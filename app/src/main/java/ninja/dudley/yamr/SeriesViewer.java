@@ -1,0 +1,115 @@
+package ninja.dudley.yamr;
+
+import android.app.ListActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import ninja.dudley.yamr.model.Series;
+
+
+public class SeriesViewer extends ListActivity
+{
+    private class SeriesAdapter extends BaseAdapter
+    {
+        private List<Series> series;
+
+        private Context context;
+
+        public SeriesAdapter(Context context, List<Series> series)
+        {
+            this.context = context;
+            this.series = series;
+        }
+
+        @Override
+        public int getCount()
+        {
+            return series.size();
+        }
+
+        @Override
+        public Series getItem(int position)
+        {
+            return series.get(position);
+        }
+
+        @Override
+        public long getItemId(int position)
+        {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent)
+        {
+            View view = convertView;
+
+            if (view == null)
+            {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.chapter_item, parent, false);
+            }
+
+            final Series series = getItem(position);
+            TextView text = (TextView) view.findViewById(R.id.textView);
+            text.setText(series.name());
+
+            view.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    Intent intent = new Intent(context, ChapterViewer.class);
+                    intent.putExtra(ChapterViewer.CHAPTER_INTENT_MESSAGE, series);
+                    startActivity(intent);
+                }
+            });
+            return view;
+        }
+    }
+
+    private List<Series> series;
+    private SeriesAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_series_viewer);
+
+        String basePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File storage = new File(basePath + "/" + getString(R.string.storage_path));
+
+        File[] seriesFiles = storage.listFiles();
+
+        Arrays.sort(seriesFiles, new Comparator<File>()
+        {
+            @Override
+            public int compare(File lhs, File rhs)
+            {
+                return lhs.getName().compareTo(rhs.getName());
+            }
+        });
+
+        this.series = new ArrayList<Series>();
+        for (File f : seriesFiles)
+        {
+            series.add(new Series(f));
+        }
+        adapter = new SeriesAdapter(this, series);
+        setListAdapter(adapter);
+    }
+}
