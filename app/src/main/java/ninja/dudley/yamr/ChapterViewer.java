@@ -64,7 +64,7 @@ public class ChapterViewer extends ListActivity
 
             final Chapter chapter = getItem(position);
             TextView text = (TextView) view.findViewById(R.id.textView);
-            text.setText(chapter.name());
+            //text.setText(chapter.name());
 
             view.setOnClickListener(new View.OnClickListener()
             {
@@ -72,7 +72,7 @@ public class ChapterViewer extends ListActivity
                 public void onClick(View v)
                 {
                     Intent intent = new Intent(context, PageViewer.class);
-                    intent.putExtra(PageViewer.PAGE_INTENT_MESSAGE, chapter.getFirstPage());
+                    //intent.putExtra(PageViewer.PAGE_INTENT_MESSAGE, chapter.getFirstPage());
                     startActivity(intent);
                 }
             });
@@ -95,5 +95,8 @@ public class ChapterViewer extends ListActivity
         chapters = series.getChapters();
         adapter = new ChapterAdapter(this, chapters);
         setListAdapter(adapter);
+
+        TextView textView = (TextView) findViewById(R.id.textView);
+//        textView.setText(series.name());
     }
 }

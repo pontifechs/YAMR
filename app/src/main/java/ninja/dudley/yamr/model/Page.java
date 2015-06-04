@@ -1,62 +1,70 @@
 package ninja.dudley.yamr.model;
 
-import android.graphics.drawable.Drawable;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.content.ContentValues;
+import android.database.Cursor;
 
-import java.io.File;
+import ninja.dudley.yamr.db.DBHelper;
 
 /**
  * Created by mdudley on 5/19/15.
  */
-public class Page implements Parcelable
+public class Page extends MangaElement
 {
-    private File storage;
+    private int chapterId;
 
-    public Page(String path)
+    private String imageUrl;
+    private String imagePath;
+
+    public Page() {}
+
+    public Page(Cursor c)
     {
-        storage = new File(path);
-    }
-
-    public Page(Parcel in)
-    {
-        String path = in.readString();
-        storage = new File(path);
-    }
-
-    public Page(File file)
-    {
-        this.storage = file;
-    }
-
-
-    public Drawable image()
-    {
-        return Drawable.createFromPath(storage.getAbsolutePath());
+        super(c);
+        int chapterIdCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_CHAPTER_ID);
+        int imageUrlCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_IMAGE_URL);
+        int imagePathCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_IMAGE_PATH);
+        chapterId = c.getInt(chapterIdCol);
+        imageUrl = c.getString(imageUrlCol);
+        imagePath = c.getString(imagePathCol);
     }
 
     @Override
-    public int describeContents()
+    public ContentValues getContentValues()
     {
-        return 0;
+        ContentValues values = super.getContentValues();
+        values.put(DBHelper.PageEntry.COLUMN_CHAPTER_ID, chapterId);
+        values.put(DBHelper.PageEntry.COLUMN_IMAGE_URL, imageUrl);
+        values.put(DBHelper.PageEntry.COLUMN_IMAGE_PATH, imagePath);
+        return values;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags)
+    public int getChapterId()
     {
-        dest.writeString(storage.getAbsolutePath());
+        return chapterId;
     }
 
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator()
+    public void setChapterId(int chapterId)
     {
-        public Page createFromParcel(Parcel in)
-        {
-            return new Page(in);
-        }
+        this.chapterId = chapterId;
+    }
 
-        public Page[] newArray(int size)
-        {
-            return new Page[size];
-        }
-    };
+    public String getImageUrl()
+    {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl)
+    {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getImagePath()
+    {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath)
+    {
+        this.imagePath = imagePath;
+    }
 }

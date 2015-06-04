@@ -1,86 +1,70 @@
 package ninja.dudley.yamr.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
+import android.content.ContentValues;
+import android.database.Cursor;
+
 import java.util.List;
+
+import ninja.dudley.yamr.db.DBHelper;
 
 /**
  * Created by mdudley on 5/19/15.
  */
-public class Series implements Parcelable
+public class Series extends MangaElement
 {
-    private File storage;
+    private int providerId;
 
-    public Series(String path)
+    private String name;
+    private List<Chapter> chapters;
+
+    public Series() {}
+
+    public Series(Cursor c)
     {
-        storage = new File(path);
+        super(c);
+        int providerIdCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
+        int nameCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_NAME);
+        providerId = c.getInt(providerIdCol);
+        name = c.getString(nameCol);
     }
 
-    public Series(Parcel in)
+    @Override
+    public ContentValues getContentValues()
     {
-        String path = in.readString();
-        storage = new File(path);
+        ContentValues values = super.getContentValues();
+        values.put(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID, providerId);
+        values.put(DBHelper.SeriesEntry.COLUMN_NAME, name);
+        return values;
     }
 
-    public Series(File file)
+    public int getProviderId()
     {
-        this.storage = file;
+        return providerId;
     }
 
-    public String name()
+    public void setProviderId(int providerId)
     {
-        return this.storage.getName();
+        this.providerId = providerId;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
     }
 
     public List<Chapter> getChapters()
     {
-        File[] files = storage.listFiles();
-
-        Arrays.sort(files, new Comparator<File>()
-        {
-            @Override
-            public int compare(File lhs, File rhs)
-            {
-                return lhs.getName().compareTo(rhs.getName());
-            }
-        });
-
-        List<Chapter> chapters = new ArrayList<Chapter>();
-        for (File f : files)
-        {
-            chapters.add(new Chapter(f));
-        }
         return chapters;
     }
 
-
-    @Override
-    public int describeContents()
+    public void setChapters(List<Chapter> chapters)
     {
-        return 0;
+        this.chapters = chapters;
     }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags)
-    {
-        dest.writeString(storage.getAbsolutePath());
-    }
-
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator()
-    {
-        public Series createFromParcel(Parcel in)
-        {
-            return new Series(in);
-        }
-
-        public Series[] newArray(int size)
-        {
-            return new Series[size];
-        }
-    };
 }

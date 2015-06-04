@@ -23,7 +23,7 @@ public class PageViewer extends Activity
         TouchImageView imageView = (TouchImageView) findViewById(R.id.imageView);
         Intent intent = getIntent();
         page = intent.getParcelableExtra(PAGE_INTENT_MESSAGE);
-        imageView.setImageDrawable(page.image());
+        //imageView.setImageDrawable(page.image());
     }
 }
 

@@ -19,6 +19,4 @@
         android:id="@android:id/list"
         >
     </ListView>
-
-
 </LinearLayout>

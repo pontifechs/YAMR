@@ -1,90 +1,83 @@
 package ninja.dudley.yamr.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.content.ContentValues;
+import android.database.Cursor;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.List;
+
+import ninja.dudley.yamr.db.DBHelper;
 
 /**
  * Created by mdudley on 5/19/15.
  */
-public class Chapter implements Parcelable
+public class Chapter extends MangaElement
 {
-    private File storage;
+    private int seriesId;
 
-    public Chapter(String path)
+    private String name;
+    private float number;
+    private List<Page> pages;
+
+    public Chapter() {}
+
+    public Chapter(Cursor c)
     {
-        storage = new File(path);
-        if (!storage.isDirectory())
-        {
-            throw new RuntimeException("Incorrect path for chapter: " + path);
-        }
-    }
-
-    public Chapter(File file)
-    {
-        this.storage = file;
-    }
-
-
-    public Chapter(Parcel in)
-    {
-        String path = in.readString();
-        storage = new File(path);
-    }
-
-
-    public String name()
-    {
-        return storage.getName();
-    }
-
-    public String id()
-    {
-        return storage.getAbsolutePath();
-    }
-
-    public Page getFirstPage()
-    {
-        File[] files = storage.listFiles();
-
-        Arrays.sort(files, new Comparator<File>()
-        {
-            @Override
-            public int compare(File lhs, File rhs)
-            {
-                return lhs.getName().compareTo(rhs.getName());
-            }
-        });
-
-        return new Page(files[0].getAbsolutePath());
-    }
-
-
-    @Override
-    public int describeContents()
-    {
-        return 0;
+        super(c);
+        int seriesIdCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_SERIES_ID);
+        int nameCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_NAME);
+        int numberCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_NUMBER);
+        seriesId = c.getInt(seriesIdCol);
+        name = c.getString(nameCol);
+        number = c.getFloat(numberCol);
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags)
+    public ContentValues getContentValues()
     {
-        dest.writeString(storage.getAbsolutePath());
+        ContentValues values = super.getContentValues();
+        values.put(DBHelper.ChapterEntry.COLUMN_SERIES_ID, seriesId);
+        values.put(DBHelper.ChapterEntry.COLUMN_NAME, name);
+        values.put(DBHelper.ChapterEntry.COLUMN_NUMBER, number);
+        return values;
     }
 
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator()
+    public int getSeriesId()
     {
-        public Chapter createFromParcel(Parcel in)
-        {
-            return new Chapter(in);
-        }
+        return seriesId;
+    }
 
-        public Chapter[] newArray(int size)
-        {
-            return new Chapter[size];
-        }
-    };
+    public void setSeriesId(int seriesId)
+    {
+        this.seriesId = seriesId;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public float getNumber()
+    {
+        return number;
+    }
+
+    public void setNumber(float number)
+    {
+        this.number = number;
+    }
+
+    public List<Page> getPages()
+    {
+        return pages;
+    }
+
+    public void setPages(List<Page> pages)
+    {
+        this.pages = pages;
+    }
 }

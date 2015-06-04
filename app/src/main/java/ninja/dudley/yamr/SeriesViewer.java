@@ -4,24 +4,22 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
+import ninja.dudley.yamr.fetch.Fetcher;
+import ninja.dudley.yamr.fetch.impl.MangaPandaFetcher;
 import ninja.dudley.yamr.model.Series;
-
 
 public class SeriesViewer extends ListActivity
 {
+
+    private SeriesAdapter adapter;
     private class SeriesAdapter extends BaseAdapter
     {
         private List<Series> series;
@@ -65,7 +63,7 @@ public class SeriesViewer extends ListActivity
 
             final Series series = getItem(position);
             TextView text = (TextView) view.findViewById(R.id.textView);
-            text.setText(series.name());
+            text.setText(series.getName());
 
             view.setOnClickListener(new View.OnClickListener()
             {
@@ -73,7 +71,7 @@ public class SeriesViewer extends ListActivity
                 public void onClick(View v)
                 {
                     Intent intent = new Intent(context, ChapterViewer.class);
-                    intent.putExtra(ChapterViewer.CHAPTER_INTENT_MESSAGE, series);
+//                    intent.putExtra(ChapterViewer.CHAPTER_INTENT_MESSAGE, series);
                     startActivity(intent);
                 }
             });
@@ -82,7 +80,8 @@ public class SeriesViewer extends ListActivity
     }
 
     private List<Series> series;
-    private SeriesAdapter adapter;
+
+    private Fetcher fetcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -90,26 +89,7 @@ public class SeriesViewer extends ListActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_series_viewer);
 
-        String basePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File storage = new File(basePath + "/" + getString(R.string.storage_path));
-
-        File[] seriesFiles = storage.listFiles();
-
-        Arrays.sort(seriesFiles, new Comparator<File>()
-        {
-            @Override
-            public int compare(File lhs, File rhs)
-            {
-                return lhs.getName().compareTo(rhs.getName());
-            }
-        });
-
-        this.series = new ArrayList<Series>();
-        for (File f : seriesFiles)
-        {
-            series.add(new Series(f));
-        }
-        adapter = new SeriesAdapter(this, series);
-        setListAdapter(adapter);
+        Intent i = new Intent(this, MangaPandaFetcher.class);
+        startService(i);
     }
 }
