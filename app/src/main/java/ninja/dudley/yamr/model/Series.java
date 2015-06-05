@@ -3,6 +3,7 @@ package ninja.dudley.yamr.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 
 import java.util.List;
 
@@ -17,6 +18,17 @@ public class Series extends MangaElement
 
     private String name;
     private List<Chapter> chapters;
+
+    public static Uri baseUri()
+    {
+        return Uri.parse("content://" + DBHelper.AUTHORITY + "/series");
+    }
+
+    public static Uri uri(int id)
+    {
+        Uri base = baseUri();
+        return base.buildUpon().appendPath(Integer.toString(id)).build();
+    }
 
     public Series() {}
 
@@ -36,6 +48,11 @@ public class Series extends MangaElement
         values.put(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID, providerId);
         values.put(DBHelper.SeriesEntry.COLUMN_NAME, name);
         return values;
+    }
+
+    public Uri uri()
+    {
+        return uri(_id);
     }
 
     public int getProviderId()

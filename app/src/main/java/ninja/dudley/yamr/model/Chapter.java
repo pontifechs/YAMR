@@ -2,6 +2,7 @@ package ninja.dudley.yamr.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 
 import java.util.List;
 
@@ -17,6 +18,17 @@ public class Chapter extends MangaElement
     private String name;
     private float number;
     private List<Page> pages;
+
+    public static Uri baseUri()
+    {
+        return Uri.parse("content://" + DBHelper.AUTHORITY + "/chapter");
+    }
+
+    public static Uri uri(int id)
+    {
+        Uri base = baseUri();
+        return base.buildUpon().appendPath(Integer.toString(id)).build();
+    }
 
     public Chapter() {}
 
@@ -39,6 +51,11 @@ public class Chapter extends MangaElement
         values.put(DBHelper.ChapterEntry.COLUMN_NAME, name);
         values.put(DBHelper.ChapterEntry.COLUMN_NUMBER, number);
         return values;
+    }
+
+    public Uri uri()
+    {
+        return uri(_id);
     }
 
     public int getSeriesId()

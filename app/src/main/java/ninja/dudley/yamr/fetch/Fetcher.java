@@ -7,7 +7,6 @@ import android.os.Environment;
 
 import java.io.File;
 
-import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
@@ -18,10 +17,19 @@ import ninja.dudley.yamr.model.Series;
  */
 public abstract class Fetcher extends IntentService
 {
-    public static final String FETCH_PROVIDER = "ninja.dudley.yamr.fetch.Fetcher.FetchProvider";
-    public static final String FETCH_SERIES = "ninja.dudley.yamr.fetch.Fetcher.FetchSeries";
-    public static final String FETCH_CHAPTER = "ninja.dudley.yamr.fetch.Fetcher.FetchChapter";
-    public static final String FETCH_PAGE = "ninja.dudley.yamr.fetch.Fetcher.FetchPage";
+    public static final String BASE = "ninja.dudley.yamr.fetch.Fetcher";
+    public static final String FETCH_PROVIDER = BASE + ".FetchProvider";
+    public static final String FETCH_SERIES = BASE + ".FetchSeries" ;
+    public static final String FETCH_CHAPTER = BASE + ".FetchChapter";
+    public static final String FETCH_PAGE = BASE + ".FetchPage";
+
+    public static final String FETCH_PROVIDER_STATUS = FETCH_PROVIDER + ".Status";
+    public static final String FETCH_PROVIDER_COMPLETE = FETCH_PROVIDER + ".Complete";
+    public static final String FETCH_SERIES_STATUS = FETCH_SERIES + ".Status";
+    public static final String FETCH_SERIES_COMPLETE = FETCH_SERIES + ".Complete";
+    public static final String FETCH_CHAPTER_STATUS = FETCH_CHAPTER + ".Status";
+    public static final String FETCH_CHAPTER_COMPLETE = FETCH_CHAPTER + ".Complete";
+    public static final String FETCH_PAGE_COMPLETE = FETCH_CHAPTER + ".Complete";
 
     public File getStorageDirectory()
     {
@@ -52,19 +60,25 @@ public abstract class Fetcher extends IntentService
     @Override
     protected void onHandleIntent(Intent intent)
     {
-//        switch(intent.getAction())
-//        {
-//            case FETCH_PROVIDER:
-//                break;
-//            case FETCH_SERIES:
-//                break;
-//            case FETCH_CHAPTER
-//                break;
-//            case FETCH_PAGE:
-//                break;
-//        }
-        Uri series = Uri.parse("content://" + DBHelper.AUTHORITY + "/series/2000");
-        Series s = new Series(getContentResolver().query(series, null,null,null,null,null));
-        fetchSeries(s);
+        Uri argument = intent.getData();
+        switch (intent.getAction())
+        {
+            case FETCH_PROVIDER:
+                Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
+                fetchProvider(p);
+                break;
+            case FETCH_SERIES:
+                Series s = new Series(getContentResolver().query(argument, null, null, null, null));
+                fetchSeries(s);
+                break;
+            case FETCH_CHAPTER:
+                Chapter c = new Chapter(getContentResolver().query(argument, null, null, null, null));
+                fetchChapter(c);
+                break;
+            case FETCH_PAGE:
+                Page page = new Page(getContentResolver().query(argument, null, null, null, null));
+                fetchPage(page);
+                break;
+        }
     }
 }

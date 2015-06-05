@@ -1,7 +1,6 @@
 package ninja.dudley.yamr.db;
 
 import android.content.Context;
-import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
@@ -141,16 +140,6 @@ public class DBHelper extends SQLiteOpenHelper
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version)
-    {
-        super(context, name, factory, version);
-    }
-
-    public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version, DatabaseErrorHandler errorHandler)
-    {
-        super(context, name, factory, version, errorHandler);
-    }
-
     @Override
     public void onCreate(SQLiteDatabase db)
     {
@@ -191,7 +180,7 @@ public class DBHelper extends SQLiteOpenHelper
                 ")";
         db.execSQL(pageCreate);
 
-        db.execSQL("INSERT INTO provider (url, name) values (\"http://www.mangapanda.com/\", \"MangaPanda\")");
+        db.execSQL("INSERT INTO provider (url, name) values (\"http://www.mangapanda.com/alphabetical\", \"MangaPanda\")");
     }
 
     @Override

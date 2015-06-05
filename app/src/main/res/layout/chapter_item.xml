@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="20dp">
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="20dp"
+              android:weightSum="1">
+
 
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/textView"
-        android:paddingLeft="20dp"
-        android:layout_gravity="start" />
+        android:layout_height="wrap_content"
+        android:text="Chapter:"
+        android:id="@+id/chapterText"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chapter_number"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chapter_name"
+        android:layout_gravity="end"
+        />
 </LinearLayout>

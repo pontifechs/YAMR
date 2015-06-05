@@ -94,7 +94,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case ProviderSeries:
-                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
+                Cursor c = db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
                         DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
@@ -102,6 +102,8 @@ public class DBProvider extends ContentProvider
                         null,
                         null
                 );
+                //c.setNotificationUri(getContext().getContentResolver(), uri);
+                return c;
             case ProviderAll:
                 return db.query(DBHelper.ProviderEntry.TABLE_NAME,
                         DBHelper.ProviderEntry.projection,
@@ -198,21 +200,30 @@ public class DBProvider extends ContentProvider
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         long id;
+        Uri inserted;
         int code = matcher.match(uri);
         switch (code)
         {
             case Provider:
                 id = db.insert(DBHelper.ProviderEntry.TABLE_NAME, null, values);
-                return Uri.parse("content://" + DBHelper.AUTHORITY + "/provider/" + id);
+                inserted = ninja.dudley.yamr.model.Provider.uri((int)id);
+                return inserted;
             case Series:
                 id = db.insert(DBHelper.SeriesEntry.TABLE_NAME, null, values);
-                return Uri.parse("content://" + DBHelper.AUTHORITY + "/series/" + id);
+                inserted = ninja.dudley.yamr.model.Series.uri((int)id);
+                Uri providerSeries = ninja.dudley.yamr.model.Provider.uri(getId(code, uri)).buildUpon().appendPath("series").build();
+                getContext().getContentResolver().notifyChange(providerSeries, null);
+                return inserted;
             case Chapter:
                 id = db.insert(DBHelper.ChapterEntry.TABLE_NAME, null, values);
-                return Uri.parse("content://" + DBHelper.AUTHORITY + "/chapter/" + id);
+                inserted = ninja.dudley.yamr.model.Chapter.uri((int)id);
+                getContext().getContentResolver().notifyChange(inserted, null);
+                return inserted;
             case Page:
                 id = db.insert(DBHelper.PageEntry.TABLE_NAME, null, values);
-                return Uri.parse("content://" + DBHelper.AUTHORITY + "/page/" + id);
+                inserted = ninja.dudley.yamr.model.Page.uri((int) id);
+                getContext().getContentResolver().notifyChange(inserted, null);
+                return inserted;
             default:
                 throw new IllegalArgumentException("Invalid insert uri: " + uri.toString());
         }
