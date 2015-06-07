@@ -102,6 +102,30 @@ public class DBHelper extends SQLiteOpenHelper
         }
     }
 
+    public static abstract class PageHeritageViewEntry
+    {
+        public static final String TABLE_NAME="page_heritage";
+
+        public static final String COLUMN_PROVIDER_NAME = "provider_name";
+        public static final SQLite3Types COLUMN_PROVIDER_NAME_TYPE = SQLite3Types.Text;
+        public static final String COLUMN_SERIES_NAME = "series_name";
+        public static final SQLite3Types COLUMN_SERIES_NAME_TYPE = SQLite3Types.Text;
+        public static final String COLUMN_CHAPTER_NUMBER = "chapter_number";
+        public static final SQLite3Types COLUMN_CHAPTER_NUMBER_TYPE = SQLite3Types.Real;
+        public static final String COLUMN_PAGE_NUMBER = "page_number";
+        public static final SQLite3Types COLUMN_PAGE_NUMBER_TYPE = SQLite3Types.Real;
+        public static final String COLUMN_PAGE_ID = "page_id";
+        public static final SQLite3Types COLUMN_PAGE_ID_TYPE = SQLite3Types.Integer;
+
+        public static final String[] projection;
+
+        static
+        {
+            projection = new String[]{COLUMN_PROVIDER_NAME, COLUMN_SERIES_NAME, COLUMN_CHAPTER_NUMBER, COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
+        }
+    }
+
+
     private static String mangaElementColumns()
     {
         return MangaElementEntry._ID + " INTEGER PRIMARY KEY, " +
@@ -134,6 +158,17 @@ public class DBHelper extends SQLiteOpenHelper
     {
        return " UNIQUE (" + MangaElementEntry._ID + ", " + MangaElementEntry.COLUMN_URL +") ON CONFLICT ABORT";
     }
+
+    private static String joinedAliasedColumn(String tableName, String fieldName, String alias)
+    {
+        return tableName + "." + fieldName + " as " + alias;
+    }
+
+    private static String joinStatement(String lhsTable, String lhsField, String rhsTable, String rhsField)
+    {
+        return " join " + rhsTable + " ON " + lhsTable + "." + lhsField + " = " + rhsTable + "." + rhsField;
+    }
+
 
     public DBHelper(Context context)
     {
@@ -179,6 +214,18 @@ public class DBHelper extends SQLiteOpenHelper
                 uniqueConstraint() +
                 ")";
         db.execSQL(pageCreate);
+
+        String pageHeritageView = "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
+               "select " + joinedAliasedColumn(PageEntry.TABLE_NAME, PageEntry._ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
+                         + joinedAliasedColumn(ProviderEntry.TABLE_NAME, ProviderEntry.COLUMN_NAME, PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", "
+                         + joinedAliasedColumn(SeriesEntry.TABLE_NAME, SeriesEntry.COLUMN_NAME, PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", "
+                         + joinedAliasedColumn(ChapterEntry.TABLE_NAME, ChapterEntry.COLUMN_NUMBER, PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", "
+                         + joinedAliasedColumn(PageEntry.TABLE_NAME, PageEntry.COLUMN_NUMBER, PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
+               " from " + ProviderEntry.TABLE_NAME + joinStatement(ProviderEntry.TABLE_NAME, ProviderEntry._ID, SeriesEntry.TABLE_NAME, SeriesEntry.COLUMN_PROVIDER_ID)
+                       + joinStatement(SeriesEntry.TABLE_NAME, SeriesEntry._ID, ChapterEntry.TABLE_NAME, ChapterEntry.COLUMN_SERIES_ID)
+                       + joinStatement(ChapterEntry.TABLE_NAME, ChapterEntry._ID, PageEntry.TABLE_NAME, PageEntry.COLUMN_CHAPTER_ID)
+                ;
+        db.execSQL(pageHeritageView);
 
         db.execSQL("INSERT INTO provider (url, name) values (\"http://www.mangapanda.com/alphabetical\", \"MangaPanda\")");
     }

@@ -71,13 +71,14 @@ public class MangaPandaFetcher extends Fetcher
                 if (index % statusStride == 0)
                 {
                     Intent i = new Intent(FETCH_PROVIDER_STATUS);
-                    i.putExtra(FETCH_PROVIDER_STATUS, index / (float)elements.size());
+                    i.putExtra(FETCH_PROVIDER_STATUS, index / (float) elements.size());
                     LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
                 }
             }
             provider.setFullyParsed(true);
             getContentResolver().update(provider.uri(), provider.getContentValues(), null, null);
             Intent i = new Intent(FETCH_PROVIDER_COMPLETE);
+            i.setData(provider.uri());
             LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
             Log.d("Fetch", "Iteration complete. Provider Fetched.");
         } catch (IOException e)
@@ -104,7 +105,7 @@ public class MangaPandaFetcher extends Fetcher
                     .execute();
             Document doc = response.parse();
             Elements elements = doc.select("td .chico_manga ~ a[href]");
-            float index = 0;
+            float index = 1.0f;
             for (Element e : elements)
             {
                 Chapter c = new Chapter();
@@ -113,11 +114,15 @@ public class MangaPandaFetcher extends Fetcher
                 c.setName(e.parent().ownText().replace(":", ""));
                 c.setNumber(index++);
                 Uri inserted = getContentResolver().insert(Chapter.baseUri(), c.getContentValues());
-                Log.d("Fetch", "Inserted: " + inserted.toString());
-                Log.d("Fetch", "url: " + c.getUrl());
+                Log.d("FetchSeries", "Inserted: " + inserted.toString());
+                Log.d("FetchSeries", "url: " + c.getUrl());
             }
             series.setFullyParsed(true);
             getContentResolver().update(series.uri(), series.getContentValues(), null, null);
+            Intent i = new Intent(FETCH_SERIES_COMPLETE);
+            i.setData(series.uri());
+            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+            Log.d("FetchSeries", "Iteration complete. Series Fetched.");
         } catch (IOException e)
         {
             // Panic? IDK what might cause this.
@@ -142,7 +147,7 @@ public class MangaPandaFetcher extends Fetcher
                     .execute();
             Document doc = response.parse();
             Elements elements = doc.select("#pageMenu option[value]");
-            float index = 0;
+            float index = 1.0f;
             for (Element e : elements)
             {
                 Page p = new Page();
@@ -155,6 +160,10 @@ public class MangaPandaFetcher extends Fetcher
             }
             chapter.setFullyParsed(true);
             getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null);
+            Intent i = new Intent(FETCH_CHAPTER_COMPLETE);
+            i.setData(chapter.uri());
+            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+            Log.d("FetchChapter", "Iteration complete. Chapter fetched");
         } catch (IOException e)
         {
             // Panic? IDK what might cause this.
@@ -179,20 +188,17 @@ public class MangaPandaFetcher extends Fetcher
                     .execute();
             Document doc = response.parse();
             Element element = doc.select("img[src]").first();
-            page.setImagePath(element.absUrl("src"));
+            page.setImageUrl(element.absUrl("src"));
             page.setFullyParsed(true);
-            getContentResolver().update(page.uri(), page.getContentValues(), null, null);
+            savePageImage(page);
+            Intent i = new Intent(FETCH_PAGE_COMPLETE);
+            i.setData(page.uri());
+            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
             Log.d("FetchPage", "Done");
         } catch (IOException e)
         {
             // Panic? IDK what might cause this.
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public String getFetcherIdentifier()
-    {
-        return "MangaPanda";
     }
 }

@@ -2,11 +2,19 @@ package ninja.dudley.yamr.fetch;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
+import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
@@ -31,23 +39,10 @@ public abstract class Fetcher extends IntentService
     public static final String FETCH_CHAPTER_COMPLETE = FETCH_CHAPTER + ".Complete";
     public static final String FETCH_PAGE_COMPLETE = FETCH_CHAPTER + ".Complete";
 
-    public File getStorageDirectory()
-    {
-        File root = Environment.getExternalStorageDirectory();
-        File storage = new File(root.getAbsolutePath() + "/" + getFetcherIdentifier());
-        if (!storage.exists() || !storage.mkdir())
-        {
-            throw new RuntimeException("Can't write to directory: " + storage.getAbsolutePath());
-        }
-        return storage;
-    }
-
     public Fetcher(String name)
     {
         super(name);
     }
-
-    public abstract String getFetcherIdentifier();
 
     public abstract void fetchProvider(Provider provider);
 
@@ -80,5 +75,85 @@ public abstract class Fetcher extends IntentService
                 fetchPage(page);
                 break;
         }
+    }
+
+    private static String stripBadCharsForFile(String file)
+    {
+        return file.replaceAll("[\\\\/\\?%\\*:\\|\"<>]", ".");
+    }
+
+    private static String formatFloat(float f)
+    {
+        if (f == (int) f)
+        {
+            return String.format("%d", (int)f);
+        }
+        else
+        {
+            return String.format("%s", f);
+        }
+    }
+
+    // TODO:: not a huge fan of this method
+    protected void savePageImage(Page p)
+    {
+        Uri heritageQuery = p.uri().buildUpon().appendPath("heritage").build();
+        Cursor heritage = getContentResolver().query(heritageQuery, null, null, null, null);
+        heritage.moveToFirst();
+
+        int providerNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME);
+        int seriesNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_NAME);
+        int chapterNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER);
+        int pageNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_NUMBER);
+
+        String providerName = heritage.getString(providerNameCol);
+        String seriesName = heritage.getString(seriesNameCol);
+        float chapterNumber = heritage.getFloat(chapterNumberCol);
+        float pageNumber = heritage.getFloat(pageNumberCol);
+
+        File root = Environment.getExternalStorageDirectory();
+        String chapterPath = root.getAbsolutePath() +
+                "/" + stripBadCharsForFile(providerName) +
+                "/" + stripBadCharsForFile(seriesName) +
+                "/" + formatFloat(chapterNumber);
+
+        File chapterDirectory = new File(chapterPath);
+        chapterDirectory.mkdirs();
+        String pagePath = chapterDirectory +
+                "/" + formatFloat(pageNumber) + ".png";
+
+        FileOutputStream out = null;
+        try
+        {
+            URL url = new URL(p.getImageUrl());
+            Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            out = new FileOutputStream(pagePath);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+        }
+        catch (MalformedURLException e)
+        {
+            // TODO:: better error handling/checking
+            throw new RuntimeException(e);
+        }
+        catch (IOException e)
+        {
+             // TODO:: better error handling/checking
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            try
+            {
+                out.close();
+            }
+            catch (IOException e)
+            {
+                //TODO:: better error handling/checking
+                throw new RuntimeException(e);
+            }
+        }
+        p.setImagePath(pagePath);
+        getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
+        heritage.close();
     }
 }

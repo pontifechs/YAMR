@@ -16,11 +16,11 @@
             android:label="@string/title_activity_page_viewer"
             android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen"/>
         <activity
-            android:name=".ChapterViewer"
+            android:name=".SeriesViewer"
             android:label="@string/title_activity_chapter_viewer"
             />
         <activity
-            android:name=".SeriesViewer"
+            android:name=".ProviderViewer"
             android:label="@string/title_activity_series_viewer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

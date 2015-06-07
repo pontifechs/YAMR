@@ -31,6 +31,7 @@ public class DBProvider extends ContentProvider
     private static final int ChapterPages = 25;
     private static final int Page = 30;
     private static final int PageByID = 31;
+    private static final int PageHeritage = 39;
 
     static
     {
@@ -47,6 +48,7 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", ChapterPages);
         matcher.addURI(DBHelper.AUTHORITY, "/page", Page);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#", PageByID);
+        matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", PageHeritage);
     }
 
     private static final int getId(int code, Uri uri)
@@ -61,6 +63,7 @@ public class DBProvider extends ContentProvider
             case ProviderSeries:
             case SeriesChapters:
             case ChapterPages:
+            case PageHeritage:
                 List<String> segments = uri.getPathSegments();
                 String idStr = segments.get(segments.size() - 2);
                 return Integer.parseInt(idStr);
@@ -94,7 +97,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case ProviderSeries:
-                Cursor c = db.query(DBHelper.SeriesEntry.TABLE_NAME,
+                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
                         DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
@@ -102,8 +105,6 @@ public class DBProvider extends ContentProvider
                         null,
                         null
                 );
-                //c.setNotificationUri(getContext().getContentResolver(), uri);
-                return c;
             case ProviderAll:
                 return db.query(DBHelper.ProviderEntry.TABLE_NAME,
                         DBHelper.ProviderEntry.projection,
@@ -155,6 +156,16 @@ public class DBProvider extends ContentProvider
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
                         DBHelper.PageEntry.projection,
                         DBHelper.PageEntry._ID + "=?",
+                        new String[]{Integer.toString(getId(code, uri))},
+                        null,
+                        null,
+                        null,
+                        "1"
+                );
+            case PageHeritage:
+                return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME,
+                        DBHelper.PageHeritageViewEntry.projection,
+                        DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
@@ -217,12 +228,14 @@ public class DBProvider extends ContentProvider
             case Chapter:
                 id = db.insert(DBHelper.ChapterEntry.TABLE_NAME, null, values);
                 inserted = ninja.dudley.yamr.model.Chapter.uri((int)id);
-                getContext().getContentResolver().notifyChange(inserted, null);
+                Uri seriesChapters = ninja.dudley.yamr.model.Series.uri(getId(code, uri)).buildUpon().appendPath("chapters").build();
+                getContext().getContentResolver().notifyChange(seriesChapters, null);
                 return inserted;
             case Page:
                 id = db.insert(DBHelper.PageEntry.TABLE_NAME, null, values);
                 inserted = ninja.dudley.yamr.model.Page.uri((int) id);
-                getContext().getContentResolver().notifyChange(inserted, null);
+                Uri chapterPages = ninja.dudley.yamr.model.Chapter.uri(getId(code, uri)).buildUpon().appendPath("pages").build();
+                getContext().getContentResolver().notifyChange(chapterPages, null);
                 return inserted;
             default:
                 throw new IllegalArgumentException("Invalid insert uri: " + uri.toString());

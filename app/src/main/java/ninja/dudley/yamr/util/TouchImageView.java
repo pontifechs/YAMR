@@ -225,6 +225,7 @@ public class TouchImageView extends ImageView implements OrientationAware.I, Sca
     {
         super.setImageDrawable(drawable);
         reset();
+        invalidate();
     }
 }
 

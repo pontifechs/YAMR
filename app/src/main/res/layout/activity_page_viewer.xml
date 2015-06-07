@@ -9,7 +9,7 @@
     <ninja.dudley.yamr.util.TouchImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/naruto"
+        android:src="@drawable/panipani cc"
         android:id="@+id/imageView"
         />
 

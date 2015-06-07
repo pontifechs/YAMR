@@ -10,25 +10,21 @@ import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
 
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.fetch.Fetcher;
 import ninja.dudley.yamr.fetch.impl.MangaPandaFetcher;
-import ninja.dudley.yamr.model.Chapter;
+import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
 
-
-public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor>
+public class ProviderViewer extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor>
 {
-
-    private Series series;
-
     private SimpleCursorAdapter adapter;
 
     private BroadcastReceiver fetchStatusReceiver;
@@ -38,7 +34,7 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chapter_viewer);
+        setContentView(R.layout.activity_series_viewer);
 
         fetchStatusReceiver = new BroadcastReceiver()
         {
@@ -56,28 +52,22 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                getLoaderManager().restartLoader(0, null, SeriesViewer.this);
+                getLoaderManager().restartLoader(0, null, ProviderViewer.this);
                 adapter.notifyDataSetChanged();
             }
         };
 
-        series = new Series(getContentResolver().query(getIntent().getData(), null, null, null, null));
-
-        Intent fetchSeries = new Intent(this, MangaPandaFetcher.class);
-        fetchSeries.setAction(Fetcher.FETCH_SERIES);
-        fetchSeries.setData(series.uri());
-        startService(fetchSeries);
-
-
-        TextView title = (TextView) findViewById(R.id.textView);
-        title.setText(series.getName());
+        Intent i = new Intent(this, MangaPandaFetcher.class);
+        i.setAction(Fetcher.FETCH_PROVIDER);
+        i.setData(Provider.uri(1));   // Hard-code to the first (mangapanda) for now.
+        startService(i);
 
         adapter = new SimpleCursorAdapter(
                 this,
-                R.layout.chapter_item,
+                R.layout.series_item,
                 null,
-                new String[]{DBHelper.ChapterEntry.COLUMN_NAME, DBHelper.ChapterEntry.COLUMN_NUMBER},
-                new int[]{R.id.chapter_name, R.id.chapter_number},
+                new String[]{DBHelper.SeriesEntry.COLUMN_NAME},
+                new int[]{R.id.series_name},
                 0
         );
         getListView().setAdapter(adapter);
@@ -89,11 +79,10 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
     protected void onResume()
     {
         super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(fetchStatusReceiver, new IntentFilter(Fetcher.FETCH_SERIES_STATUS));
-        IntentFilter completeFilter = new IntentFilter(Fetcher.FETCH_SERIES_COMPLETE);
+        IntentFilter completeFilter = new IntentFilter(Fetcher.FETCH_PROVIDER_COMPLETE);
         try
         {
-            completeFilter.addDataType(getContentResolver().getType(Series.baseUri()));
+            completeFilter.addDataType(getContentResolver().getType(Provider.baseUri()));
         }
         catch (IntentFilter.MalformedMimeTypeException e)
         {
@@ -101,6 +90,7 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
             throw new AssertionError(e);
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(fetchCompleteReceiver, completeFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(fetchStatusReceiver, new IntentFilter(Fetcher.FETCH_PROVIDER_STATUS));
     }
 
     @Override
@@ -114,9 +104,10 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args)
     {
+        Uri mangaPandaSeries = Provider.uri(1).buildUpon().appendPath("series").build();
         return new CursorLoader(
                 this,
-                series.uri().buildUpon().appendPath("chapters").build(),
+                mangaPandaSeries,
                 null,
                 null,
                 null,
@@ -140,8 +131,8 @@ public class SeriesViewer extends ListActivity implements LoaderManager.LoaderCa
     protected void onListItemClick(ListView l, View v, int position, long id)
     {
         super.onListItemClick(l, v, position, id);
-        Intent i = new Intent(this, PageViewer.class);
-        i.setData(Chapter.uri((int) id));
+        Intent i = new Intent(this, SeriesViewer.class);
+        i.setData(Series.uri((int) id));
         startActivity(i);
     }
 }
