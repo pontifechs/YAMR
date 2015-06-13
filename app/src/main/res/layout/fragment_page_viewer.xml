@@ -6,10 +6,10 @@
     tools:context=".PageViewer"
     >
 
-    <ninja.dudley.yamr.util.TouchImageView
+    <ninja.dudley.yamr.ui.util.TouchImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/panipani cc"
+        android:src="@drawable/panic"
         android:id="@+id/imageView"
         />
 

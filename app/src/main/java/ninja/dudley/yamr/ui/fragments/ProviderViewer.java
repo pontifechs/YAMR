@@ -1,6 +1,8 @@
-package ninja.dudley.yamr;
+package ninja.dudley.yamr.ui.fragments;
 
-import android.app.ListActivity;
+import android.app.Activity;
+import android.app.FragmentTransaction;
+import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,41 +11,56 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 
+import ninja.dudley.yamr.R;
+import ninja.dudley.yamr.coms.LoadSeries;
 import ninja.dudley.yamr.db.DBHelper;
-import ninja.dudley.yamr.fetch.Fetcher;
-import ninja.dudley.yamr.fetch.impl.MangaPandaFetcher;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
+import ninja.dudley.yamr.svc.FetcherAsync;
 
-public class ProviderViewer extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor>
+public class ProviderViewer extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>
 {
     private SimpleCursorAdapter adapter;
 
     private BroadcastReceiver fetchStatusReceiver;
     private BroadcastReceiver fetchCompleteReceiver;
 
+    private LoadSeries parent;
+
+    private LoadingDialog loading;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    public void onAttach(Activity activity)
     {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_series_viewer);
+        super.onAttach(activity);
+
+        this.parent = (LoadSeries) activity;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
+        LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_provider_viewer, container, false);
 
         fetchStatusReceiver = new BroadcastReceiver()
         {
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                float percent = intent.getFloatExtra(Fetcher.FETCH_PROVIDER_STATUS, 0.0f);
-                int grey = (int) (percent * 255);
-                getListView().setBackgroundColor(Color.argb(255, grey, grey, grey));
+                float percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_PROVIDER_STATUS, 0.0f);
+                ProgressBar bar = (ProgressBar)loading.getView().findViewById(R.id.loading_progress);
+                bar.setProgress((int)percent);
             }
         };
 
@@ -57,48 +74,51 @@ public class ProviderViewer extends ListActivity implements LoaderManager.Loader
             }
         };
 
-        Intent i = new Intent(this, MangaPandaFetcher.class);
-        i.setAction(Fetcher.FETCH_PROVIDER);
+        Intent i = new Intent(getActivity(), FetcherAsync.class);
+        i.setAction(FetcherAsync.FETCH_PROVIDER);
         i.setData(Provider.uri(1));   // Hard-code to the first (mangapanda) for now.
-        startService(i);
+        getActivity().startService(i);
 
         adapter = new SimpleCursorAdapter(
-                this,
+                getActivity(),
                 R.layout.series_item,
                 null,
                 new String[]{DBHelper.SeriesEntry.COLUMN_NAME},
                 new int[]{R.id.series_name},
                 0
         );
-        getListView().setAdapter(adapter);
+        setListAdapter(adapter);
 
         getLoaderManager().initLoader(0, null, this);
+        loading = LoadingDialog.newInstance();
+        loading.show(getFragmentManager(), "loading");
+        return layout;
     }
 
     @Override
-    protected void onResume()
+    public void onResume()
     {
         super.onResume();
-        IntentFilter completeFilter = new IntentFilter(Fetcher.FETCH_PROVIDER_COMPLETE);
+        IntentFilter completeFilter = new IntentFilter(FetcherAsync.FETCH_PROVIDER_COMPLETE);
         try
         {
-            completeFilter.addDataType(getContentResolver().getType(Provider.baseUri()));
+            completeFilter.addDataType(getActivity().getContentResolver().getType(Provider.baseUri()));
         }
         catch (IntentFilter.MalformedMimeTypeException e)
         {
             // I'm a little more OK with this, as Provider.baseUri() is static.
             throw new AssertionError(e);
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(fetchCompleteReceiver, completeFilter);
-        LocalBroadcastManager.getInstance(this).registerReceiver(fetchStatusReceiver, new IntentFilter(Fetcher.FETCH_PROVIDER_STATUS));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchCompleteReceiver, completeFilter);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchStatusReceiver, new IntentFilter(FetcherAsync.FETCH_PROVIDER_STATUS));
     }
 
     @Override
-    protected void onPause()
+    public void onPause()
     {
         super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(fetchStatusReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(fetchCompleteReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchStatusReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchCompleteReceiver);
     }
 
     @Override
@@ -106,7 +126,7 @@ public class ProviderViewer extends ListActivity implements LoaderManager.Loader
     {
         Uri mangaPandaSeries = Provider.uri(1).buildUpon().appendPath("series").build();
         return new CursorLoader(
-                this,
+                getActivity(),
                 mangaPandaSeries,
                 null,
                 null,
@@ -128,11 +148,12 @@ public class ProviderViewer extends ListActivity implements LoaderManager.Loader
     }
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id)
+    public void onListItemClick(ListView l, View v, int position, long id)
     {
         super.onListItemClick(l, v, position, id);
-        Intent i = new Intent(this, SeriesViewer.class);
-        i.setData(Series.uri((int) id));
-        startActivity(i);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+        parent.loadSeries(Series.uri((int) id));
     }
+
 }

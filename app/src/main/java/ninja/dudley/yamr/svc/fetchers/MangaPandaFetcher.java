@@ -1,8 +1,7 @@
-package ninja.dudley.yamr.fetch.impl;
+package ninja.dudley.yamr.svc.fetchers;
 
-import android.content.Intent;
+import android.content.Context;
 import android.net.Uri;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.jsoup.Connection;
@@ -13,35 +12,35 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
-import ninja.dudley.yamr.fetch.Fetcher;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
+import ninja.dudley.yamr.svc.FetcherSync;
 
 /**
  * Created by mdudley on 5/28/15.
  */
-public class MangaPandaFetcher extends Fetcher
+public class MangaPandaFetcher extends FetcherSync
 {
-    public MangaPandaFetcher()
+    public MangaPandaFetcher(Context context)
     {
-        super("MangaPandaFetcher");
+        super(context);
     }
 
-    // TODO:: See about generalizing this so that Fetcher can load up what/how to parse based on
+    // TODO:: See about generalizing this so that FetcherSync can load up what/how to parse based on
     // either pure selectors, pure xpath, or a mix of selectors/javascript (via rhino)?
     // Kind of huge, but whatever haha.
 
     @Override
-    public void fetchProvider(Provider provider)
+    public Provider fetchProvider(Provider provider)
     {
         try
         {
             if (provider.isFullyParsed())
             {
                 Log.d("Fetch", "Already parsed. Ignoring");
-                return;
+                return provider;
             }
             Log.d("Fetch", "Starting Provider Fetch.");
             Connection.Response response = Jsoup.connect(provider.getUrl())
@@ -55,7 +54,7 @@ public class MangaPandaFetcher extends Fetcher
             Elements elements = doc.select(".series_alpha li a[href]");
             Log.d("Fetch", "Selection complete. Iterating");
 
-            final int statusStride = elements.size() / 100;
+            final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
             int index = 0;
             for (Element e : elements)
             {
@@ -63,40 +62,37 @@ public class MangaPandaFetcher extends Fetcher
                 s.setProviderId(provider.getId());
                 s.setUrl(e.absUrl("href"));
                 s.setName(e.ownText());
-                Uri inserted = getContentResolver().insert(Series.baseUri(), s.getContentValues());
-                getContentResolver().notifyChange(provider.uri().buildUpon().appendPath("series").build(), null);
+                Uri inserted = context.getContentResolver().insert(Series.baseUri(), s.getContentValues());
+                context.getContentResolver().notifyChange(provider.uri().buildUpon().appendPath("series").build(), null);
                 Log.d("Fetch", "Inserted: " + inserted.toString());
                 Log.d("Fetch", "url: " + s.getUrl());
                 index++;
-                if (index % statusStride == 0)
+                if (index % statusStride == 0 && listener != null)
                 {
-                    Intent i = new Intent(FETCH_PROVIDER_STATUS);
-                    i.putExtra(FETCH_PROVIDER_STATUS, index / (float) elements.size());
-                    LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+                    listener.notifyProviderStatus(index / (float)elements.size());
                 }
             }
             provider.setFullyParsed(true);
-            getContentResolver().update(provider.uri(), provider.getContentValues(), null, null);
-            Intent i = new Intent(FETCH_PROVIDER_COMPLETE);
-            i.setData(provider.uri());
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+            context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null);
             Log.d("Fetch", "Iteration complete. Provider Fetched.");
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             // Shrug?
             throw new RuntimeException(e);
         }
+        return provider;
     }
 
     @Override
-    public void fetchSeries(Series series)
+    public Series fetchSeries(Series series)
     {
         try
         {
             if (series.isFullyParsed())
             {
                 Log.d("FetchSeries", "Already parsed. Ignoring");
-                return;
+                return series;
             }
             Connection.Response response = Jsoup.connect(series.getUrl())
                     .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
@@ -105,40 +101,46 @@ public class MangaPandaFetcher extends Fetcher
                     .execute();
             Document doc = response.parse();
             Elements elements = doc.select("td .chico_manga ~ a[href]");
-            float index = 1.0f;
+            float number = 1.0f;
+            final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
+            int index = 0;
             for (Element e : elements)
             {
                 Chapter c = new Chapter();
                 c.setSeriesId(series.getId());
                 c.setUrl(e.attr("abs:href"));
                 c.setName(e.parent().ownText().replace(":", ""));
-                c.setNumber(index++);
-                Uri inserted = getContentResolver().insert(Chapter.baseUri(), c.getContentValues());
+                c.setNumber(number++);
+                Uri inserted = context.getContentResolver().insert(Chapter.baseUri(), c.getContentValues());
                 Log.d("FetchSeries", "Inserted: " + inserted.toString());
                 Log.d("FetchSeries", "url: " + c.getUrl());
+                index++;
+                if (index % statusStride == 0 && listener != null)
+                {
+                    listener.notifySeriesStatus(index / (float)elements.size());
+                }
             }
             series.setFullyParsed(true);
-            getContentResolver().update(series.uri(), series.getContentValues(), null, null);
-            Intent i = new Intent(FETCH_SERIES_COMPLETE);
-            i.setData(series.uri());
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+            context.getContentResolver().update(series.uri(), series.getContentValues(), null, null);
             Log.d("FetchSeries", "Iteration complete. Series Fetched.");
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             // Panic? IDK what might cause this.
             throw new RuntimeException(e);
         }
+        return series;
     }
 
     @Override
-    public void fetchChapter(Chapter chapter)
+    public Chapter fetchChapter(Chapter chapter)
     {
         try
         {
             if (chapter.isFullyParsed())
             {
                 Log.d("FetchChapter", "Already parsed. Ignoring");
-                return;
+                return chapter;
             }
             Connection.Response response = Jsoup.connect(chapter.getUrl())
                     .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
@@ -147,39 +149,45 @@ public class MangaPandaFetcher extends Fetcher
                     .execute();
             Document doc = response.parse();
             Elements elements = doc.select("#pageMenu option[value]");
-            float index = 1.0f;
+            float number = 1.0f;
+            final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
+            int index = 0;
             for (Element e : elements)
             {
                 Page p = new Page();
                 p.setChapterId(chapter.getId());
                 p.setUrl(e.absUrl("value"));
-                p.setNumber(index++);
-                Uri inserted = getContentResolver().insert(Page.baseUri(), p.getContentValues());
+                p.setNumber(number++);
+                Uri inserted = context.getContentResolver().insert(Page.baseUri(), p.getContentValues());
                 Log.d("FetchChapter", "Inserted: " + inserted.toString());
                 Log.d("FetchChapter", "url: " + p.getUrl());
+                index++;
+                if (index % statusStride == 0 && listener != null)
+                {
+                    listener.notifyChapterStatus(index / (float)elements.size());
+                }
             }
             chapter.setFullyParsed(true);
-            getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null);
-            Intent i = new Intent(FETCH_CHAPTER_COMPLETE);
-            i.setData(chapter.uri());
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+            context.getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null);
             Log.d("FetchChapter", "Iteration complete. Chapter fetched");
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             // Panic? IDK what might cause this.
             throw new RuntimeException(e);
         }
+        return chapter;
     }
 
     @Override
-    public void fetchPage(Page page)
+    public Page fetchPage(Page page)
     {
         try
         {
             if (page.isFullyParsed())
             {
                 Log.d("FetchPage", "Already parsed. Ignoring");
-                return;
+                return page;
             }
             Connection.Response response = Jsoup.connect(page.getUrl())
                     .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
@@ -191,14 +199,13 @@ public class MangaPandaFetcher extends Fetcher
             page.setImageUrl(element.absUrl("src"));
             page.setFullyParsed(true);
             savePageImage(page);
-            Intent i = new Intent(FETCH_PAGE_COMPLETE);
-            i.setData(page.uri());
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
             Log.d("FetchPage", "Done");
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             // Panic? IDK what might cause this.
             throw new RuntimeException(e);
         }
+        return page;
     }
 }

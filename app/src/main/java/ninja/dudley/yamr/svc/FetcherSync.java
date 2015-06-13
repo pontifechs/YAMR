@@ -1,7 +1,6 @@
-package ninja.dudley.yamr.fetch;
+package ninja.dudley.yamr.svc;
 
-import android.app.IntentService;
-import android.content.Intent;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,59 +22,37 @@ import ninja.dudley.yamr.model.Series;
 /**
  * Created by mdudley on 5/19/15.
  */
-public abstract class Fetcher extends IntentService
+public abstract class FetcherSync
 {
-    public static final String BASE = "ninja.dudley.yamr.fetch.Fetcher";
-    public static final String FETCH_PROVIDER = BASE + ".FetchProvider";
-    public static final String FETCH_SERIES = BASE + ".FetchSeries" ;
-    public static final String FETCH_CHAPTER = BASE + ".FetchChapter";
-    public static final String FETCH_PAGE = BASE + ".FetchPage";
 
-    public static final String FETCH_PROVIDER_STATUS = FETCH_PROVIDER + ".Status";
-    public static final String FETCH_PROVIDER_COMPLETE = FETCH_PROVIDER + ".Complete";
-    public static final String FETCH_SERIES_STATUS = FETCH_SERIES + ".Status";
-    public static final String FETCH_SERIES_COMPLETE = FETCH_SERIES + ".Complete";
-    public static final String FETCH_CHAPTER_STATUS = FETCH_CHAPTER + ".Status";
-    public static final String FETCH_CHAPTER_COMPLETE = FETCH_CHAPTER + ".Complete";
-    public static final String FETCH_PAGE_COMPLETE = FETCH_CHAPTER + ".Complete";
+    protected Context context;
 
-    public Fetcher(String name)
+    public FetcherSync(Context context)
     {
-        super(name);
+        this.context = context;
     }
 
-    public abstract void fetchProvider(Provider provider);
-
-    public abstract void fetchSeries(Series series);
-
-    public abstract void fetchChapter(Chapter chapter);
-
-    public abstract void fetchPage(Page page);
-
-    @Override
-    protected void onHandleIntent(Intent intent)
+    public interface NotifyStatus
     {
-        Uri argument = intent.getData();
-        switch (intent.getAction())
-        {
-            case FETCH_PROVIDER:
-                Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
-                fetchProvider(p);
-                break;
-            case FETCH_SERIES:
-                Series s = new Series(getContentResolver().query(argument, null, null, null, null));
-                fetchSeries(s);
-                break;
-            case FETCH_CHAPTER:
-                Chapter c = new Chapter(getContentResolver().query(argument, null, null, null, null));
-                fetchChapter(c);
-                break;
-            case FETCH_PAGE:
-                Page page = new Page(getContentResolver().query(argument, null, null, null, null));
-                fetchPage(page);
-                break;
-        }
+        void notifyProviderStatus(float status);
+
+        void notifySeriesStatus(float status);
+
+        void notifyChapterStatus(float status);
     }
+    protected NotifyStatus listener;
+    public void register(NotifyStatus listener)
+    {
+        this.listener = listener;
+    }
+
+    public abstract Provider fetchProvider(Provider provider);
+
+    public abstract Series fetchSeries(Series series);
+
+    public abstract Chapter fetchChapter(Chapter chapter);
+
+    public abstract Page fetchPage(Page page);
 
     private static String stripBadCharsForFile(String file)
     {
@@ -94,11 +71,11 @@ public abstract class Fetcher extends IntentService
         }
     }
 
-    // TODO:: not a huge fan of this method
+    // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     protected void savePageImage(Page p)
     {
         Uri heritageQuery = p.uri().buildUpon().appendPath("heritage").build();
-        Cursor heritage = getContentResolver().query(heritageQuery, null, null, null, null);
+        Cursor heritage = context.getContentResolver().query(heritageQuery, null, null, null, null);
         heritage.moveToFirst();
 
         int providerNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME);
@@ -153,7 +130,7 @@ public abstract class Fetcher extends IntentService
             }
         }
         p.setImagePath(pagePath);
-        getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
+        context.getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
         heritage.close();
     }
 }

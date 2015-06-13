@@ -1,4 +1,4 @@
-package ninja.dudley.yamr.util;
+package ninja.dudley.yamr.ui.util;
 
 import android.content.res.Configuration;
 

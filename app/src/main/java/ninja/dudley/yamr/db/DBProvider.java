@@ -28,9 +28,11 @@ public class DBProvider extends ContentProvider
     private static final int SeriesChapters = 15;
     private static final int Chapter = 20;
     private static final int ChapterByID = 21;
+    private static final int ChapterBySeriesAndNumberRel = 22;
     private static final int ChapterPages = 25;
     private static final int Page = 30;
     private static final int PageByID = 31;
+    private static final int PageByChapterAndNumberRel = 32;
     private static final int PageHeritage = 39;
 
     static
@@ -43,16 +45,20 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/series", Series);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#", SeriesByID);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", SeriesChapters);
+        matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*", ChapterBySeriesAndNumberRel);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter", Chapter);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", ChapterByID);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", ChapterPages);
+        matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*", PageByChapterAndNumberRel);
         matcher.addURI(DBHelper.AUTHORITY, "/page", Page);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#", PageByID);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", PageHeritage);
     }
 
-    private static final int getId(int code, Uri uri)
+    private static int getId(int code, Uri uri)
     {
+        List<String> segments;
+        String idStr;
         switch (code)
         {
             case ProviderByID:
@@ -64,8 +70,13 @@ public class DBProvider extends ContentProvider
             case SeriesChapters:
             case ChapterPages:
             case PageHeritage:
-                List<String> segments = uri.getPathSegments();
-                String idStr = segments.get(segments.size() - 2);
+                segments = uri.getPathSegments();
+                idStr = segments.get(segments.size() - 2);
+                return Integer.parseInt(idStr);
+            case ChapterBySeriesAndNumberRel:
+            case PageByChapterAndNumberRel:
+                segments = uri.getPathSegments();
+                idStr = segments.get(segments.size() - 3);
                 return Integer.parseInt(idStr);
             default:
                 return -1;
@@ -114,6 +125,16 @@ public class DBProvider extends ContentProvider
                         null,
                         null
                 );
+            case ChapterBySeriesAndNumberRel:
+                float chapterNumber = Float.parseFloat(uri.getLastPathSegment());
+                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
+                        DBHelper.ChapterEntry.projection,
+                        DBHelper.ChapterEntry.COLUMN_SERIES_ID + "=? and " + DBHelper.ChapterEntry.COLUMN_NUMBER + selection + "?",
+                        new String[]{Integer.toString(getId(code, uri)), Float.toString(chapterNumber)},
+                        null,
+                        null,
+                        "1"
+                );
             case SeriesByID:
                 return db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
@@ -152,6 +173,16 @@ public class DBProvider extends ContentProvider
                         null,
                         null
                 );
+            case PageByChapterAndNumberRel:
+                float pageNumber = Float.parseFloat(uri.getLastPathSegment());
+                return db.query(DBHelper.PageEntry.TABLE_NAME,
+                        DBHelper.PageEntry.projection,
+                        DBHelper.PageEntry.COLUMN_CHAPTER_ID+ "=? and " + DBHelper.PageEntry.COLUMN_NUMBER + selection + "?",
+                        new String[]{Integer.toString(getId(code, uri)), Float.toString(pageNumber)},
+                        null,
+                        null,
+                        "1"
+                        );
             case PageByID:
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
                         DBHelper.PageEntry.projection,
