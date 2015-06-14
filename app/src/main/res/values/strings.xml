@@ -7,9 +7,9 @@
     <string name="title_activity_chapter_viewer">ChapterViewer</string>
     <string name="title_activity_page_viewer">PageViewer</string>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_reader">Reader</string>
+    <string name="title_activity_reader">Browse</string>
+    <string name="title_activity_main">YAMR</string>
+    <string name="title_activity_favorites">Favorites</string>
 
     <string name="hello_world">Hello world!</string>
 </resources>

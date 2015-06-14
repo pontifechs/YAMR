@@ -15,7 +15,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Chapter;
@@ -44,6 +46,11 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        // Go full-screen
+        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getActivity().getActionBar().hide();
+
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.fragment_page_viewer, container, false);
         fetchChapterCompleteReceiver = new BroadcastReceiver()
         {
@@ -60,6 +67,7 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
                 fetchPage.setAction(FetcherAsync.FETCH_PAGE);
                 fetchPage.setData(firstPage.uri());
                 getActivity().startService(fetchPage);
+                pages.close();
             }
         };
 
@@ -72,6 +80,8 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
                 TouchImageView imageView = (TouchImageView) getActivity().findViewById(R.id.imageView);
                 Drawable d = Drawable.createFromPath(page.getImagePath());
                 imageView.setImageDrawable(d);
+                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
+                loadingText.setVisibility(View.INVISIBLE);
             }
         };
 
@@ -102,7 +112,7 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
         }
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchChapterCompleteReceiver, chapterCompleteFilter);
         IntentFilter pageCompleteFilter = new IntentFilter();
-        pageCompleteFilter.addAction(FetcherAsync.FETCH_PAGE_COMPLETE) ;
+        pageCompleteFilter.addAction(FetcherAsync.FETCH_PAGE_COMPLETE);
         pageCompleteFilter.addAction(Paging.NEXT_PAGE_COMPLETE);
         pageCompleteFilter.addAction(Paging.PREV_PAGE_COMPLETE);
         try
@@ -124,6 +134,7 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
         super.onResume();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchChapterCompleteReceiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(loadPageCompleteReceiver);
+        getActivity().getActionBar().show();
     }
 
     @Override
@@ -135,6 +146,9 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             nextIntent.setAction(Paging.NEXT_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
+            TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
+            loadingText.setText("Loading next page");
+            loadingText.setVisibility(View.VISIBLE);
         }
     }
 
@@ -147,6 +161,9 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             nextIntent.setAction(Paging.PREV_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
+            TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
+            loadingText.setText("Loading previous page");
+            loadingText.setVisibility(View.VISIBLE);
         }
     }
 }

@@ -108,10 +108,25 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case ProviderSeries:
+                String querySelection = DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?";
+                if (selection != null)
+                {
+                    querySelection += " and " + selection;
+                }
+                String[] querySelectionArgs;
+                if (selectionArgs == null)
+                {
+                    querySelectionArgs = new String[]{Integer.toString(getId(code, uri))};
+                }
+                else
+                {
+                    querySelectionArgs = new String[]{Integer.toString(getId(code, uri)), selectionArgs[0]};
+                }
+
                 return db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
-                        DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?",
-                        new String[]{Integer.toString(getId(code, uri))},
+                        querySelection,
+                        querySelectionArgs,
                         null,
                         null,
                         null

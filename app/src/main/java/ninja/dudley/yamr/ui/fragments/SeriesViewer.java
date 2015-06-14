@@ -3,6 +3,7 @@ package ninja.dudley.yamr.ui.fragments;
 import android.app.Activity;
 import android.app.ListFragment;
 import android.app.LoaderManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -10,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -41,6 +41,8 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
 
     private LoadChapter parent;
 
+    private ProgressDialog loading;
+
     public static final String ArgumentKey = "series";
 
     @Override
@@ -60,9 +62,8 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                float percent = intent.getFloatExtra(FetcherAsync.FETCH_PROVIDER_STATUS, 0.0f);
-                int grey = (int) (percent * 255);
-                getListView().setBackgroundColor(Color.argb(255, grey, grey, grey));
+                float percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_SERIES_STATUS, 0.0f);
+                loading.setProgress((int)percent);
             }
         };
 
@@ -73,6 +74,10 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
             {
                 getLoaderManager().restartLoader(0, null, SeriesViewer.this);
                 adapter.notifyDataSetChanged();
+                if (loading != null)
+                {
+                    loading.dismiss();
+                }
             }
         };
 
@@ -101,6 +106,13 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
 
         getLoaderManager().initLoader(0, null, this);
 
+        if (!series.isFullyParsed())
+        {
+            loading = new ProgressDialog(getActivity());
+            loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            loading.setTitle("Loading Chapters for " + series.getName());
+            loading.show();
+        }
         return layout;
     }
 

@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="ninja.dudley.yamr.ninja.dudley.yamr.ui.activities.Reader">
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/ic_search_white_48dp"
+        android:orderInCategory="1"
+        android:title="Search"
+        android:showAsAction="ifRoom"
+        />
+</menu>

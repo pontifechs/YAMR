@@ -17,7 +17,6 @@ import ninja.dudley.yamr.ui.util.OrientationAware;
 
 public class Reader extends Activity implements LoadSeries, LoadChapter, OrientationAware.I
 {
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {

@@ -125,16 +125,28 @@ public class TouchImageView extends ImageView
 
     private int horizontalSlop()
     {
+        if (getDrawable() == null)
+        {
+            return 0;
+        }
         return (int) Math.max(0.0f, (getDrawable().getIntrinsicWidth() * scale) - screenWidth());
     }
 
     private int verticalSlop()
     {
+        if (getDrawable() == null)
+        {
+            return 0;
+        }
         return (int) Math.max(0.0f, (getDrawable().getIntrinsicHeight() * scale) - screenHeight());
     }
 
     private float minScale()
     {
+        if (getDrawable() == null)
+        {
+            return 1.0f;
+        }
         return screenWidth() / (float) getDrawable().getIntrinsicWidth();
     }
 

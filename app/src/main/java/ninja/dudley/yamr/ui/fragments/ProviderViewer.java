@@ -1,9 +1,9 @@
 package ninja.dudley.yamr.ui.fragments;
 
 import android.app.Activity;
-import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.app.LoaderManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -14,13 +14,18 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.coms.LoadSeries;
@@ -29,7 +34,8 @@ import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
 
-public class ProviderViewer extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>
+public class ProviderViewer extends ListFragment
+        implements LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
 {
     private SimpleCursorAdapter adapter;
 
@@ -38,7 +44,9 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
 
     private LoadSeries parent;
 
-    private LoadingDialog loading;
+    private ProgressDialog loading;
+
+    private String filter;
 
     @Override
     public void onAttach(Activity activity)
@@ -51,6 +59,8 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        setHasOptionsMenu(true);
+
         LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_provider_viewer, container, false);
 
         fetchStatusReceiver = new BroadcastReceiver()
@@ -59,8 +69,7 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
             public void onReceive(Context context, Intent intent)
             {
                 float percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_PROVIDER_STATUS, 0.0f);
-                ProgressBar bar = (ProgressBar)loading.getView().findViewById(R.id.loading_progress);
-                bar.setProgress((int)percent);
+                loading.setProgress((int) percent);
             }
         };
 
@@ -71,6 +80,7 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
             {
                 getLoaderManager().restartLoader(0, null, ProviderViewer.this);
                 adapter.notifyDataSetChanged();
+                loading.dismiss();
             }
         };
 
@@ -90,8 +100,10 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
         setListAdapter(adapter);
 
         getLoaderManager().initLoader(0, null, this);
-        loading = LoadingDialog.newInstance();
-        loading.show(getFragmentManager(), "loading");
+        loading = new ProgressDialog(getActivity());
+        loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        loading.setTitle("Loading Series");
+        loading.show();
         return layout;
     }
 
@@ -122,17 +134,53 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
+        inflater.inflate(R.menu.menu_provider_viewer, menu);
+        SearchView sv = new SearchView(getActivity());
+        sv.setOnQueryTextListener(this);
+        menu.findItem(R.id.search).setActionView(sv);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.search:
+                Toast.makeText(getActivity(), "Searching?", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args)
     {
         Uri mangaPandaSeries = Provider.uri(1).buildUpon().appendPath("series").build();
-        return new CursorLoader(
-                getActivity(),
-                mangaPandaSeries,
-                null,
-                null,
-                null,
-                null
-        );
+        if (filter == null)
+        {
+            return new CursorLoader(
+                    getActivity(),
+                    mangaPandaSeries,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+        else
+        {
+            return new CursorLoader(
+                    getActivity(),
+                    mangaPandaSeries,
+                    null,
+                    DBHelper.SeriesEntry.COLUMN_NAME + " like ?",
+                    new String[]{'%' + filter + '%'},
+                    null
+            );
+        }
     }
 
     @Override
@@ -151,9 +199,20 @@ public class ProviderViewer extends ListFragment implements LoaderManager.Loader
     public void onListItemClick(ListView l, View v, int position, long id)
     {
         super.onListItemClick(l, v, position, id);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-
         parent.loadSeries(Series.uri((int) id));
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String query)
+    {
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText)
+    {
+        filter = !TextUtils.isEmpty(newText) ? newText : null;
+        getLoaderManager().restartLoader(0, null, this);
+        return true;
+    }
 }
