@@ -41,6 +41,7 @@ public class Chapter extends MangaElement
         seriesId = c.getInt(seriesIdCol);
         name = c.getString(nameCol);
         number = c.getFloat(numberCol);
+        c.close();
     }
 
     @Override

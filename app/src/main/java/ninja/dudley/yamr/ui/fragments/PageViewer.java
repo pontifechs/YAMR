@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,19 +21,19 @@ import android.widget.TextView;
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
-import ninja.dudley.yamr.svc.FetcherAsync;
-import ninja.dudley.yamr.svc.Paging;
+import ninja.dudley.yamr.svc.Navigation;
 import ninja.dudley.yamr.ui.util.TouchImageView;
 
-public class PageViewer extends Fragment implements TouchImageView.SwipeListener
+public class PageViewer extends Fragment
+        implements TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
 
     public static final String ChapterArgumentKey = "chapter";
+    public static final String BookmarkArgumentKey = "bookmark";
 
     private Chapter chapter;
     private Page page;
 
-    private BroadcastReceiver fetchChapterCompleteReceiver;
     private BroadcastReceiver loadPageCompleteReceiver;
 
     @Override
@@ -52,24 +51,6 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
         getActivity().getActionBar().hide();
 
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.fragment_page_viewer, container, false);
-        fetchChapterCompleteReceiver = new BroadcastReceiver()
-        {
-            @Override
-            public void onReceive(Context context, Intent intent)
-            {
-                chapter = new Chapter(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
-
-                Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
-                Cursor pages = getActivity().getContentResolver().query(pagesQuery, null, null, null, null);
-                Page firstPage = new Page(pages);
-
-                Intent fetchPage = new Intent(getActivity(), FetcherAsync.class);
-                fetchPage.setAction(FetcherAsync.FETCH_PAGE);
-                fetchPage.setData(firstPage.uri());
-                getActivity().startService(fetchPage);
-                pages.close();
-            }
-        };
 
         loadPageCompleteReceiver = new BroadcastReceiver()
         {
@@ -87,12 +68,29 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
 
         TouchImageView imageView = (TouchImageView) layout.findViewById(R.id.imageView);
         imageView.register(this);
+        imageView.setOnClickListener(this);
 
-        Intent fetchChapter = new Intent(getActivity(), FetcherAsync.class);
-        fetchChapter.setAction(FetcherAsync.FETCH_CHAPTER);
-        Uri chapterUri = getArguments().getParcelable(ChapterArgumentKey);
-        fetchChapter.setData(chapterUri);
-        getActivity().startService(fetchChapter);
+
+        if (getArguments().getParcelable(ChapterArgumentKey) != null)
+        {
+            Intent fetchChapter = new Intent(getActivity(), Navigation.class);
+            fetchChapter.setAction(Navigation.FIRST_PAGE_FROM_CHAPTER);
+            Uri chapterUri = getArguments().getParcelable(ChapterArgumentKey);
+            fetchChapter.setData(chapterUri);
+            getActivity().startService(fetchChapter);
+        }
+        else if (getArguments().getParcelable(BookmarkArgumentKey) != null)
+        {
+            Intent fetchPage = new Intent(getActivity(), Navigation.class);
+            fetchPage.setAction(Navigation.PAGE_FROM_BOOKMARK);
+            Uri bookmarkUri = getArguments().getParcelable(BookmarkArgumentKey);
+            fetchPage.setData(bookmarkUri);
+            getActivity().startService(fetchPage);
+        }
+        else
+        {
+            throw new AssertionError("No Chapter or Bookmark argument. Check your intent's arguments");
+        }
         return layout;
     }
 
@@ -100,21 +98,11 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     public void onResume()
     {
         super.onPause();
-        IntentFilter chapterCompleteFilter = new IntentFilter(FetcherAsync.FETCH_CHAPTER_COMPLETE);
-        try
-        {
-            chapterCompleteFilter.addDataType(getActivity().getContentResolver().getType(Chapter.baseUri()));
-        }
-        catch (IntentFilter.MalformedMimeTypeException e)
-        {
-            // I'm a little more OK with this, as Provider.baseUri() is static.
-            throw new AssertionError(e);
-        }
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchChapterCompleteReceiver, chapterCompleteFilter);
         IntentFilter pageCompleteFilter = new IntentFilter();
-        pageCompleteFilter.addAction(FetcherAsync.FETCH_PAGE_COMPLETE);
-        pageCompleteFilter.addAction(Paging.NEXT_PAGE_COMPLETE);
-        pageCompleteFilter.addAction(Paging.PREV_PAGE_COMPLETE);
+        pageCompleteFilter.addAction(Navigation.FIRST_PAGE_FROM_CHAPTER_COMPLETE);
+        pageCompleteFilter.addAction(Navigation.NEXT_PAGE_COMPLETE);
+        pageCompleteFilter.addAction(Navigation.PREV_PAGE_COMPLETE);
+        pageCompleteFilter.addAction(Navigation.PAGE_FROM_BOOKMARK_COMPLETE);
         try
         {
             pageCompleteFilter.addDataType(getActivity().getContentResolver().getType(Page.baseUri()));
@@ -132,7 +120,6 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     public void onPause()
     {
         super.onResume();
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchChapterCompleteReceiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(loadPageCompleteReceiver);
         getActivity().getActionBar().show();
     }
@@ -142,8 +129,8 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     {
         if (page != null)
         {
-            Intent nextIntent = new Intent(getActivity(), Paging.class);
-            nextIntent.setAction(Paging.NEXT_PAGE);
+            Intent nextIntent = new Intent(getActivity(), Navigation.class);
+            nextIntent.setAction(Navigation.NEXT_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
             TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
@@ -157,14 +144,34 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     {
         if (page != null)
         {
-            Intent nextIntent = new Intent(getActivity(), Paging.class);
-            nextIntent.setAction(Paging.PREV_PAGE);
+            Intent nextIntent = new Intent(getActivity(), Navigation.class);
+            nextIntent.setAction(Navigation.PREV_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
             TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
             loadingText.setText("Loading previous page");
             loadingText.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        onSwipeLeft();
+    }
+
+    @Override
+    public boolean onLongClick(View v)
+    {
+        if (getActivity().getActionBar().isShowing())
+        {
+            getActivity().getActionBar().hide();
+        }
+        else
+        {
+            getActivity().getActionBar().show();
+        }
+        return true;
     }
 }
 

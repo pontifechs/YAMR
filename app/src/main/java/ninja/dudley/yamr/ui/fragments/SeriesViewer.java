@@ -15,6 +15,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -55,6 +58,8 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        setHasOptionsMenu(true);
+
         LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_series_viewer, container, false);
 
         fetchStatusReceiver = new BroadcastReceiver()
@@ -78,6 +83,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
                 {
                     loading.dismiss();
                 }
+                getActivity().invalidateOptionsMenu();
             }
         };
 
@@ -128,7 +134,6 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
         }
         catch (IntentFilter.MalformedMimeTypeException e)
         {
-            // I'm a little more OK with this, as Provider.baseUri() is static.
             throw new AssertionError(e);
         }
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchCompleteReceiver, completeFilter);
@@ -140,6 +145,38 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
         super.onPause();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchStatusReceiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchCompleteReceiver);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
+        inflater.inflate(R.menu.menu_series_viewer, menu);
+        if (series != null && series.isFavorite())
+        {
+            menu.findItem(R.id.favorite).setIcon(R.drawable.ic_favorite_border_white_48dp);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.favorite:
+                if (series.isFavorite())
+                {
+                    series.setFavorite(false);
+                }
+                else
+                {
+                    series.setFavorite(true);
+                }
+                getActivity().getContentResolver().update(series.uri(), series.getContentValues(), null, null);
+                getActivity().invalidateOptionsMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

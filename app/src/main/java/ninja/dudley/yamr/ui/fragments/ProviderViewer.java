@@ -25,7 +25,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.Toast;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.coms.LoadSeries;
@@ -137,9 +136,9 @@ public class ProviderViewer extends ListFragment
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
         inflater.inflate(R.menu.menu_provider_viewer, menu);
-        SearchView sv = new SearchView(getActivity());
+        MenuItem item = menu.findItem(R.id.search);
+        SearchView sv = (SearchView) item.getActionView();
         sv.setOnQueryTextListener(this);
-        menu.findItem(R.id.search).setActionView(sv);
     }
 
     @Override
@@ -148,7 +147,6 @@ public class ProviderViewer extends ListFragment
         switch (item.getItemId())
         {
             case R.id.search:
-                Toast.makeText(getActivity(), "Searching?", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

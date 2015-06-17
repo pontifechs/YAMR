@@ -41,6 +41,7 @@ public class Page extends MangaElement
         number = c.getFloat(numberCol);
         imageUrl = c.getString(imageUrlCol);
         imagePath = c.getString(imagePathCol);
+        c.close();
     }
 
     @Override

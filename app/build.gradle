@@ -13,7 +13,7 @@ android {
     buildToolsVersion "22.0.1"
     defaultConfig {
         applicationId "ninja.dudley.yamr"
-        minSdkVersion 19
+        minSdkVersion 22
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -28,11 +28,13 @@ android {
             signingConfig signingConfigs.config
         }
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.android.support:support-v4:22.1.1'
     compile 'org.jsoup:jsoup:1.7.2'
     testCompile 'junit:junit:4.12'

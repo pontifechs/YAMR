@@ -31,6 +31,7 @@ public class Provider extends MangaElement
         super(c);
         int nameCol = c.getColumnIndex(DBHelper.ProviderEntry.COLUMN_NAME);
         name = c.getString(nameCol);
+        c.close();
     }
 
     @Override

@@ -3,6 +3,8 @@ package ninja.dudley.yamr.model;
 import android.content.ContentValues;
 import android.database.Cursor;
 
+import java.util.NoSuchElementException;
+
 import ninja.dudley.yamr.db.DBHelper;
 
 /**
@@ -19,6 +21,11 @@ public class MangaElement
     // Provider IO
     public MangaElement(Cursor c)
     {
+        if (c.getCount() <= 0)
+        {
+            c.close();
+            throw new NoSuchElementException("Empty Cursor!");
+        }
         c.moveToFirst();
         int _idCol = c.getColumnIndex(DBHelper.MangaElementEntry._ID);
         int urlCol = c.getColumnIndex(DBHelper.MangaElementEntry.COLUMN_URL);
@@ -26,6 +33,7 @@ public class MangaElement
         _id = c.getInt(_idCol);
         url = c.getString(urlCol);
         fullyParsed = c.getInt(fullyParsedCol) > 0;
+        // Can't close yet, others need the cursor still
     }
 
     public ContentValues getContentValues()

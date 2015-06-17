@@ -18,6 +18,7 @@ public class Series extends MangaElement
 
     private String name;
     private List<Chapter> chapters;
+    private boolean favorite = false;
 
     public static Uri baseUri()
     {
@@ -37,8 +38,11 @@ public class Series extends MangaElement
         super(c);
         int providerIdCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
         int nameCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_NAME);
+        int favoriteCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_FAVORITE);
         providerId = c.getInt(providerIdCol);
         name = c.getString(nameCol);
+        favorite = c.getInt(favoriteCol) > 0;
+        c.close();
     }
 
     @Override
@@ -47,6 +51,7 @@ public class Series extends MangaElement
         ContentValues values = super.getContentValues();
         values.put(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID, providerId);
         values.put(DBHelper.SeriesEntry.COLUMN_NAME, name);
+        values.put(DBHelper.SeriesEntry.COLUMN_FAVORITE, favorite);
         return values;
     }
 
@@ -83,5 +88,15 @@ public class Series extends MangaElement
     public void setChapters(List<Chapter> chapters)
     {
         this.chapters = chapters;
+    }
+
+    public boolean isFavorite()
+    {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite)
+    {
+        this.favorite = favorite;
     }
 }

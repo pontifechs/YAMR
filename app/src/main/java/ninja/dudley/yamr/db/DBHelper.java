@@ -53,12 +53,14 @@ public class DBHelper extends SQLiteOpenHelper
         public static final SQLite3Types COLUMN_NAME_TYPE = SQLite3Types.Text;
         public static final String COLUMN_PROVIDER_ID = "provider_id";
         public static final SQLite3Types COLUMN_PROVIDER_ID_TYPE = SQLite3Types.Integer;
+        public static final String COLUMN_FAVORITE = "favorite";
+        public static final SQLite3Types COLUMN_FAVORITE_TYPE = SQLite3Types.Integer;
 
         public static final String[] projection;
 
         static
         {
-            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_PROVIDER_ID};
+            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_PROVIDER_ID, COLUMN_FAVORITE};
         }
     }
 
@@ -125,6 +127,25 @@ public class DBHelper extends SQLiteOpenHelper
         }
     }
 
+    public static abstract class BookmarkEntry implements BaseColumns
+    {
+        public static final String TABLE_NAME = "bookmark";
+
+        public static final String COLUMN_SERIES_ID = "series_id";
+        public static final SQLite3Types COLUMN_SERIES_ID_TYPE = SQLite3Types.Integer;
+        public static final String COLUMN_PAGE_ID = "progress_page_id";
+        public static final SQLite3Types COLUMN_PAGE_ID_TYPE = SQLite3Types.Integer;
+        public static final String COLUMN_NOTE = "note";
+        public static final SQLite3Types COLUMN_NOTE_TYPE = SQLite3Types.Text;
+
+        public static final String[] projection;
+
+        static
+        {
+            projection = new String[]{_ID, COLUMN_SERIES_ID, COLUMN_PAGE_ID, COLUMN_NOTE};
+        }
+    }
+
 
     private static String mangaElementColumns()
     {
@@ -186,9 +207,10 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(providerCreate);
 
         String seriesCreate = "CREATE TABLE " + SeriesEntry.TABLE_NAME + " (" +
-               mangaElementColumns() +
+                mangaElementColumns() +
                 makeColumn(SeriesEntry.COLUMN_NAME, SeriesEntry.COLUMN_NAME_TYPE) +
                 makeColumn(SeriesEntry.COLUMN_PROVIDER_ID, SeriesEntry.COLUMN_PROVIDER_ID_TYPE) +
+                makeColumn(SeriesEntry.COLUMN_FAVORITE, SeriesEntry.COLUMN_FAVORITE_TYPE) +
                 makeForeignKey(SeriesEntry.COLUMN_PROVIDER_ID, ProviderEntry.TABLE_NAME, ProviderEntry._ID) +
                 uniqueConstraint() +
                 ")";
@@ -227,6 +249,16 @@ public class DBHelper extends SQLiteOpenHelper
                 ;
         db.execSQL(pageHeritageView);
 
+        String bookmarksCreate = "CREATE TABLE " + BookmarkEntry.TABLE_NAME + " (" +
+                BookmarkEntry._ID + " INTEGER PRIMARY KEY, " +
+                makeColumn(BookmarkEntry.COLUMN_SERIES_ID, BookmarkEntry.COLUMN_SERIES_ID_TYPE) +
+                makeColumn(BookmarkEntry.COLUMN_PAGE_ID, BookmarkEntry.COLUMN_PAGE_ID_TYPE) +
+                makeColumn(BookmarkEntry.COLUMN_NOTE, BookmarkEntry.COLUMN_NOTE_TYPE) +
+                makeForeignKey(BookmarkEntry.COLUMN_SERIES_ID, SeriesEntry.TABLE_NAME, SeriesEntry._ID) +
+                makeForeignKey(BookmarkEntry.COLUMN_PAGE_ID, PageEntry.TABLE_NAME, PageEntry._ID, false) +
+                ")";
+        db.execSQL(bookmarksCreate);
+
         db.execSQL("INSERT INTO provider (url, name) values (\"http://www.mangapanda.com/alphabetical\", \"MangaPanda\")");
     }
 
@@ -237,6 +269,7 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL("DROP TABLE IF EXISTS " + ChapterEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SeriesEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ProviderEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + BookmarkEntry.TABLE_NAME);
         onCreate(db);
     }
 
