@@ -26,7 +26,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.coms.LoadChapter;
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Series;
@@ -35,6 +34,8 @@ import ninja.dudley.yamr.svc.FetcherAsync;
 
 public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>
 {
+    public static final String ArgumentKey = "series";
+
     private Series series;
 
     private SimpleCursorAdapter adapter;
@@ -42,12 +43,14 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
     private BroadcastReceiver fetchStatusReceiver;
     private BroadcastReceiver fetchCompleteReceiver;
 
-    private LoadChapter parent;
-
     private ProgressDialog loading;
 
-    public static final String ArgumentKey = "series";
+    public interface LoadChapter
+    {
+        void loadChapter(Uri chapter);
+    }
 
+    private LoadChapter parent;
     @Override
     public void onAttach(Activity activity)
     {
@@ -84,6 +87,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
                     loading.dismiss();
                 }
                 getActivity().invalidateOptionsMenu();
+                series = new Series(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
             }
         };
 

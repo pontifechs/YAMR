@@ -8,14 +8,12 @@ import android.os.Bundle;
 import android.widget.RelativeLayout;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.coms.LoadChapter;
-import ninja.dudley.yamr.coms.LoadSeries;
 import ninja.dudley.yamr.ui.fragments.PageViewer;
 import ninja.dudley.yamr.ui.fragments.ProviderViewer;
 import ninja.dudley.yamr.ui.fragments.SeriesViewer;
 import ninja.dudley.yamr.ui.util.OrientationAware;
 
-public class Reader extends Activity implements LoadSeries, LoadChapter, OrientationAware.I
+public class Reader extends Activity implements ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, OrientationAware.I
 {
     @Override
     protected void onCreate(Bundle savedInstanceState)

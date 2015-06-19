@@ -1,6 +1,5 @@
 package ninja.dudley.yamr.ui.fragments;
 
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
@@ -19,10 +18,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.model.Chapter;
+import ninja.dudley.yamr.model.Bookmark;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.svc.Navigation;
 import ninja.dudley.yamr.ui.util.TouchImageView;
+import ninja.dudley.yamr.util.ProgressTracker;
 
 public class PageViewer extends Fragment
         implements TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
@@ -31,8 +31,9 @@ public class PageViewer extends Fragment
     public static final String ChapterArgumentKey = "chapter";
     public static final String BookmarkArgumentKey = "bookmark";
 
-    private Chapter chapter;
     private Page page;
+    private Bookmark bookmark;
+    private ProgressTracker progressTracker;
 
     private BroadcastReceiver loadPageCompleteReceiver;
 
@@ -63,13 +64,26 @@ public class PageViewer extends Fragment
                 imageView.setImageDrawable(d);
                 TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
                 loadingText.setVisibility(View.INVISIBLE);
+
+                if (bookmark != null)
+                {
+                    if (progressTracker == null)
+                    {
+                        bookmark = new Bookmark(getActivity().getContentResolver().query(bookmark.uri(), null, null, null, null));
+                        progressTracker = new ProgressTracker(getActivity().getContentResolver(), bookmark);
+                        progressTracker.handleNextPage(page);
+                    }
+                    else
+                    {
+                        progressTracker.handleNextPage(page);
+                    }
+                }
             }
         };
 
         TouchImageView imageView = (TouchImageView) layout.findViewById(R.id.imageView);
         imageView.register(this);
         imageView.setOnClickListener(this);
-
 
         if (getArguments().getParcelable(ChapterArgumentKey) != null)
         {
@@ -86,6 +100,7 @@ public class PageViewer extends Fragment
             Uri bookmarkUri = getArguments().getParcelable(BookmarkArgumentKey);
             fetchPage.setData(bookmarkUri);
             getActivity().startService(fetchPage);
+            bookmark = new Bookmark(Integer.parseInt(bookmarkUri.getLastPathSegment()));
         }
         else
         {

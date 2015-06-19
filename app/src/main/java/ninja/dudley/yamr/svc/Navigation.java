@@ -121,7 +121,6 @@ public class Navigation extends IntentService
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
     }
 
-
     private Page page(Uri uri)
     {
         return new Page(getContentResolver().query(uri, null, null, null, null));

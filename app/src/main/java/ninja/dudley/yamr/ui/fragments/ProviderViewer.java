@@ -27,7 +27,6 @@ import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.coms.LoadSeries;
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
@@ -41,12 +40,16 @@ public class ProviderViewer extends ListFragment
     private BroadcastReceiver fetchStatusReceiver;
     private BroadcastReceiver fetchCompleteReceiver;
 
-    private LoadSeries parent;
-
     private ProgressDialog loading;
 
     private String filter;
 
+    public interface LoadSeries
+    {
+        void loadSeries(Uri series);
+    }
+
+    private LoadSeries parent;
     @Override
     public void onAttach(Activity activity)
     {
