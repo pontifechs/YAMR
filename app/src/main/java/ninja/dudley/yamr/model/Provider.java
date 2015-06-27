@@ -12,6 +12,7 @@ import ninja.dudley.yamr.db.DBHelper;
 public class Provider extends MangaElement
 {
     private String name;
+    private String newUrl;
 
     public static Uri baseUri()
     {
@@ -30,7 +31,9 @@ public class Provider extends MangaElement
     {
         super(c);
         int nameCol = c.getColumnIndex(DBHelper.ProviderEntry.COLUMN_NAME);
+        int newUrlCol = c.getColumnIndex(DBHelper.ProviderEntry.COLUMN_NEW_URL);
         name = c.getString(nameCol);
+        newUrl = c.getString(newUrlCol);
         c.close();
     }
 
@@ -55,5 +58,15 @@ public class Provider extends MangaElement
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getNewUrl()
+    {
+        return newUrl;
+    }
+
+    public void setNewUrl(String newUrl)
+    {
+        this.newUrl = newUrl;
     }
 }

@@ -18,10 +18,13 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
 {
     public static final String BASE = "ninja.dudley.yamr.fetch.FetcherSync";
 
+    public static final String FETCH_BEHAVIOR = BASE + ".FetchBehavior";
+
     public static final String FETCH_PROVIDER = BASE + ".FetchProvider";
     public static final String FETCH_SERIES = BASE + ".FetchSeries";
     public static final String FETCH_CHAPTER = BASE + ".FetchChapter";
     public static final String FETCH_PAGE = BASE + ".FetchPage";
+    public static final String FETCH_NEW = BASE + ".FetchNew";
 
     public static final String FETCH_PROVIDER_STATUS = FETCH_PROVIDER + ".Status";
     public static final String FETCH_PROVIDER_COMPLETE = FETCH_PROVIDER + ".Complete";
@@ -30,6 +33,7 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
     public static final String FETCH_CHAPTER_STATUS = FETCH_CHAPTER + ".Status";
     public static final String FETCH_CHAPTER_COMPLETE = FETCH_CHAPTER + ".Complete";
     public static final String FETCH_PAGE_COMPLETE = FETCH_CHAPTER + ".Complete";
+    public static final String FETCH_NEW_COMPLETE = FETCH_NEW + ".Complete";
 
     public FetcherAsync()
     {
@@ -43,37 +47,66 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
         FetcherSync fetcher = new MangaPandaFetcher(getBaseContext());
         fetcher.register(this);
         Uri argument = intent.getData();
-        Intent complete;
+
+        FetcherSync.FetchBehavior behavior;
+        try
+        {
+            behavior = FetcherSync.FetchBehavior.valueOf(intent.getStringExtra(FETCH_BEHAVIOR));
+        }
+        catch (IllegalArgumentException e)
+        {
+            behavior = FetcherSync.FetchBehavior.LazyFetch;
+        }
+        catch (NullPointerException e)
+        {
+            behavior = FetcherSync.FetchBehavior.LazyFetch;
+        }
+
         switch (intent.getAction())
         {
             case FETCH_PROVIDER:
+            {
                 Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
-                fetcher.fetchProvider(p);
-                complete = new Intent(FETCH_PROVIDER_COMPLETE);
+                fetcher.fetchProvider(p, behavior);
+                Intent complete = new Intent(FETCH_PROVIDER_COMPLETE);
                 complete.setData(p.uri());
                 LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
                 break;
+            }
             case FETCH_SERIES:
+            {
                 Series s = new Series(getContentResolver().query(argument, null, null, null, null));
-                fetcher.fetchSeries(s);
-                complete = new Intent(FETCH_SERIES_COMPLETE);
+                fetcher.fetchSeries(s, behavior);
+                Intent complete = new Intent(FETCH_SERIES_COMPLETE);
                 complete.setData(s.uri());
                 LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
                 break;
+            }
             case FETCH_CHAPTER:
+            {
                 Chapter c = new Chapter(getContentResolver().query(argument, null, null, null, null));
-                fetcher.fetchChapter(c);
-                complete = new Intent(FETCH_CHAPTER_COMPLETE);
+                fetcher.fetchChapter(c, behavior);
+                Intent complete = new Intent(FETCH_CHAPTER_COMPLETE);
                 complete.setData(c.uri());
                 LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
                 break;
+            }
             case FETCH_PAGE:
+            {
                 Page page = new Page(getContentResolver().query(argument, null, null, null, null));
-                fetcher.fetchPage(page);
-                complete = new Intent(FETCH_PAGE_COMPLETE);
+                fetcher.fetchPage(page, behavior);
+                Intent complete = new Intent(FETCH_PAGE_COMPLETE);
                 complete.setData(page.uri());
                 LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
                 break;
+            }
+
+            case FETCH_NEW:
+            {
+                Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
+                fetcher.fetchNew(p);
+                break;
+            }
         }
     }
 

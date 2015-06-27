@@ -6,16 +6,11 @@
     tools:context="ninja.dudley.yamr.ui.fragments.SeriesViewer"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/textView" />
-
     <ListView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@android:id/list"
         >
     </ListView>
+
 </LinearLayout>

@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.fragments;
 
 import android.app.Activity;
+import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.app.ProgressDialog;
@@ -20,16 +21,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
+import ninja.dudley.yamr.svc.FetcherSync;
 
 
 public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>
@@ -44,6 +46,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
     private BroadcastReceiver fetchCompleteReceiver;
 
     private ProgressDialog loading;
+
 
     public interface LoadChapter
     {
@@ -64,6 +67,9 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
         setHasOptionsMenu(true);
 
         LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_series_viewer, container, false);
+        ListView list = (ListView) layout.findViewById(android.R.id.list);
+        FrameLayout headerContainer = (FrameLayout) inflater.inflate(R.layout.list_header_container, null);
+        list.addHeaderView(headerContainer);
 
         fetchStatusReceiver = new BroadcastReceiver()
         {
@@ -88,6 +94,11 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
                 }
                 getActivity().invalidateOptionsMenu();
                 series = new Series(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
+
+                SeriesCard card = SeriesCard.newInstance(series);
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                transaction.replace(R.id.list_header_container, card);
+                transaction.commit();
             }
         };
 
@@ -95,14 +106,15 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
 
         series = new Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null));
 
+        SeriesCard seriesCard = SeriesCard.newInstance(series);
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.list_header_container, seriesCard);
+        transaction.commit();
+
         Intent fetchSeries = new Intent(getActivity(), FetcherAsync.class);
         fetchSeries.setAction(FetcherAsync.FETCH_SERIES);
         fetchSeries.setData(series.uri());
         getActivity().startService(fetchSeries);
-
-
-        TextView title = (TextView) layout.findViewById(R.id.textView);
-        title.setText(series.getName());
 
         adapter = new SimpleCursorAdapter(
                 getActivity(),
@@ -116,11 +128,11 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
 
         getLoaderManager().initLoader(0, null, this);
 
+        loading = new ProgressDialog(getActivity());
+        loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        loading.setTitle("Loading Chapters for " + series.getName());
         if (!series.isFullyParsed())
         {
-            loading = new ProgressDialog(getActivity());
-            loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            loading.setTitle("Loading Chapters for " + series.getName());
             loading.show();
         }
         return layout;
@@ -177,6 +189,15 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
                 }
                 getActivity().getContentResolver().update(series.uri(), series.getContentValues(), null, null);
                 getActivity().invalidateOptionsMenu();
+                return true;
+            case R.id.refresh:
+                Intent i = new Intent(getActivity(), FetcherAsync.class);
+                i.setAction(FetcherAsync.FETCH_SERIES);
+                i.setData(series.uri());
+                i.putExtra(FetcherAsync.FETCH_BEHAVIOR, FetcherSync.FetchBehavior.ForceRefresh.toString());
+                getActivity().startService(i);
+                loading.setProgress(0);
+                loading.show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

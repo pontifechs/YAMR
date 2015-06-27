@@ -4,7 +4,14 @@
         android:id="@+id/favorite"
         android:icon="@drawable/ic_favorite_white_48dp"
         android:orderInCategory="1"
-        android:title="Favorite"
         android:showAsAction="ifRoom"
+        android:title="Favorite"
+        />
+    <item
+        android:id="@+id/refresh"
+        android:icon="@drawable/ic_autorenew_white_48dp"
+        android:orderInCategory="2"
+        android:showAsAction="ifRoom"
+        android:title="Refresh"
         />
 </menu>

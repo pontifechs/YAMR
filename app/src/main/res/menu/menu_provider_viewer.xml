@@ -3,10 +3,17 @@
       tools:context="ninja.dudley.yamr.ninja.dudley.yamr.ui.activities.Reader">
     <item
         android:id="@+id/search"
+        android:actionViewClass="android.widget.SearchView"
         android:icon="@drawable/ic_search_white_48dp"
         android:orderInCategory="1"
-        android:title="Search"
         android:showAsAction="ifRoom"
-        android:actionViewClass="android.widget.SearchView"
+        android:title="Search"
+        />
+    <item
+        android:id="@+id/refresh"
+        android:icon="@drawable/ic_autorenew_white_48dp"
+        android:orderInCategory="2"
+        android:showAsAction="ifRoom"
+        android:title="Refresh"
         />
 </menu>

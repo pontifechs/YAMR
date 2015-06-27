@@ -6,6 +6,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class DBProvider extends ContentProvider
     private static final int SeriesByID = 11;
     private static final int SeriesChapters = 15;
     private static final int SeriesFavorites = 16;
+    private static final int SeriesGenres = 17;
     private static final int Chapter = 20;
     private static final int ChapterByID = 21;
     private static final int PrevChapterInSeries = 22;
@@ -40,6 +42,9 @@ public class DBProvider extends ContentProvider
     private static final int Bookmark = 40;
     private static final int BookmarkBySeriesId = 41;
     private static final int Bookmarks = 42;
+    private static final int Genre = 50;
+    private static final int GenreSeries = 51;
+    private static final int SeriesGenreRelator = 60;
 
     static
     {
@@ -54,6 +59,7 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", PrevChapterInSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", NextChapterInSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", SeriesFavorites);
+        matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", SeriesGenres);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter", Chapter);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", ChapterByID);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", ChapterPages);
@@ -63,8 +69,11 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/page/#", PageByID);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", PageHeritage);
         matcher.addURI(DBHelper.AUTHORITY, "/bookmark", Bookmark);
-        matcher.addURI(DBHelper.AUTHORITY, "/bookmarks", Bookmarks);
+        matcher.addURI(DBHelper.AUTHORITY, "/bookmark/all", Bookmarks);
         matcher.addURI(DBHelper.AUTHORITY, "/bookmark/#", BookmarkBySeriesId);
+        matcher.addURI(DBHelper.AUTHORITY, "/genre", Genre);
+        matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", SeriesGenreRelator);
+        matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", GenreSeries);
     }
 
     private static int getId(int code, Uri uri)
@@ -112,7 +121,17 @@ public class DBProvider extends ContentProvider
         int code = matcher.match(uri);
         switch (code)
         {
+            case Provider:
+                Log.d("Query", "Provider " + code + " : " + Provider);
+                return db.query(DBHelper.ProviderEntry.TABLE_NAME,
+                        DBHelper.ProviderEntry.projection,
+                        DBHelper.ProviderEntry.COLUMN_URL + "=?",
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
             case ProviderByID:
+                Log.d("Query", "ProviderByID " + code + " : " + ProviderByID);
                 return db.query(DBHelper.ProviderEntry.TABLE_NAME,
                         DBHelper.ProviderEntry.projection,
                         DBHelper.ProviderEntry._ID + "=?",
@@ -123,6 +142,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case ProviderSeries:
+                Log.d("Query", "ProviderSeries " + code + " : " + ProviderSeries);
                 String querySelection = DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?";
                 if (selection != null)
                 {
@@ -144,9 +164,10 @@ public class DBProvider extends ContentProvider
                         querySelectionArgs,
                         null,
                         null,
-                        sortOrder
+                        sortOrder == null ? DBHelper.SeriesEntry.COLUMN_NAME : sortOrder
                 );
             case ProviderAll:
+                Log.d("Query", "ProviderAll " + code + " : " + ProviderAll);
                 return db.query(DBHelper.ProviderEntry.TABLE_NAME,
                         DBHelper.ProviderEntry.projection,
                         null,
@@ -156,6 +177,7 @@ public class DBProvider extends ContentProvider
                         sortOrder
                 );
             case PrevChapterInSeries:
+                Log.d("Query", "PrevChapterInSeries " + code + " : " + PrevChapterInSeries);
                 String chapterNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float chapterNumberForPrev = Float.parseFloat(chapterNumberStringForPrev);
                 return db.query(DBHelper.ChapterEntry.TABLE_NAME,
@@ -168,6 +190,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case NextChapterInSeries:
+                Log.d("Query", "NextChapterInSeries " + code + " : " + NextChapterInSeries);
                 String chapterNumberStringForNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float chapterNumberForNext = Float.parseFloat(chapterNumberStringForNext);
                 return db.query(DBHelper.ChapterEntry.TABLE_NAME,
@@ -179,7 +202,17 @@ public class DBProvider extends ContentProvider
                         DBHelper.ChapterEntry.COLUMN_NUMBER + " asc",
                         "1"
                 );
+            case Series:
+                Log.d("Query", "Series " + code + " : " + Series);
+                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
+                        DBHelper.SeriesEntry.projection,
+                        DBHelper.SeriesEntry.COLUMN_URL + "=?",
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
             case SeriesByID:
+                Log.d("Query", "SeriesByID " + code + " : " + SeriesByID);
                 return db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
                         DBHelper.SeriesEntry._ID + "=?",
@@ -190,15 +223,17 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case SeriesChapters:
+                Log.d("Query", "SeriesChapters " + code + " : " + SeriesChapters);
                 return db.query(DBHelper.ChapterEntry.TABLE_NAME,
                         DBHelper.ChapterEntry.projection,
                         DBHelper.ChapterEntry.COLUMN_SERIES_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
-                        sortOrder
+                        sortOrder == null ? DBHelper.ChapterEntry.COLUMN_NUMBER : sortOrder
                 );
             case SeriesFavorites:
+                Log.d("Query", "SeriesFavorites " + code + " : " + SeriesFavorites);
                 return db.query(DBHelper.SeriesEntry.TABLE_NAME,
                         DBHelper.SeriesEntry.projection,
                         DBHelper.SeriesEntry.COLUMN_FAVORITE + " > 0",
@@ -207,7 +242,37 @@ public class DBProvider extends ContentProvider
                         null,
                         sortOrder
                 );
+            case SeriesGenres:
+                Log.d("Query", "SeriesGenres " + code + " : " + SeriesGenres);
+                return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME,
+                        DBHelper.GenreEntry.projection,
+                        DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID + " =?",
+                        new String[]{Integer.toString(getId(code, uri))},
+                        null,
+                        null,
+                        null
+                );
+            case GenreSeries:
+                Log.d("Query", "GenreSeries " + code + " : " + GenreSeries);
+                return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME,
+                        DBHelper.SeriesEntry.projection,
+                        DBHelper.GenreEntry._ID + " =?",
+                        new String[]{Integer.toString(getId(code, uri))},
+                        null,
+                        null,
+                        null
+                );
+            case Chapter:
+                Log.d("Query", "Chapter " + code + " : " + Chapter);
+                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
+                        DBHelper.ChapterEntry.projection,
+                        DBHelper.ChapterEntry.COLUMN_URL + "=?",
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
             case ChapterByID:
+                Log.d("Query", "ChapterByID " + code + " : " + ChapterByID);
                 return db.query(DBHelper.ChapterEntry.TABLE_NAME,
                         DBHelper.ChapterEntry.projection,
                         DBHelper.ChapterEntry._ID + "=?",
@@ -218,15 +283,17 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case ChapterPages:
+                Log.d("Query", "ChapterPages " + code + " : " + ChapterPages );
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
                         DBHelper.PageEntry.projection,
                         DBHelper.PageEntry.COLUMN_CHAPTER_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
-                        sortOrder
+                        sortOrder == null ? DBHelper.PageEntry.COLUMN_NUMBER : sortOrder
                 );
             case PrevPageInChapter:
+                Log.d("Query", "PrevPageInChapter " + code + " : " + PrevPageInChapter);
                 String pageNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float pageNumberForPrev = Float.parseFloat(pageNumberStringForPrev);
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
@@ -239,6 +306,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case NextPageInChapter:
+                Log.d("Query", "NextPageInChapter " + code + " : " + NextPageInChapter);
                 String pageNumberStringNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float pageNumberNext = Float.parseFloat(pageNumberStringNext);
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
@@ -250,7 +318,17 @@ public class DBProvider extends ContentProvider
                         DBHelper.PageEntry.COLUMN_NUMBER + " asc",
                         "1"
                 );
+            case Page:
+                Log.d("Query", "Page " + code + " : " + Page);
+                return db.query(DBHelper.PageEntry.TABLE_NAME,
+                        DBHelper.PageEntry.projection,
+                        DBHelper.PageEntry.COLUMN_URL + "=?",
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
             case PageByID:
+                Log.d("Query", "PageByID " + code + " : " + PageByID);
                 return db.query(DBHelper.PageEntry.TABLE_NAME,
                         DBHelper.PageEntry.projection,
                         DBHelper.PageEntry._ID + "=?",
@@ -261,6 +339,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case PageHeritage:
+                Log.d("Query", "PageHeritage " + code + " : " + PageHeritage);
                 return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME,
                         DBHelper.PageHeritageViewEntry.projection,
                         DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID + "=?",
@@ -271,6 +350,7 @@ public class DBProvider extends ContentProvider
                         "1"
                 );
             case BookmarkBySeriesId:
+                Log.d("Query", "BookmarkBySeriesId " + code + " : " + BookmarkBySeriesId);
                 return db.query(DBHelper.BookmarkEntry.TABLE_NAME,
                         DBHelper.BookmarkEntry.projection,
                         DBHelper.BookmarkEntry.COLUMN_SERIES_ID + "=?",
@@ -280,6 +360,7 @@ public class DBProvider extends ContentProvider
                         null
                 );
             case Bookmarks:
+                Log.d("Query", "Bookmarks " + code + " : " + Bookmarks);
                 return db.query(DBHelper.BookmarkEntry.TABLE_NAME,
                         DBHelper.BookmarkEntry.projection,
                         null,
@@ -287,6 +368,17 @@ public class DBProvider extends ContentProvider
                         null,
                         null,
                         sortOrder
+                );
+            case Genre:
+                Log.d("Query", "Genre " + code + " : " + Genre);
+                return db.query(DBHelper.GenreEntry.TABLE_NAME,
+                        DBHelper.GenreEntry.projection,
+                        DBHelper.GenreEntry.COLUMN_NAME + "=?",
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        "1"
                 );
             default:
                 throw new IllegalArgumentException("Invalid query uri: " + uri.toString());
@@ -304,6 +396,7 @@ public class DBProvider extends ContentProvider
                 return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.ProviderEntry.TABLE_NAME;
             case ProviderSeries:
             case SeriesFavorites:
+            case GenreSeries:
                 return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.SeriesEntry.TABLE_NAME;
             case Series:
             case SeriesByID:
@@ -323,6 +416,10 @@ public class DBProvider extends ContentProvider
                 return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.BookmarkEntry.TABLE_NAME;
             case Bookmarks:
                 return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.BookmarkEntry.TABLE_NAME;
+            case Genre:
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.GenreEntry.TABLE_NAME;
+            case SeriesGenres:
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.GenreEntry.TABLE_NAME;
             default:
                 throw new IllegalArgumentException("Invalid uri: " + uri.toString());
         }
@@ -365,6 +462,13 @@ public class DBProvider extends ContentProvider
                 Uri bookmarks = ninja.dudley.yamr.model.Bookmark.uri(getId(code, uri)).buildUpon().appendPath("s").build();
                 getContext().getContentResolver().notifyChange(bookmarks, null);
                 return inserted;
+            case Genre:
+                id = db.insert(DBHelper.GenreEntry.TABLE_NAME, null, values);
+                inserted = ninja.dudley.yamr.model.Genre.uri((int) id);
+                return inserted;
+            case SeriesGenreRelator:
+                db.insert(DBHelper.SeriesGenreEntry.TABLE_NAME, null, values);
+                return null;
             default:
                 throw new IllegalArgumentException("Invalid insert uri: " + uri.toString());
         }

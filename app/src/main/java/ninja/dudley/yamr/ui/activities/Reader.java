@@ -73,4 +73,10 @@ public class Reader extends Activity implements ProviderViewer.LoadSeries, Serie
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.reader);
         layout.removeAllViews();
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+    }
 }

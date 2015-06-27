@@ -27,12 +27,9 @@ public class MangaElement
             throw new NoSuchElementException("Empty Cursor!");
         }
         c.moveToFirst();
-        int _idCol = c.getColumnIndex(DBHelper.MangaElementEntry._ID);
-        int urlCol = c.getColumnIndex(DBHelper.MangaElementEntry.COLUMN_URL);
-        int fullyParsedCol = c.getColumnIndex(DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED);
-        _id = c.getInt(_idCol);
-        url = c.getString(urlCol);
-        fullyParsed = c.getInt(fullyParsedCol) > 0;
+        _id = getInt(c, DBHelper.MangaElementEntry._ID);
+        url = getString(c, DBHelper.MangaElementEntry.COLUMN_URL);
+        fullyParsed = getBool(c, DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED);
         // Can't close yet, others need the cursor still
     }
 
@@ -46,6 +43,30 @@ public class MangaElement
         values.put(DBHelper.MangaElementEntry.COLUMN_URL, url);
         values.put(DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED, fullyParsed);
         return values;
+    }
+
+    protected String getString(Cursor c, String col)
+    {
+        int colNum = c.getColumnIndex(col);
+        return c.getString(colNum);
+    }
+
+    protected int getInt(Cursor c, String col)
+    {
+        int colNum = c.getColumnIndex(col);
+        return c.getInt(colNum);
+    }
+
+    protected float getFloat(Cursor c, String col)
+    {
+        int colNum = c.getColumnIndex(col);
+        return c.getFloat(colNum);
+    }
+
+    protected boolean getBool(Cursor c, String col)
+    {
+        int colNum = c.getColumnIndex(col);
+        return c.getInt(colNum) > 0;
     }
 
     public int getId()

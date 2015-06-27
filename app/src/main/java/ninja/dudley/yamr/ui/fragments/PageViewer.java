@@ -13,7 +13,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -47,8 +46,9 @@ public class PageViewer extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
         // Go full-screen
-        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+//        getActivity().getActionBar().setBackgroundDrawable(new ColorDrawable(R.color.black_overlay));
         getActivity().getActionBar().hide();
 
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.fragment_page_viewer, container, false);
@@ -84,6 +84,7 @@ public class PageViewer extends Fragment
         TouchImageView imageView = (TouchImageView) layout.findViewById(R.id.imageView);
         imageView.register(this);
         imageView.setOnClickListener(this);
+        imageView.setOnLongClickListener(this);
 
         if (getArguments().getParcelable(ChapterArgumentKey) != null)
         {

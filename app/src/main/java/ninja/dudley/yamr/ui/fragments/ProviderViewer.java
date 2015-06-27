@@ -31,6 +31,7 @@ import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
+import ninja.dudley.yamr.svc.FetcherSync;
 
 public class ProviderViewer extends ListFragment
         implements LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
@@ -42,6 +43,7 @@ public class ProviderViewer extends ListFragment
 
     private ProgressDialog loading;
 
+    private static final String filterArg = "filter";
     private String filter;
 
     public interface LoadSeries
@@ -110,6 +112,13 @@ public class ProviderViewer extends ListFragment
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putString(filterArg, filter);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onResume()
     {
         super.onResume();
@@ -150,6 +159,15 @@ public class ProviderViewer extends ListFragment
         switch (item.getItemId())
         {
             case R.id.search:
+                return true;
+            case R.id.refresh:
+                Intent i = new Intent(getActivity(), FetcherAsync.class);
+                i.setAction(FetcherAsync.FETCH_PROVIDER);
+                i.setData(Provider.uri(1));   // Hard-code to the first (mangapanda) for now.
+                i.putExtra(FetcherAsync.FETCH_BEHAVIOR, FetcherSync.FetchBehavior.ForceRefresh.toString());
+                getActivity().startService(i);
+                loading.setProgress(0);
+                loading.show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

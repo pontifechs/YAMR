@@ -5,8 +5,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
-import java.util.List;
-
 import ninja.dudley.yamr.db.DBHelper;
 
 /**
@@ -17,8 +15,14 @@ public class Series extends MangaElement
     private int providerId;
 
     private String name;
-    private List<Chapter> chapters;
+    private String description;
     private boolean favorite = false;
+    private String alternateName;
+    private boolean complete = false;
+    private String author;
+    private String artist;
+    private String thumbnailUrl;
+    private String thumbnailPath;
 
     public static Uri baseUri()
     {
@@ -36,12 +40,16 @@ public class Series extends MangaElement
     public Series(Cursor c)
     {
         super(c);
-        int providerIdCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
-        int nameCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_NAME);
-        int favoriteCol = c.getColumnIndex(DBHelper.SeriesEntry.COLUMN_FAVORITE);
-        providerId = c.getInt(providerIdCol);
-        name = c.getString(nameCol);
-        favorite = c.getInt(favoriteCol) > 0;
+        providerId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
+        name = getString(c, DBHelper.SeriesEntry.COLUMN_NAME);
+        description = getString(c, DBHelper.SeriesEntry.COLUMN_DESCRIPTION);
+        favorite = getBool(c, DBHelper.SeriesEntry.COLUMN_FAVORITE);
+        alternateName = getString(c, DBHelper.SeriesEntry.COLUMN_ALTERNATE_NAME);
+        complete = getBool(c, DBHelper.SeriesEntry.COLUMN_COMPLETE);
+        author = getString(c, DBHelper.SeriesEntry.COLUMN_AUTHOR);
+        artist = getString(c, DBHelper.SeriesEntry.COLUMN_ARTIST);
+        thumbnailUrl = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL);
+        thumbnailPath = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH);
         c.close();
     }
 
@@ -51,7 +59,14 @@ public class Series extends MangaElement
         ContentValues values = super.getContentValues();
         values.put(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID, providerId);
         values.put(DBHelper.SeriesEntry.COLUMN_NAME, name);
+        values.put(DBHelper.SeriesEntry.COLUMN_DESCRIPTION, description);
         values.put(DBHelper.SeriesEntry.COLUMN_FAVORITE, favorite);
+        values.put(DBHelper.SeriesEntry.COLUMN_ALTERNATE_NAME, alternateName);
+        values.put(DBHelper.SeriesEntry.COLUMN_COMPLETE, complete);
+        values.put(DBHelper.SeriesEntry.COLUMN_AUTHOR, author);
+        values.put(DBHelper.SeriesEntry.COLUMN_ARTIST, artist);
+        values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL, thumbnailUrl);
+        values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH, thumbnailPath);
         return values;
     }
 
@@ -80,14 +95,14 @@ public class Series extends MangaElement
         this.name = name;
     }
 
-    public List<Chapter> getChapters()
+    public String getDescription()
     {
-        return chapters;
+        return description;
     }
 
-    public void setChapters(List<Chapter> chapters)
+    public void setDescription(String description)
     {
-        this.chapters = chapters;
+        this.description = description;
     }
 
     public boolean isFavorite()
@@ -98,5 +113,65 @@ public class Series extends MangaElement
     public void setFavorite(boolean favorite)
     {
         this.favorite = favorite;
+    }
+
+    public String getAlternateName()
+    {
+        return alternateName;
+    }
+
+    public void setAlternateName(String alternateName)
+    {
+        this.alternateName = alternateName;
+    }
+
+    public boolean isComplete()
+    {
+        return complete;
+    }
+
+    public void setComplete(boolean complete)
+    {
+        this.complete = complete;
+    }
+
+    public String getAuthor()
+    {
+        return author;
+    }
+
+    public void setAuthor(String author)
+    {
+        this.author = author;
+    }
+
+    public String getArtist()
+    {
+        return artist;
+    }
+
+    public void setArtist(String artist)
+    {
+        this.artist = artist;
+    }
+
+    public String getThumbnailUrl()
+    {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl)
+    {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public String getThumbnailPath()
+    {
+        return thumbnailPath;
+    }
+
+    public void setThumbnailPath(String thumbnailPath)
+    {
+        this.thumbnailPath = thumbnailPath;
     }
 }

@@ -15,6 +15,7 @@ import java.net.URL;
 
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
+import ninja.dudley.yamr.model.Genre;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
@@ -24,7 +25,6 @@ import ninja.dudley.yamr.model.Series;
  */
 public abstract class FetcherSync
 {
-
     protected Context context;
 
     public FetcherSync(Context context)
@@ -46,13 +46,90 @@ public abstract class FetcherSync
         this.listener = listener;
     }
 
-    public abstract Provider fetchProvider(Provider provider);
+    public enum FetchBehavior
+    {
+        LazyFetch("LazyFetch"),
+        ForceRefresh("ForceRefresh");
 
-    public abstract Series fetchSeries(Series series);
+        private final String val;
 
-    public abstract Chapter fetchChapter(Chapter chapter);
+        FetchBehavior(String val)
+        {
+            this.val = val;
+        }
 
-    public abstract Page fetchPage(Page page);
+        @Override
+        public String toString()
+        {
+            return val;
+        }
+    }
+
+    public Provider fetchProvider(Provider provider)
+    {
+        return fetchProvider(provider, FetchBehavior.LazyFetch);
+    }
+    public abstract Provider fetchProvider(Provider provider, FetchBehavior behavior);
+
+    public Series fetchSeries(Series series)
+    {
+        return fetchSeries(series, FetchBehavior.LazyFetch);
+    }
+    public abstract Series fetchSeries(Series series, FetchBehavior behavior);
+
+    public Chapter fetchChapter(Chapter chapter)
+    {
+       return fetchChapter(chapter, FetchBehavior.LazyFetch);
+    }
+    public abstract Chapter fetchChapter(Chapter chapter, FetchBehavior behavior);
+
+    public Page fetchPage(Page page)
+    {
+        return fetchPage(page, FetchBehavior.LazyFetch);
+    }
+    public abstract Page fetchPage(Page page, FetchBehavior behavior);
+
+    public abstract void fetchNew(Provider provider);
+
+    protected boolean providerExists(String url)
+    {
+        Cursor c = context.getContentResolver().query(Provider.baseUri(), null, null, new String[]{url}, null);
+        boolean ret = c.getCount() > 0;
+        c.close();
+        return ret;
+    }
+
+    protected boolean seriesExists(String url)
+    {
+        Cursor c = context.getContentResolver().query(Series.baseUri(), null, null, new String[]{url}, null);
+        boolean ret = c.getCount() > 0;
+        c.close();
+        return ret;
+    }
+
+    protected boolean chapterExists(String url)
+    {
+        Cursor c = context.getContentResolver().query(Chapter.baseUri(), null, null, new String[]{url}, null);
+        boolean ret = c.getCount() > 0;
+        c.close();
+        return ret;
+    }
+
+    protected boolean pageExists(String url)
+    {
+        Cursor c = context.getContentResolver().query(Page.baseUri(), null, null, new String[]{url}, null);
+        boolean ret = c.getCount() > 0;
+        c.close();
+        return ret;
+    }
+
+    protected boolean genreExists(String name)
+    {
+        Cursor c = context.getContentResolver().query(Genre.baseUri(), null, null, new String[]{name}, null);
+        boolean ret = c.getCount() > 0;
+        c.close();
+        return ret;
+    }
 
     private static String stripBadCharsForFile(String file)
     {
@@ -132,5 +209,55 @@ public abstract class FetcherSync
         p.setImagePath(pagePath);
         context.getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
         heritage.close();
+    }
+
+    protected String saveThumbnail(Series s)
+    {
+        Provider p = new Provider(context.getContentResolver().query(Provider.uri(s.getProviderId()), null, null, null, null));
+
+        File root = Environment.getExternalStorageDirectory();
+        String seriesPath = root.getAbsolutePath() +
+                "/" + stripBadCharsForFile(p.getName()) +
+                "/" + stripBadCharsForFile(s.getName());
+        File chapterDirectory = new File(seriesPath);
+        chapterDirectory.mkdirs();
+        String thumbPath = chapterDirectory +
+                "/thumb.png";
+
+        s.setThumbnailPath(thumbPath);
+        FileOutputStream out = null;
+        try
+        {
+            URL url = new URL(s.getThumbnailUrl());
+            Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            out = new FileOutputStream(thumbPath);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+        }
+        catch (MalformedURLException e)
+        {
+            // TODO:: better error handling/checking
+            throw new RuntimeException(e);
+        }
+        catch (IOException e)
+        {
+            // Couldn't get it
+            return null;
+        }
+        finally
+        {
+            try
+            {
+                if (out != null)
+                {
+                    out.close();
+                }
+            }
+            catch (IOException e)
+            {
+                //TODO:: better error handling/checking
+                throw new RuntimeException(e);
+            }
+        }
+        return thumbPath;
     }
 }
