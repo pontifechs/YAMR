@@ -9,7 +9,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import java.util.NoSuchElementException;
 
 import ninja.dudley.yamr.db.DBHelper;
-import ninja.dudley.yamr.model.Bookmark;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Series;
@@ -96,15 +95,10 @@ public class Navigation extends IntentService
                 }
                 case PAGE_FROM_BOOKMARK:
                 {
-                    Bookmark arg;
-                    try
+                    Series arg = series(intent.getData());
+                    if (arg.getProgressPageId() == -1)
                     {
-                        arg = bookmark(intent.getData());
-                    }
-                    catch (NoSuchElementException e)
-                    {
-                        Series s = series(Series.uri(Integer.parseInt(intent.getData().getLastPathSegment())));
-                        arg = bookmarkFirstPage(s);
+                        arg = bookmarkFirstPage(arg);
                     }
                     Page page = pageFromBookmark(arg);
                     broadcastComplete(page.uri(), PAGE_FROM_BOOKMARK_COMPLETE);
@@ -134,11 +128,6 @@ public class Navigation extends IntentService
     private Series series(Uri uri)
     {
         return new Series(getContentResolver().query(uri, null, null, null, null));
-    }
-
-    private Bookmark bookmark(Uri uri)
-    {
-        return new Bookmark(getContentResolver().query(uri, null, null, null, null));
     }
 
     private Chapter chapterFromPage(Page p)
@@ -278,25 +267,19 @@ public class Navigation extends IntentService
         return firstPageFromChapter(c);
     }
 
-    private Bookmark bookmarkFromSeries(Series series)
+    private Series bookmarkFirstPage(Series series)
     {
-        Uri bookmarkQuery = Uri.withAppendedPath(Bookmark.baseUri(), Integer.toString(series.getId()));
-        Cursor bookmarkCursor = getContentResolver().query(bookmarkQuery, null, null, null, null);
-        return new Bookmark(bookmarkCursor);
-    }
-
-    private Bookmark bookmarkFirstPage(Series series)
-    {
-        Bookmark bookmark = new Bookmark(series.getId());
+        Chapter firstChapter = firstChapterFromSeries(series);
         Page firstPage = firstPageFromSeries(series);
-        bookmark.setPageId(firstPage.getId());
-        getContentResolver().insert(bookmark.uri(), bookmark.getContentValues());
-        return bookmark;
+        series.setProgressChapterId(firstChapter.getId());
+        series.setProgressPageId(firstPage.getId());
+        getContentResolver().update(series.uri(), series.getContentValues(), null, null);
+        return series;
     }
 
-    private Page pageFromBookmark(Bookmark bookmark)
+    private Page pageFromBookmark(Series series)
     {
-        Uri pageUri = Page.uri(bookmark.getPageId());
+        Uri pageUri = Page.uri(series.getProgressPageId());
         Page page = page(pageUri);
         new MangaPandaFetcher(getBaseContext()).fetchPage(page);
         return page;

@@ -75,6 +75,11 @@ public class DBHelper extends SQLiteOpenHelper
         public static final SQLite3Types COLUMN_THUMBNAIL_URL_TYPE = SQLite3Types.Text;
         public static final String COLUMN_THUMBNAIL_PATH = "thumbnail_path";
         public static final SQLite3Types COLUMN_THUMBNAIL_PATH_TYPE = SQLite3Types.Text;
+        public static final String COLUMN_PROGRESS_CHAPTER_ID = "progress_chapter_id";
+        public static final SQLite3Types COLUMN_PROGRESS_CHAPTER_ID_TYPE = SQLite3Types.Integer;
+        public static final String COLUMN_PROGRESS_PAGE_ID = "progress_page_id";
+        public static final SQLite3Types COLUMN_PROGRESS_PAGE_ID_TYPE = SQLite3Types.Integer;
+
 
         public static final String[] projection;
 
@@ -82,7 +87,8 @@ public class DBHelper extends SQLiteOpenHelper
         {
             projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_DESCRIPTION,
                     COLUMN_PROVIDER_ID, COLUMN_FAVORITE, COLUMN_ALTERNATE_NAME, COLUMN_COMPLETE,
-                    COLUMN_AUTHOR, COLUMN_ARTIST, COLUMN_THUMBNAIL_URL, COLUMN_THUMBNAIL_PATH
+                    COLUMN_AUTHOR, COLUMN_ARTIST, COLUMN_THUMBNAIL_URL, COLUMN_THUMBNAIL_PATH, COLUMN_PROGRESS_CHAPTER_ID,
+                    COLUMN_PROGRESS_PAGE_ID
             };
         }
     }
@@ -182,25 +188,6 @@ public class DBHelper extends SQLiteOpenHelper
         }
     }
 
-    public static abstract class BookmarkEntry implements BaseColumns
-    {
-        public static final String TABLE_NAME = "bookmark";
-
-        public static final String COLUMN_SERIES_ID = "series_id";
-        public static final SQLite3Types COLUMN_SERIES_ID_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_PAGE_ID = "progress_page_id";
-        public static final SQLite3Types COLUMN_PAGE_ID_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_NOTE = "note";
-        public static final SQLite3Types COLUMN_NOTE_TYPE = SQLite3Types.Text;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_SERIES_ID, COLUMN_PAGE_ID, COLUMN_NOTE};
-        }
-    }
-
     public static abstract class SeriesGenreViewEntry extends SeriesEntry
     {
         public static final String TABLE_NAME = "series_genre_view";
@@ -285,7 +272,11 @@ public class DBHelper extends SQLiteOpenHelper
                 makeColumn(SeriesEntry.COLUMN_ARTIST, SeriesEntry.COLUMN_ARTIST_TYPE) +
                 makeColumn(SeriesEntry.COLUMN_THUMBNAIL_URL, SeriesEntry.COLUMN_THUMBNAIL_URL_TYPE) +
                 makeColumn(SeriesEntry.COLUMN_THUMBNAIL_PATH, SeriesEntry.COLUMN_THUMBNAIL_PATH_TYPE) +
+                makeColumn(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID_TYPE) +
+                makeColumn(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, SeriesEntry.COLUMN_PROGRESS_PAGE_ID_TYPE) +
                 makeForeignKey(SeriesEntry.COLUMN_PROVIDER_ID, ProviderEntry.TABLE_NAME, ProviderEntry._ID) +
+                makeForeignKey(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, ChapterEntry.TABLE_NAME, ChapterEntry._ID) +
+                makeForeignKey(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, PageEntry.TABLE_NAME, PageEntry._ID) +
                 uniqueConstraint() +
                 ")";
         db.execSQL(seriesCreate);
@@ -322,16 +313,6 @@ public class DBHelper extends SQLiteOpenHelper
                        + joinStatement(ChapterEntry.TABLE_NAME, ChapterEntry._ID, PageEntry.TABLE_NAME, PageEntry.COLUMN_CHAPTER_ID)
                 ;
         db.execSQL(pageHeritageView);
-
-        String bookmarksCreate = "CREATE TABLE " + BookmarkEntry.TABLE_NAME + " (" +
-                BookmarkEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(BookmarkEntry.COLUMN_SERIES_ID, BookmarkEntry.COLUMN_SERIES_ID_TYPE) +
-                makeColumn(BookmarkEntry.COLUMN_PAGE_ID, BookmarkEntry.COLUMN_PAGE_ID_TYPE) +
-                makeColumn(BookmarkEntry.COLUMN_NOTE, BookmarkEntry.COLUMN_NOTE_TYPE) +
-                makeForeignKey(BookmarkEntry.COLUMN_SERIES_ID, SeriesEntry.TABLE_NAME, SeriesEntry._ID) +
-                makeForeignKey(BookmarkEntry.COLUMN_PAGE_ID, PageEntry.TABLE_NAME, PageEntry._ID, false) +
-                ")";
-        db.execSQL(bookmarksCreate);
 
         String genreCreate = "CREATE TABLE " + GenreEntry.TABLE_NAME + " (" +
                 GenreEntry._ID + " INTEGER PRIMARY KEY, " +
@@ -370,7 +351,6 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL("DROP TABLE IF EXISTS " + GenreEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SeriesEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ProviderEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + BookmarkEntry.TABLE_NAME);
         onCreate(db);
     }
 

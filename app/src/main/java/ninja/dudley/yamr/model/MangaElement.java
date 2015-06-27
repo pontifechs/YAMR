@@ -26,7 +26,10 @@ public class MangaElement
             c.close();
             throw new NoSuchElementException("Empty Cursor!");
         }
-        c.moveToFirst();
+        if (c.getPosition() == -1)
+        {
+            c.moveToFirst();
+        }
         _id = getInt(c, DBHelper.MangaElementEntry._ID);
         url = getString(c, DBHelper.MangaElementEntry.COLUMN_URL);
         fullyParsed = getBool(c, DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED);
@@ -54,6 +57,10 @@ public class MangaElement
     protected int getInt(Cursor c, String col)
     {
         int colNum = c.getColumnIndex(col);
+        if (c.isNull(colNum))
+        {
+            return -1;
+        }
         return c.getInt(colNum);
     }
 

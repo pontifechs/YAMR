@@ -39,9 +39,6 @@ public class DBProvider extends ContentProvider
     private static final int PrevPageInChapter = 32;
     private static final int NextPageInChapter = 33;
     private static final int PageHeritage = 39;
-    private static final int Bookmark = 40;
-    private static final int BookmarkBySeriesId = 41;
-    private static final int Bookmarks = 42;
     private static final int Genre = 50;
     private static final int GenreSeries = 51;
     private static final int SeriesGenreRelator = 60;
@@ -68,9 +65,6 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/page", Page);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#", PageByID);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", PageHeritage);
-        matcher.addURI(DBHelper.AUTHORITY, "/bookmark", Bookmark);
-        matcher.addURI(DBHelper.AUTHORITY, "/bookmark/all", Bookmarks);
-        matcher.addURI(DBHelper.AUTHORITY, "/bookmark/#", BookmarkBySeriesId);
         matcher.addURI(DBHelper.AUTHORITY, "/genre", Genre);
         matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", SeriesGenreRelator);
         matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", GenreSeries);
@@ -86,7 +80,6 @@ public class DBProvider extends ContentProvider
             case SeriesByID:
             case ChapterByID:
             case PageByID:
-            case BookmarkBySeriesId:
                 return Integer.parseInt(uri.getLastPathSegment());
             case ProviderSeries:
             case SeriesChapters:
@@ -349,26 +342,6 @@ public class DBProvider extends ContentProvider
                         null,
                         "1"
                 );
-            case BookmarkBySeriesId:
-                Log.d("Query", "BookmarkBySeriesId " + code + " : " + BookmarkBySeriesId);
-                return db.query(DBHelper.BookmarkEntry.TABLE_NAME,
-                        DBHelper.BookmarkEntry.projection,
-                        DBHelper.BookmarkEntry.COLUMN_SERIES_ID + "=?",
-                        new String[]{Integer.toString(getId(code, uri))},
-                        null,
-                        null,
-                        null
-                );
-            case Bookmarks:
-                Log.d("Query", "Bookmarks " + code + " : " + Bookmarks);
-                return db.query(DBHelper.BookmarkEntry.TABLE_NAME,
-                        DBHelper.BookmarkEntry.projection,
-                        null,
-                        null,
-                        null,
-                        null,
-                        sortOrder
-                );
             case Genre:
                 Log.d("Query", "Genre " + code + " : " + Genre);
                 return db.query(DBHelper.GenreEntry.TABLE_NAME,
@@ -411,11 +384,6 @@ public class DBProvider extends ContentProvider
             case Page:
             case PageByID:
                 return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.PageEntry.TABLE_NAME;
-            case Bookmark:
-            case BookmarkBySeriesId:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.BookmarkEntry.TABLE_NAME;
-            case Bookmarks:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.BookmarkEntry.TABLE_NAME;
             case Genre:
                 return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.GenreEntry.TABLE_NAME;
             case SeriesGenres:
@@ -456,12 +424,6 @@ public class DBProvider extends ContentProvider
                 Uri chapterPages = ninja.dudley.yamr.model.Chapter.uri(getId(code, uri)).buildUpon().appendPath("pages").build();
                 getContext().getContentResolver().notifyChange(chapterPages, null);
                 return inserted;
-            case BookmarkBySeriesId:
-                id = db.insert(DBHelper.BookmarkEntry.TABLE_NAME, null, values);
-                inserted = ninja.dudley.yamr.model.Bookmark.uri((int) id);
-                Uri bookmarks = ninja.dudley.yamr.model.Bookmark.uri(getId(code, uri)).buildUpon().appendPath("s").build();
-                getContext().getContentResolver().notifyChange(bookmarks, null);
-                return inserted;
             case Genre:
                 id = db.insert(DBHelper.GenreEntry.TABLE_NAME, null, values);
                 inserted = ninja.dudley.yamr.model.Genre.uri((int) id);
@@ -501,11 +463,6 @@ public class DBProvider extends ContentProvider
                         DBHelper.PageEntry._ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
-            case BookmarkBySeriesId:
-                return db.delete(DBHelper.BookmarkEntry.TABLE_NAME,
-                        DBHelper.BookmarkEntry.COLUMN_SERIES_ID + "=?",
-                        new String[]{Integer.toString(getId(code, uri))}
-                );
             default:
                 throw new IllegalArgumentException("Invalid delete uri : " + uri.toString());
         }
@@ -540,12 +497,6 @@ public class DBProvider extends ContentProvider
                 return db.update(DBHelper.PageEntry.TABLE_NAME,
                         values,
                         DBHelper.PageEntry._ID + "=?",
-                        new String[]{Integer.toString(getId(code, uri))}
-                );
-            case BookmarkBySeriesId:
-                return db.update(DBHelper.BookmarkEntry.TABLE_NAME,
-                        values,
-                        DBHelper.BookmarkEntry.COLUMN_SERIES_ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             default:

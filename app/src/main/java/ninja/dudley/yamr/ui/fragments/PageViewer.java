@@ -17,8 +17,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.model.Bookmark;
 import ninja.dudley.yamr.model.Page;
+import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.Navigation;
 import ninja.dudley.yamr.ui.util.TouchImageView;
 import ninja.dudley.yamr.util.ProgressTracker;
@@ -26,12 +26,11 @@ import ninja.dudley.yamr.util.ProgressTracker;
 public class PageViewer extends Fragment
         implements TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
-
     public static final String ChapterArgumentKey = "chapter";
-    public static final String BookmarkArgumentKey = "bookmark";
+    public static final String SeriesArgumentKey = "series";
 
     private Page page;
-    private Bookmark bookmark;
+    private Series series;
     private ProgressTracker progressTracker;
 
     private BroadcastReceiver loadPageCompleteReceiver;
@@ -59,18 +58,21 @@ public class PageViewer extends Fragment
             public void onReceive(Context context, Intent intent)
             {
                 page = new Page(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
+                if (series.getProgressPageId() == -1)
+                {
+                    series = new Series(getActivity().getContentResolver().query(series.uri(), null, null, null, null));
+                }
                 TouchImageView imageView = (TouchImageView) getActivity().findViewById(R.id.imageView);
                 Drawable d = Drawable.createFromPath(page.getImagePath());
                 imageView.setImageDrawable(d);
                 TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
                 loadingText.setVisibility(View.INVISIBLE);
 
-                if (bookmark != null)
+                if (series != null)
                 {
                     if (progressTracker == null)
                     {
-                        bookmark = new Bookmark(getActivity().getContentResolver().query(bookmark.uri(), null, null, null, null));
-                        progressTracker = new ProgressTracker(getActivity().getContentResolver(), bookmark);
+                        progressTracker = new ProgressTracker(getActivity().getContentResolver(), series);
                         progressTracker.handleNextPage(page);
                     }
                     else
@@ -94,14 +96,14 @@ public class PageViewer extends Fragment
             fetchChapter.setData(chapterUri);
             getActivity().startService(fetchChapter);
         }
-        else if (getArguments().getParcelable(BookmarkArgumentKey) != null)
+        else if (getArguments().getParcelable(SeriesArgumentKey) != null)
         {
             Intent fetchPage = new Intent(getActivity(), Navigation.class);
             fetchPage.setAction(Navigation.PAGE_FROM_BOOKMARK);
-            Uri bookmarkUri = getArguments().getParcelable(BookmarkArgumentKey);
-            fetchPage.setData(bookmarkUri);
+            Uri seriesUri = getArguments().getParcelable(SeriesArgumentKey);
+            fetchPage.setData(seriesUri);
             getActivity().startService(fetchPage);
-            bookmark = new Bookmark(Integer.parseInt(bookmarkUri.getLastPathSegment()));
+            series = new Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null));
         }
         else
         {
@@ -129,7 +131,6 @@ public class PageViewer extends Fragment
             throw new AssertionError(e);
         }
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(loadPageCompleteReceiver, pageCompleteFilter);
-
     }
 
     @Override

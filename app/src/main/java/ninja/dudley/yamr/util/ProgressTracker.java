@@ -3,9 +3,9 @@ package ninja.dudley.yamr.util;
 import android.content.ContentResolver;
 import android.database.Cursor;
 
-import ninja.dudley.yamr.model.Bookmark;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
+import ninja.dudley.yamr.model.Series;
 
 /**
  * Created by mdudley on 6/18/15.
@@ -13,21 +13,21 @@ import ninja.dudley.yamr.model.Page;
 public class ProgressTracker
 {
     private ContentResolver resolver;
-    private Bookmark bookmark;
+    private Series series;
     private Chapter progressChapter;
     private Page progressPage;
 
-    public ProgressTracker(ContentResolver resolver, Bookmark bookmark)
+    public ProgressTracker(ContentResolver resolver, Series series)
     {
         this.resolver = resolver;
-        this.bookmark = bookmark;
+        this.series= series;
 
-        if (this.bookmark == null)
+        if (this.series == null)
         {
             throw new IllegalArgumentException("Must have the bookmark to track progress");
         }
 
-        Cursor pageCursor = resolver.query(Page.uri(bookmark.getPageId()), null, null, null, null);
+        Cursor pageCursor = resolver.query(Page.uri(series.getProgressPageId()), null, null, null, null);
         progressPage = new Page(pageCursor);
         Cursor chapterCursor = resolver.query(Chapter.uri(progressPage.getChapterId()), null, null, null, null);
         progressChapter = new Chapter(chapterCursor);
@@ -42,8 +42,8 @@ public class ProgressTracker
             if (p.getNumber() > progressPage.getNumber())
             {
                 progressPage = p;
-                bookmark.setPageId(progressPage.getId());
-                resolver.update(bookmark.uri(), bookmark.getContentValues(), null, null);
+                series.setProgressPageId(progressPage.getId());
+                resolver.update(series.uri(), series.getContentValues(), null, null);
             }
         }
         // Check if the new chapter is higher numbered than the progress chapter
@@ -57,19 +57,10 @@ public class ProgressTracker
             {
                 progressChapter = c;
                 progressPage = p;
-                bookmark.setPageId(progressPage.getId());
-                resolver.update(bookmark.uri(), bookmark.getContentValues(), null, null);
+                series.setProgressChapterId(progressChapter.getId());
+                series.setProgressPageId(progressPage.getId());
+                resolver.update(series.uri(), series.getContentValues(), null, null);
             }
         }
-    }
-
-    public Bookmark getBookmark()
-    {
-        return bookmark;
-    }
-
-    public void setBookmark(Bookmark bookmark)
-    {
-        this.bookmark = bookmark;
     }
 }

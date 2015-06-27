@@ -95,7 +95,7 @@ public class ProviderViewer extends ListFragment
 
         adapter = new SimpleCursorAdapter(
                 getActivity(),
-                R.layout.series_item,
+                R.layout.simple_series_item,
                 null,
                 new String[]{DBHelper.SeriesEntry.COLUMN_NAME},
                 new int[]{R.id.series_name},

@@ -23,6 +23,8 @@ public class Series extends MangaElement
     private String artist;
     private String thumbnailUrl;
     private String thumbnailPath;
+    private int progressChapterId = -1;
+    private int progressPageId = -1;
 
     public static Uri baseUri()
     {
@@ -40,6 +42,17 @@ public class Series extends MangaElement
     public Series(Cursor c)
     {
         super(c);
+        parse(c,true);
+    }
+
+    public Series(Cursor c, boolean close)
+    {
+        super(c);
+        parse(c,close);
+    }
+
+    private void parse(Cursor c, boolean close)
+    {
         providerId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
         name = getString(c, DBHelper.SeriesEntry.COLUMN_NAME);
         description = getString(c, DBHelper.SeriesEntry.COLUMN_DESCRIPTION);
@@ -50,7 +63,12 @@ public class Series extends MangaElement
         artist = getString(c, DBHelper.SeriesEntry.COLUMN_ARTIST);
         thumbnailUrl = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL);
         thumbnailPath = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH);
-        c.close();
+        progressChapterId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID);
+        progressPageId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID);
+        if (close)
+        {
+            c.close();
+        }
     }
 
     @Override
@@ -67,6 +85,14 @@ public class Series extends MangaElement
         values.put(DBHelper.SeriesEntry.COLUMN_ARTIST, artist);
         values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL, thumbnailUrl);
         values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH, thumbnailPath);
+        if (progressChapterId != -1)
+        {
+            values.put(DBHelper.SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, progressChapterId);
+        }
+        if (progressPageId != -1)
+        {
+            values.put(DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID, progressPageId);
+        }
         return values;
     }
 
@@ -173,5 +199,25 @@ public class Series extends MangaElement
     public void setThumbnailPath(String thumbnailPath)
     {
         this.thumbnailPath = thumbnailPath;
+    }
+
+    public int getProgressChapterId()
+    {
+        return progressChapterId;
+    }
+
+    public void setProgressChapterId(int progressChapterId)
+    {
+        this.progressChapterId = progressChapterId;
+    }
+
+    public int getProgressPageId()
+    {
+        return progressPageId;
+    }
+
+    public void setProgressPageId(int progressPageId)
+    {
+        this.progressPageId = progressPageId;
     }
 }

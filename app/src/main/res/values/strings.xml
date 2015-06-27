@@ -1,18 +1,25 @@
 <resources>
     <string name="app_name">YAMR</string>
-    <string name="action_settings">que?</string>
+    <string name="action_settings">Settings</string>
 
     <string name="storage_path">YAMR</string>
-    <string name="title_activity_series_viewer">SeriesViewer</string>
-    <string name="title_activity_chapter_viewer">ChapterViewer</string>
-    <string name="title_activity_page_viewer">PageViewer</string>
 
     <string name="title_activity_reader">Browse</string>
     <string name="title_activity_main">YAMR</string>
     <string name="title_activity_favorites">Favorites</string>
+    <string name="title_activity_notifications">Notifications</string>
+    <string name="title_activity_settings">Settings</string>
 
-    <string name="hello_world">Hello world!</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_world">
+        Bacon ipsum dolor amet non frankfurter elit ex ipsum hamburger. Officia pancetta labore frankfurter, strip steak eu cillum ipsum kielbasa exercitation quis aute biltong. Proident porchetta mollit, ut kielbasa do laborum cupim jerky landjaeger veniam aliqua biltong sunt. Cow consequat biltong hamburger, est sunt ham dolor ut alcatra salami eiusmod ribeye velit. Nostrud swine excepteur, duis biltong ut meatball proident ham hock meatloaf rump porchetta. Strip steak jowl beef ribs tail adipisicing officia, in in exercitation ball tip flank turkey culpa brisket.
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+        Ball tip filet mignon occaecat swine shankle, aliqua sunt fugiat. Jerky lorem tri-tip laborum cillum, aute ipsum labore capicola ut in aliquip in pastrami ham hock. Shoulder rump commodo prosciutto qui anim. T-bone consectetur turkey occaecat in picanha filet mignon meatball.
+
+        Et doner in incididunt biltong sunt pig spare ribs irure tongue. Biltong cupim swine, qui sint meatloaf shoulder ea eiusmod pork loin bresaola occaecat ham hock. Kevin pork chop short loin chicken beef ribs picanha fugiat est officia. Consequat turkey commodo, labore anim flank esse nostrud salami do ex pariatur turducken. Tongue ut in, prosciutto spare ribs picanha quis chicken.
+
+        Deserunt eiusmod tri-tip incididunt. Ribeye spare ribs doner kielbasa, turducken jowl veniam pig. Fugiat corned beef boudin, sausage nostrud dolor jowl culpa reprehenderit prosciutto. Nulla lorem fatback, frankfurter short loin pork loin culpa tri-tip capicola rump tenderloin swine. Incididunt magna hamburger eiusmod jerky dolore tenderloin meatloaf enim. Sausage alcatra mollit, leberkas ham laboris meatball shoulder anim t-bone. Cupidatat turkey ea pork, eu enim in.
+
+        Dolor ut eu, minim tenderloin prosciutto shoulder consequat spare ribs picanha est pariatur. Ut do capicola labore ham enim. Ball tip pork belly cupim, venison in laborum swine chuck deserunt aliqua landjaeger enim sunt jerky exercitation. Beef pancetta tongue in fatback cillum pork loin, irure filet mignon culpa laborum beef ribs non boudin est.
+    </string>
 </resources>

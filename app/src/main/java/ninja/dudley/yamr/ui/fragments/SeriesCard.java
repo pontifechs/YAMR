@@ -52,7 +52,6 @@ public class SeriesCard extends Fragment
         {
             Uri seriesUri = Uri.parse(getArguments().getString(ArgumentKey));
             series = new Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null));
-
         }
     }
 

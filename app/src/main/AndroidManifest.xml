@@ -1,53 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="ninja.dudley.yamr"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ninja.dudley.yamr" >
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
-        <service android:name=".svc.FetcherAsync"/>
-        <service android:name=".svc.Navigation"/>
+        android:theme="@style/AppTheme" >
+        <service android:name=".svc.FetcherAsync" />
+        <service android:name=".svc.Navigation" />
 
-        <receiver android:name=".svc.FetchNew"
-                  android:enabled="false">
+        <receiver
+            android:name=".svc.FetchNew"
+            android:enabled="false" >
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
         <provider
             android:name=".db.DBProvider"
-            android:authorities="ninja.dudley.yamr.db.DBProvider"/>
+            android:authorities="ninja.dudley.yamr.db.DBProvider" />
 
         <activity
             android:name=".ui.activities.MainActivity"
             android:label="@string/title_activity_main"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.activities.Reader"
             android:label="@string/title_activity_reader"
-            android:parentActivityName=".ui.activities.MainActivity"
-            android:theme="@style/AppTheme"
-            >
+            android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
-
         <activity
             android:name=".ui.activities.Favorites"
             android:label="@string/title_activity_favorites"
-            android:parentActivityName=".ui.activities.MainActivity">
+            android:parentActivityName=".ui.activities.MainActivity" >
+        </activity>
+        <activity
+            android:name=".ui.activities.Notifications"
+            android:label="@string/title_activity_notifications"
+            android:parentActivityName=".ui.activities.MainActivity" >
+        </activity>
+        <activity
+            android:name=".ui.activities.Settings"
+            android:label="@string/title_activity_settings" >
         </activity>
     </application>
+
 </manifest>

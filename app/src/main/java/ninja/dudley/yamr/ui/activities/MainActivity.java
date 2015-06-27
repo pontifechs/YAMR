@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -37,7 +38,7 @@ public class MainActivity extends Activity
         // Set up activities
 
         Map<String, Object> browseMap = new HashMap<>();
-        browseMap.put(iconKey, R.drawable.ic_list_black_48dp);
+        browseMap.put(iconKey, R.drawable.ic_explore_black_48dp);
         browseMap.put(nameKey, "Browse Manga");
         browseMap.put(descriptionKey, "Browse through a provider's series");
         maps.add(browseMap);
@@ -48,6 +49,12 @@ public class MainActivity extends Activity
         favoritesMap.put(descriptionKey, "Check up on your favorites");
         maps.add(favoritesMap);
 
+        Map<String, Object> settingsMap = new HashMap<>();
+        settingsMap.put(iconKey, R.drawable.ic_settings_black_48dp);
+        settingsMap.put(nameKey, "Settings");
+        settingsMap.put(descriptionKey, "Twiddle the knobs; Push the buttons");
+        maps.add(settingsMap);
+
         SimpleAdapter adapter = new SimpleAdapter(
                 this,
                 maps,
@@ -56,21 +63,29 @@ public class MainActivity extends Activity
                 new int[]{R.id.activity_icon, R.id.activity_name, R.id.activity_description}
         );
         ListView listView = (ListView) findViewById(R.id.listView);
+
+        FrameLayout mascot = (FrameLayout) getLayoutInflater().inflate(R.layout.yamr_mascot, null);
         listView.setAdapter(adapter);
+        listView.addHeaderView(mascot, null, false);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
+                // TODO:: Is this the only way?
                 Intent i;
                 switch (position)
                 {
-                    case 0:
+                    case 1:
                         i = new Intent(MainActivity.this, Reader.class);
                         startActivity(i);
                         break;
-                    case 1:
+                    case 2:
                         i = new Intent(MainActivity.this, Favorites.class);
+                        startActivity(i);
+                        break;
+                    case 3:
+                        i = new Intent(MainActivity.this, Settings.class);
                         startActivity(i);
                         break;
                     default:
