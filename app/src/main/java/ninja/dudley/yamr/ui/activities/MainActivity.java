@@ -73,15 +73,15 @@ public class MainActivity extends Activity
                 Intent i;
                 switch (position)
                 {
-                    case 1:
+                    case 0:
                         i = new Intent(MainActivity.this, Reader.class);
                         startActivity(i);
                         break;
-                    case 2:
+                    case 1:
                         i = new Intent(MainActivity.this, Favorites.class);
                         startActivity(i);
                         break;
-                    case 3:
+                    case 2:
                         i = new Intent(MainActivity.this, Settings.class);
                         startActivity(i);
                         break;
