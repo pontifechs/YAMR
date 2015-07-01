@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.fragments;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,12 +35,16 @@ public class PageViewer extends Fragment
     private ProgressTracker progressTracker;
 
     private BroadcastReceiver loadPageCompleteReceiver;
+    private BroadcastReceiver prevPageFailedReceiver;
+    private BroadcastReceiver nextPageFailedReceiver;
 
     @Override
     public void onAttach(Activity activity)
     {
         super.onAttach(activity);
     }
+
+    
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -58,12 +63,17 @@ public class PageViewer extends Fragment
             public void onReceive(Context context, Intent intent)
             {
                 page = new Page(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
-                if (series.getProgressPageId() == -1)
+                if (series != null && series.getProgressPageId() == -1)
                 {
                     series = new Series(getActivity().getContentResolver().query(series.uri(), null, null, null, null));
                 }
                 TouchImageView imageView = (TouchImageView) getActivity().findViewById(R.id.imageView);
                 Drawable d = Drawable.createFromPath(page.getImagePath());
+                if (d == null)
+                {
+                    // TODO:: Handle no image or corrupt image.
+                }
+
                 imageView.setImageDrawable(d);
                 TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
                 loadingText.setVisibility(View.INVISIBLE);
@@ -83,6 +93,38 @@ public class PageViewer extends Fragment
             }
         };
 
+        nextPageFailedReceiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
+                loadingText.setVisibility(View.INVISIBLE);
+                // TODO:: Make sure series is available for this
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("E.N.D.")
+                        .setMessage("You've reached the end of  + series.getName() + . Check back later for new chapters.")
+                        .setNegativeButton("K.", null)
+                        .show();
+            }
+        };
+
+        prevPageFailedReceiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
+                loadingText.setVisibility(View.INVISIBLE);
+                // TODO:: Make sure series is available for this
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Genesis")
+                        .setMessage("You've reached the beginning of  + series.getName() + . Nothing older")
+                        .setNegativeButton("K.", null)
+                        .show();
+            }
+        };
+
         TouchImageView imageView = (TouchImageView) layout.findViewById(R.id.imageView);
         imageView.register(this);
         imageView.setOnClickListener(this);
@@ -99,7 +141,7 @@ public class PageViewer extends Fragment
         else if (getArguments().getParcelable(SeriesArgumentKey) != null)
         {
             Intent fetchPage = new Intent(getActivity(), Navigation.class);
-            fetchPage.setAction(Navigation.PAGE_FROM_BOOKMARK);
+            fetchPage.setAction(Navigation.PAGE_FROM_SERIES);
             Uri seriesUri = getArguments().getParcelable(SeriesArgumentKey);
             fetchPage.setData(seriesUri);
             getActivity().startService(fetchPage);
@@ -120,7 +162,7 @@ public class PageViewer extends Fragment
         pageCompleteFilter.addAction(Navigation.FIRST_PAGE_FROM_CHAPTER_COMPLETE);
         pageCompleteFilter.addAction(Navigation.NEXT_PAGE_COMPLETE);
         pageCompleteFilter.addAction(Navigation.PREV_PAGE_COMPLETE);
-        pageCompleteFilter.addAction(Navigation.PAGE_FROM_BOOKMARK_COMPLETE);
+        pageCompleteFilter.addAction(Navigation.PAGE_FROM_SERIES_COMPLETE);
         try
         {
             pageCompleteFilter.addDataType(getActivity().getContentResolver().getType(Page.baseUri()));
@@ -131,6 +173,14 @@ public class PageViewer extends Fragment
             throw new AssertionError(e);
         }
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(loadPageCompleteReceiver, pageCompleteFilter);
+
+        IntentFilter prevFailedFilter = new IntentFilter();
+        prevFailedFilter.addAction(Navigation.PREV_PAGE_DOESNT_EXIST);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(prevPageFailedReceiver, prevFailedFilter);
+
+        IntentFilter nextFailedFilter = new IntentFilter();
+        nextFailedFilter.addAction(Navigation.NEXT_PAGE_DOESNT_EXIST);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(nextPageFailedReceiver, nextFailedFilter);
     }
 
     @Override

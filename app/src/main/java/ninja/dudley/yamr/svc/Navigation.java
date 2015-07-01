@@ -20,20 +20,25 @@ public class Navigation extends IntentService
 
     public static final String NEXT_PAGE = BASE + ".NextPage";
     public static final String NEXT_PAGE_COMPLETE = NEXT_PAGE + ".Complete";
+    public static final String NEXT_PAGE_DOESNT_EXIST = NEXT_PAGE + ".DoesntExist";
     public static final String PREV_PAGE = BASE + ".PrevPage";
     public static final String PREV_PAGE_COMPLETE = PREV_PAGE + ".Complete";
+    public static final String PREV_PAGE_DOESNT_EXIST = PREV_PAGE + ".DoesntExist";
 
     public static final String NEXT_CHAPTER = BASE + ".NextChapter";
     public static final String NEXT_CHAPTER_COMPLETE = NEXT_CHAPTER + ".Complete";
+    public static final String NEXT_CHAPTER_DOESNT_EXIST = NEXT_CHAPTER + ".DoesntExist";
     public static final String PREV_CHAPTER = BASE + ".PrevChapter";
     public static final String PREV_CHAPTER_COMPLETE = PREV_CHAPTER + ".Complete";
+    public static final String PREV_CHAPTER_DOESNT_EXIST = PREV_CHAPTER + ".DoesntExist";
+
 
     public static final String FIRST_PAGE_FROM_SERIES = BASE + ".FirstPageFromSeries";
     public static final String FIRST_PAGE_FROM_SERIES_COMPLETE = FIRST_PAGE_FROM_SERIES + ".Complete";
     public static final String FIRST_PAGE_FROM_CHAPTER = BASE + ".FirstPageFromChapter";
     public static final String FIRST_PAGE_FROM_CHAPTER_COMPLETE = FIRST_PAGE_FROM_CHAPTER + " .Complete";
-    public static final String PAGE_FROM_BOOKMARK = BASE + ".FirstPageFromBookmark";
-    public static final String PAGE_FROM_BOOKMARK_COMPLETE = PAGE_FROM_BOOKMARK + ".Complete";
+    public static final String PAGE_FROM_SERIES = BASE + ".PageFromSeries";
+    public static final String PAGE_FROM_SERIES_COMPLETE = PAGE_FROM_SERIES + ".Complete";
 
 
     public Navigation()
@@ -53,28 +58,56 @@ public class Navigation extends IntentService
                 {
                     Page arg = page(intent.getData());
                     Page next = nextPage(arg);
-                    broadcastComplete(next.uri(), NEXT_PAGE_COMPLETE);
+                    if (next != null)
+                    {
+                        broadcastComplete(next.uri(), NEXT_PAGE_COMPLETE);
+                    }
+                    else
+                    {
+                        broadcastComplete(null, NEXT_PAGE_DOESNT_EXIST);
+                    }
                     break;
                 }
                 case PREV_PAGE:
                 {
                     Page arg = page(intent.getData());
                     Page prev = prevPage(arg);
-                    broadcastComplete(prev.uri(), PREV_PAGE_COMPLETE);
+                    if (prev != null)
+                    {
+                        broadcastComplete(prev.uri(), PREV_PAGE_COMPLETE);
+                    }
+                    else
+                    {
+                        broadcastComplete(null, PREV_PAGE_DOESNT_EXIST);
+                    }
                     break;
                 }
                 case NEXT_CHAPTER:
                 {
                     Chapter arg = chapter(intent.getData());
                     Chapter next = nextChapter(arg);
-                    broadcastComplete(next.uri(), NEXT_CHAPTER_COMPLETE);
+                    if (next != null)
+                    {
+                        broadcastComplete(next.uri(), NEXT_CHAPTER_COMPLETE);
+                    }
+                    else
+                    {
+                        broadcastComplete(null, NEXT_CHAPTER_DOESNT_EXIST);
+                    }
                     break;
                 }
                 case PREV_CHAPTER:
                 {
                     Chapter arg = chapter(intent.getData());
                     Chapter prev = prevChapter(arg);
-                    broadcastComplete(prev.uri(), PREV_CHAPTER_COMPLETE);
+                    if (prev != null)
+                    {
+                        broadcastComplete(prev.uri(), PREV_CHAPTER_COMPLETE);
+                    }
+                    else
+                    {
+                        broadcastComplete(null, PREV_CHAPTER_DOESNT_EXIST);
+                    }
                     break;
                 }
                 case FIRST_PAGE_FROM_CHAPTER:
@@ -93,7 +126,7 @@ public class Navigation extends IntentService
                     broadcastComplete(first.uri(), FIRST_PAGE_FROM_SERIES_COMPLETE);
                     break;
                 }
-                case PAGE_FROM_BOOKMARK:
+                case PAGE_FROM_SERIES:
                 {
                     Series arg = series(intent.getData());
                     if (arg.getProgressPageId() == -1)
@@ -101,7 +134,7 @@ public class Navigation extends IntentService
                         arg = bookmarkFirstPage(arg);
                     }
                     Page page = pageFromBookmark(arg);
-                    broadcastComplete(page.uri(), PAGE_FROM_BOOKMARK_COMPLETE);
+                    broadcastComplete(page.uri(), PAGE_FROM_SERIES_COMPLETE);
                     break;
                 }
             }
@@ -192,15 +225,20 @@ public class Navigation extends IntentService
         {
             nextPage = neighboringPage(page, Direction.Next);
         }
-        catch (NoSuchElementException e)
+        catch (NoSuchElementException noPage)
         {
             Chapter wrongChapter = chapterFromPage(page);
-            nextPage = firstPageFromChapter(wrongChapter);
+            try
+            {
+                Chapter rightChapter = nextChapter(wrongChapter);
+                new MangaPandaFetcher(getBaseContext()).fetchChapter(rightChapter);
+                nextPage = firstPageFromChapter(rightChapter);
+            }
+            catch (NoSuchElementException noChapter)
+            {
+                return null;
+            }
         }
-
-        Intent i = new Intent(NEXT_PAGE_COMPLETE);
-        i.setData(nextPage.uri());
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
         return nextPage;
     }
 
@@ -211,15 +249,20 @@ public class Navigation extends IntentService
         {
             prevPage = neighboringPage(page, Direction.Previous);
         }
-        catch (NoSuchElementException e)
+        catch (NoSuchElementException noPage)
         {
             Chapter wrongChapter = chapterFromPage(page);
-            prevPage = lastPageFromChapter(wrongChapter);
+            try
+            {
+                Chapter rightChapter = prevChapter(wrongChapter);
+                new MangaPandaFetcher(getBaseContext()).fetchChapter(rightChapter);
+                prevPage = lastPageFromChapter(rightChapter);
+            }
+            catch (NoSuchElementException noChapter)
+            {
+                return null;
+            }
         }
-
-        Intent i = new Intent(PREV_PAGE_COMPLETE);
-        i.setData(prevPage.uri());
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
         return prevPage;
     }
 

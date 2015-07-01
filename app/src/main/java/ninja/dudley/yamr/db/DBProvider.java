@@ -51,11 +51,11 @@ public class DBProvider extends ContentProvider
         matcher.addURI(DBHelper.AUTHORITY, "/provider/#", ProviderByID);
         matcher.addURI(DBHelper.AUTHORITY, "/provider/#/series", ProviderSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series", Series);
+        matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", SeriesFavorites);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#", SeriesByID);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", SeriesChapters);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", PrevChapterInSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", NextChapterInSeries);
-        matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", SeriesFavorites);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", SeriesGenres);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter", Chapter);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", ChapterByID);

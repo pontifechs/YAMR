@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
@@ -10,16 +11,20 @@
                 tools:context="ninja.dudley.yamr.ui.activities.MainActivity">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="290dp"
         android:id="@+id/mascot"
+        android:layout_width="275dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:src="@drawable/mascot"/>
+
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/mascot"
+        android:layout_toRightOf="@+id/mascot"
         >
     </ListView>
 </RelativeLayout>
+

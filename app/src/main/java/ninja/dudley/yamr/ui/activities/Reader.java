@@ -20,11 +20,13 @@ public class Reader extends Activity implements ProviderViewer.LoadSeries, Serie
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reader);
-
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        ProviderViewer providerViewer = new ProviderViewer();
-        transaction.replace(R.id.reader, providerViewer);
-        transaction.commit();
+        if (savedInstanceState == null)
+        {
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            ProviderViewer providerViewer = new ProviderViewer();
+            transaction.replace(R.id.reader, providerViewer);
+            transaction.commit();
+        }
     }
 
     @Override

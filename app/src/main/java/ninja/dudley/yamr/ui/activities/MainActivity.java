@@ -8,7 +8,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -64,9 +63,7 @@ public class MainActivity extends Activity
         );
         ListView listView = (ListView) findViewById(R.id.listView);
 
-        FrameLayout mascot = (FrameLayout) getLayoutInflater().inflate(R.layout.yamr_mascot, null);
         listView.setAdapter(adapter);
-        listView.addHeaderView(mascot, null, false);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
