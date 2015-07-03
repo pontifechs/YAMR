@@ -29,6 +29,14 @@ public class MangaPandaFetcher extends FetcherSync
         super(context);
     }
 
+    private Document fetchUrl(String url) throws IOException
+    {
+        Connection.Response response = Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                .referrer("http://www.google.com").method(Connection.Method.GET).execute();
+        return response.parse();
+    }
+
     // TODO:: See about generalizing this so that FetcherSync can load up what/how to parse based on
     // either pure selectors, pure xpath, or a mix of selectors/javascript (via rhino)?
     // Kind of huge, but whatever haha.
@@ -44,12 +52,7 @@ public class MangaPandaFetcher extends FetcherSync
                 Log.d("Fetch", "Already parsed, skipping");
                 return provider;
             }
-            Connection.Response response = Jsoup.connect(provider.getUrl())
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
+            Document doc = fetchUrl(provider.getUrl());
             Elements elements = doc.select(".series_alpha li a[href]");
 
             final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
@@ -98,12 +101,7 @@ public class MangaPandaFetcher extends FetcherSync
                 Log.d("Fetch", "Already parsed. Ignoring");
                 return series;
             }
-            Connection.Response response = Jsoup.connect(series.getUrl())
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
+            Document doc = fetchUrl(series.getUrl());
             // Parse series info
             Elements propertyElements = doc.select(".propertytitle");
             for (Element property : propertyElements)
@@ -142,7 +140,6 @@ public class MangaPandaFetcher extends FetcherSync
                             Uri genreRelator = Genre.baseUri().buildUpon().appendPath("relator").build();
                             context.getContentResolver().insert(genreRelator, Genre.SeriesGenreRelator(series.getId(), g.getId()));
                         }
-
                         break;
                     }
                 }
@@ -205,12 +202,7 @@ public class MangaPandaFetcher extends FetcherSync
                 Log.d("Fetch", "Already parsed. Ignoring");
                 return chapter;
             }
-            Connection.Response response = Jsoup.connect(chapter.getUrl())
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
+            Document doc = fetchUrl(chapter.getUrl());
             Elements elements = doc.select("#pageMenu option[value]");
             final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
             int index = 0;
@@ -258,12 +250,7 @@ public class MangaPandaFetcher extends FetcherSync
                 Log.d("FetchPage", "Already parsed. Ignoring");
                 return page;
             }
-            Connection.Response response = Jsoup.connect(page.getUrl())
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
+            Document doc = fetchUrl(page.getUrl());
             Element element = doc.select("img[src]").first();
             page.setImageUrl(element.absUrl("src"));
             page.setFullyParsed(true);
@@ -284,12 +271,7 @@ public class MangaPandaFetcher extends FetcherSync
         Log.d("FetchNew", "Starting");
         try
         {
-            Connection.Response response = Jsoup.connect(provider.getNewUrl())
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
+            Document doc = fetchUrl(provider.getNewUrl());
             Elements rows = doc.select(".c2");
             for (Element row : rows)
             {
@@ -314,6 +296,7 @@ public class MangaPandaFetcher extends FetcherSync
                     continue;
                 }
 
+                boolean newChapter = false;
                 Elements chapters = row.select(".chaptersrec");
                 for (Element chapterElement : chapters)
                 {
@@ -331,8 +314,14 @@ public class MangaPandaFetcher extends FetcherSync
                         chapter.setNumber(number);
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues());
+                        newChapter = true;
                     }
                 }
+                if (newChapter)
+                {
+                    series.setUpdated(true);
+                }
+                context.getContentResolver().update(series.uri(), series.getContentValues(), null, null);
             }
         }
         catch (IOException e)

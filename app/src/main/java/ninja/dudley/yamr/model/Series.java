@@ -25,6 +25,7 @@ public class Series extends MangaElement
     private String thumbnailPath;
     private int progressChapterId = -1;
     private int progressPageId = -1;
+    private boolean updated = false;
 
     public static Uri baseUri()
     {
@@ -65,6 +66,7 @@ public class Series extends MangaElement
         thumbnailPath = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH);
         progressChapterId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID);
         progressPageId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID);
+        updated = getBool(c, DBHelper.SeriesEntry.COLUMN_UPDATED_CHAPTER);
         if (close)
         {
             c.close();
@@ -93,6 +95,7 @@ public class Series extends MangaElement
         {
             values.put(DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID, progressPageId);
         }
+        values.put(DBHelper.SeriesEntry.COLUMN_UPDATED_CHAPTER, updated);
         return values;
     }
 
@@ -219,5 +222,15 @@ public class Series extends MangaElement
     public void setProgressPageId(int progressPageId)
     {
         this.progressPageId = progressPageId;
+    }
+
+    public boolean isUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(boolean updated)
+    {
+        this.updated = updated;
     }
 }

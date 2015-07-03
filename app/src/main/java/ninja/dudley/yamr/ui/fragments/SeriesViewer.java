@@ -33,7 +33,6 @@ import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
 import ninja.dudley.yamr.svc.FetcherSync;
 
-
 public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>
 {
     public static final String ArgumentKey = "series";

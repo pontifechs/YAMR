@@ -29,6 +29,7 @@ import ninja.dudley.yamr.ui.fragments.PageViewer;
 public class Favorites extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor>
 {
 
+    private ThumbSeriesAdapter adapter;
     public class ThumbSeriesAdapter extends SimpleCursorAdapter
     {
         private final LayoutInflater inflater;
@@ -75,8 +76,6 @@ public class Favorites extends ListActivity implements LoaderManager.LoaderCallb
             }
         }
     }
-
-    private ThumbSeriesAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -128,14 +127,7 @@ public class Favorites extends ListActivity implements LoaderManager.LoaderCallb
     public Loader<Cursor> onCreateLoader(int id, Bundle args)
     {
         Uri favorites = Series.baseUri().buildUpon().appendPath("favorites").build();
-        return new CursorLoader(
-                this,
-                favorites,
-                null,
-                null,
-                null,
-                null
-        );
+        return new CursorLoader(this, favorites, null, null, null, null);
     }
 
     @Override

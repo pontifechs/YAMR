@@ -10,6 +10,10 @@
     <string name="title_activity_notifications">Notifications</string>
     <string name="title_activity_settings">Settings</string>
 
+
+    <string name="reading_settings">Reading</string>
+    <string name="rtl_enabled">Read Right-to-Left</string>
+    <string name="rtl_enabled_sum">Enable this to read Right to Left (Swiping right goes to the next page)</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_world">
         Bacon ipsum dolor amet non frankfurter elit ex ipsum hamburger. Officia pancetta labore frankfurter, strip steak eu cillum ipsum kielbasa exercitation quis aute biltong. Proident porchetta mollit, ut kielbasa do laborum cupim jerky landjaeger veniam aliqua biltong sunt. Cow consequat biltong hamburger, est sunt ham dolor ut alcatra salami eiusmod ribeye velit. Nostrud swine excepteur, duis biltong ut meatball proident ham hock meatloaf rump porchetta. Strip steak jowl beef ribs tail adipisicing officia, in in exercitation ball tip flank turkey culpa brisket.

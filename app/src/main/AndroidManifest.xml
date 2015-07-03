@@ -47,14 +47,9 @@
             android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
         <activity
-            android:name=".ui.activities.Notifications"
-            android:label="@string/title_activity_notifications"
+            android:name=".ui.activities.Settings"
+            android:label="@string/title_activity_settings"
             android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
-        <activity
-            android:name=".ui.activities.Settings"
-            android:label="@string/title_activity_settings" >
-        </activity>
     </application>
-
 </manifest>

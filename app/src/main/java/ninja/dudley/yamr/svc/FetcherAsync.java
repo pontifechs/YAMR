@@ -32,7 +32,9 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
     public static final String FETCH_SERIES_COMPLETE = FETCH_SERIES + ".Complete";
     public static final String FETCH_CHAPTER_STATUS = FETCH_CHAPTER + ".Status";
     public static final String FETCH_CHAPTER_COMPLETE = FETCH_CHAPTER + ".Complete";
-    public static final String FETCH_PAGE_COMPLETE = FETCH_CHAPTER + ".Complete";
+    public static final String FETCH_PAGE_STATUS = FETCH_PAGE + ".Status";
+    public static final String FETCH_PAGE_COMPLETE = FETCH_PAGE + ".Complete";
+    public static final String FETCH_NEW_STATUS = FETCH_NEW + ".Status";
     public static final String FETCH_NEW_COMPLETE = FETCH_NEW + ".Complete";
 
     public FetcherAsync()
@@ -43,7 +45,6 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
     @Override
     protected void onHandleIntent(Intent intent)
     {
-        // TODO:: Not sure how best to handle other fetchers in the future.
         FetcherSync fetcher = new MangaPandaFetcher(getBaseContext());
         fetcher.register(this);
         Uri argument = intent.getData();
@@ -53,11 +54,7 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
         {
             behavior = FetcherSync.FetchBehavior.valueOf(intent.getStringExtra(FETCH_BEHAVIOR));
         }
-        catch (IllegalArgumentException e)
-        {
-            behavior = FetcherSync.FetchBehavior.LazyFetch;
-        }
-        catch (NullPointerException e)
+        catch (IllegalArgumentException|NullPointerException e)
         {
             behavior = FetcherSync.FetchBehavior.LazyFetch;
         }
@@ -105,6 +102,9 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
             {
                 Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
                 fetcher.fetchNew(p);
+                Intent  complete = new Intent(FETCH_NEW_COMPLETE);
+                complete.setData(p.uri());
+                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
                 break;
             }
         }
@@ -131,6 +131,22 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
     {
         Intent i = new Intent(FETCH_CHAPTER_STATUS);
         i.putExtra(FETCH_CHAPTER_STATUS, status);
+        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+    }
+
+    @Override
+    public void notifyPageStatus(float status)
+    {
+        Intent i = new Intent(FETCH_PAGE_STATUS);
+        i.putExtra(FETCH_PAGE_STATUS, status);
+        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+    }
+
+    @Override
+    public void notifyNewStatus(float status)
+    {
+        Intent i = new Intent(FETCH_NEW_STATUS);
+        i.putExtra(FETCH_NEW_STATUS, status);
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
     }
 }

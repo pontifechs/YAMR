@@ -10,7 +10,6 @@ import android.provider.BaseColumns;
  */
 public class DBHelper extends SQLiteOpenHelper
 {
-    private Context context;
 
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "YAMR.db";
@@ -79,7 +78,8 @@ public class DBHelper extends SQLiteOpenHelper
         public static final SQLite3Types COLUMN_PROGRESS_CHAPTER_ID_TYPE = SQLite3Types.Integer;
         public static final String COLUMN_PROGRESS_PAGE_ID = "progress_page_id";
         public static final SQLite3Types COLUMN_PROGRESS_PAGE_ID_TYPE = SQLite3Types.Integer;
-
+        public static final String COLUMN_UPDATED_CHAPTER = "updated_chapter";
+        public static final SQLite3Types COLUMN_UPDATED_CHAPTER_TYPE = SQLite3Types.Integer;
 
         public static final String[] projection;
 
@@ -88,7 +88,7 @@ public class DBHelper extends SQLiteOpenHelper
             projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_DESCRIPTION,
                     COLUMN_PROVIDER_ID, COLUMN_FAVORITE, COLUMN_ALTERNATE_NAME, COLUMN_COMPLETE,
                     COLUMN_AUTHOR, COLUMN_ARTIST, COLUMN_THUMBNAIL_URL, COLUMN_THUMBNAIL_PATH, COLUMN_PROGRESS_CHAPTER_ID,
-                    COLUMN_PROGRESS_PAGE_ID
+                    COLUMN_PROGRESS_PAGE_ID, COLUMN_UPDATED_CHAPTER
             };
         }
     }
@@ -244,7 +244,6 @@ public class DBHelper extends SQLiteOpenHelper
     public DBHelper(Context context)
     {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.context = context;
     }
 
     @Override
@@ -274,6 +273,7 @@ public class DBHelper extends SQLiteOpenHelper
                 makeColumn(SeriesEntry.COLUMN_THUMBNAIL_PATH, SeriesEntry.COLUMN_THUMBNAIL_PATH_TYPE) +
                 makeColumn(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID_TYPE) +
                 makeColumn(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, SeriesEntry.COLUMN_PROGRESS_PAGE_ID_TYPE) +
+                makeColumn(SeriesEntry.COLUMN_UPDATED_CHAPTER, SeriesEntry.COLUMN_UPDATED_CHAPTER_TYPE) +
                 makeForeignKey(SeriesEntry.COLUMN_PROVIDER_ID, ProviderEntry.TABLE_NAME, ProviderEntry._ID) +
                 makeForeignKey(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, ChapterEntry.TABLE_NAME, ChapterEntry._ID) +
                 makeForeignKey(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, PageEntry.TABLE_NAME, PageEntry._ID) +

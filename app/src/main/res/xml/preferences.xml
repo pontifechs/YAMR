@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="reading_settings"
+        android:title="@string/reading_settings"
+        >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="rtl_enabled"
+            android:summary="@string/rtl_enabled_sum"
+            android:title="@string/rtl_enabled"
+            />
+    </PreferenceCategory>
+</PreferenceScreen>

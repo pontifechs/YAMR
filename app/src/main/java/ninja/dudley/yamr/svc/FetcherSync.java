@@ -39,6 +39,10 @@ public abstract class FetcherSync
         void notifySeriesStatus(float status);
 
         void notifyChapterStatus(float status);
+
+        void notifyPageStatus(float status);
+
+        void notifyNewStatus(float status);
     }
     protected NotifyStatus listener;
     public void register(NotifyStatus listener)

@@ -7,9 +7,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,11 +23,11 @@ import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.Navigation;
+import ninja.dudley.yamr.ui.activities.Settings;
 import ninja.dudley.yamr.ui.util.TouchImageView;
 import ninja.dudley.yamr.util.ProgressTracker;
 
-public class PageViewer extends Fragment
-        implements TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
+public class PageViewer extends Fragment implements TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
     public static final String ChapterArgumentKey = "chapter";
     public static final String SeriesArgumentKey = "series";
@@ -43,8 +45,6 @@ public class PageViewer extends Fragment
     {
         super.onAttach(activity);
     }
-
-    
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -188,11 +188,12 @@ public class PageViewer extends Fragment
     {
         super.onResume();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(loadPageCompleteReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(prevPageFailedReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(nextPageFailedReceiver);
         getActivity().getActionBar().show();
     }
 
-    @Override
-    public void onSwipeLeft()
+    private void nextPage()
     {
         if (page != null)
         {
@@ -206,8 +207,7 @@ public class PageViewer extends Fragment
         }
     }
 
-    @Override
-    public void onSwipeRight()
+    private void prevPage()
     {
         if (page != null)
         {
@@ -222,9 +222,37 @@ public class PageViewer extends Fragment
     }
 
     @Override
+    public void onSwipeLeft()
+    {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        if (pref.getBoolean(Settings.RTL_ENABLED_KEY, true))
+        {
+            nextPage();
+        }
+        else
+        {
+            prevPage();
+        }
+    }
+
+    @Override
+    public void onSwipeRight()
+    {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        if (pref.getBoolean(Settings.RTL_ENABLED_KEY, true))
+        {
+            prevPage();
+        }
+        else
+        {
+            nextPage();
+        }
+    }
+
+    @Override
     public void onClick(View v)
     {
-        onSwipeLeft();
+        nextPage();
     }
 
     @Override

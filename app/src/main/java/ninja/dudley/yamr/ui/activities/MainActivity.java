@@ -35,7 +35,6 @@ public class MainActivity extends Activity
         List<Map<String, ?>> maps = new ArrayList<>();
 
         // Set up activities
-
         Map<String, Object> browseMap = new HashMap<>();
         browseMap.put(iconKey, R.drawable.ic_explore_black_48dp);
         browseMap.put(nameKey, "Browse Manga");
