@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.util.NoSuchElementException;
 
@@ -14,7 +15,7 @@ import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.fetchers.MangaPandaFetcher;
 
-public class Navigation extends IntentService
+public class Navigation extends IntentService implements FetcherSync.NotifyStatus
 {
     public static final String BASE = "ninja.dudley.yamr.fetch.Navigation";
 
@@ -40,10 +41,47 @@ public class Navigation extends IntentService
     public static final String PAGE_FROM_SERIES = BASE + ".PageFromSeries";
     public static final String PAGE_FROM_SERIES_COMPLETE = PAGE_FROM_SERIES + ".Complete";
 
-
     public Navigation()
     {
         super("Navigation");
+    }
+
+    private FetcherSync fetcher;
+
+    @Override
+    public void notifyProviderStatus(float status)
+    {
+        // Dun care
+    }
+
+    @Override
+    public void notifySeriesStatus(float status)
+    {
+        // Dun care
+    }
+
+    @Override
+    public void notifyChapterStatus(float status)
+    {
+        // Dun care
+    }
+
+    @Override
+    public void notifyPageStatus(float status)
+    {
+        // Do care!
+        Log.d("PageStatus", "" + status);
+        Intent i = new Intent();
+        i.setAction(FetcherAsync.FETCH_PAGE_STATUS);
+        i.putExtra(FetcherAsync.FETCH_PAGE_STATUS, status);
+        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i);
+    }
+
+
+    @Override
+    public void notifyNewStatus(float status)
+    {
+        // Dun care
     }
 
     @Override
@@ -51,6 +89,8 @@ public class Navigation extends IntentService
     {
         if (intent != null)
         {
+            fetcher = new MangaPandaFetcher(getBaseContext());
+            fetcher.register(this);
             final String action = intent.getAction();
             switch (action)
             {
@@ -113,7 +153,7 @@ public class Navigation extends IntentService
                 case FIRST_PAGE_FROM_CHAPTER:
                 {
                     Chapter arg = chapter(intent.getData());
-                    new MangaPandaFetcher(getBaseContext()).fetchChapter(arg);
+                    fetcher.fetchChapter(arg);
                     Page first = firstPageFromChapter(arg);
                     broadcastComplete(first.uri(), FIRST_PAGE_FROM_CHAPTER_COMPLETE);
                     break;
@@ -121,7 +161,7 @@ public class Navigation extends IntentService
                 case FIRST_PAGE_FROM_SERIES:
                 {
                     Series arg = series(intent.getData());
-                    new MangaPandaFetcher(getBaseContext()).fetchSeries(arg);
+                    fetcher.fetchSeries(arg);
                     Page first = firstPageFromSeries(arg);
                     broadcastComplete(first.uri(), FIRST_PAGE_FROM_SERIES_COMPLETE);
                     break;
@@ -202,7 +242,7 @@ public class Navigation extends IntentService
                 .appendPath(Float.toString(currentPage.getNumber())).appendPath(direction.toString()).build();
         Cursor nextPageCursor = getContentResolver().query(getNextPageUri, null, null, null, null);
         Page page = new Page(nextPageCursor); // Let it throw, Let it throw!!! Can't hold it back anymore!!!
-        new MangaPandaFetcher(getBaseContext()).fetchPage(page);
+        fetcher.fetchPage(page);
         return page;
     }
 
@@ -214,7 +254,7 @@ public class Navigation extends IntentService
                 .appendPath(Float.toString(currentChapter.getNumber())).appendPath(direction.toString()).build();
         Cursor nextChapterCursor = getContentResolver().query(getNextChapterUri, null, null, null, null);
         Chapter chapter= new Chapter(nextChapterCursor); // Let it throw, Let it throw!!! Can't hold it back anymore
-        new MangaPandaFetcher(getBaseContext()).fetchChapter(currentChapter);
+        fetcher.fetchChapter(currentChapter);
         return chapter;
     }
 
@@ -231,7 +271,7 @@ public class Navigation extends IntentService
             try
             {
                 Chapter rightChapter = nextChapter(wrongChapter);
-                new MangaPandaFetcher(getBaseContext()).fetchChapter(rightChapter);
+                fetcher.fetchChapter(rightChapter);
                 nextPage = firstPageFromChapter(rightChapter);
             }
             catch (NoSuchElementException noChapter)
@@ -255,7 +295,7 @@ public class Navigation extends IntentService
             try
             {
                 Chapter rightChapter = prevChapter(wrongChapter);
-                new MangaPandaFetcher(getBaseContext()).fetchChapter(rightChapter);
+                fetcher.fetchChapter(rightChapter);
                 prevPage = lastPageFromChapter(rightChapter);
             }
             catch (NoSuchElementException noChapter)
@@ -281,7 +321,7 @@ public class Navigation extends IntentService
         Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
         Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " asc");
         Page firstPage = new Page(pages);
-        new MangaPandaFetcher(getBaseContext()).fetchPage(firstPage);
+        fetcher.fetchPage(firstPage);
         return firstPage;
     }
 
@@ -290,7 +330,7 @@ public class Navigation extends IntentService
         Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
         Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " desc");
         Page lastPage = new Page(pages);
-        new MangaPandaFetcher(getBaseContext()).fetchPage(lastPage);
+        fetcher.fetchPage(lastPage);
         return lastPage;
     }
 
@@ -299,14 +339,14 @@ public class Navigation extends IntentService
         Uri chaptersQuery = series.uri().buildUpon().appendPath("chapters").build();
         Cursor chapters = getContentResolver().query(chaptersQuery, null, null, null, Chapter.numberCol + " asc");
         Chapter firstChapter = new Chapter(chapters);
-        new MangaPandaFetcher(getBaseContext()).fetchChapter(firstChapter);
+        fetcher.fetchChapter(firstChapter);
         return firstChapter;
     }
 
     private Page firstPageFromSeries(Series series)
     {
         Chapter c = firstChapterFromSeries(series);
-        new MangaPandaFetcher(getBaseContext()).fetchChapter(c);
+        fetcher.fetchChapter(c);
         return firstPageFromChapter(c);
     }
 
@@ -324,7 +364,7 @@ public class Navigation extends IntentService
     {
         Uri pageUri = Page.uri(series.getProgressPageId());
         Page page = page(pageUri);
-        new MangaPandaFetcher(getBaseContext()).fetchPage(page);
+        fetcher.fetchPage(page);
         return page;
     }
 }

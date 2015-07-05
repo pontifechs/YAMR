@@ -16,12 +16,14 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Series;
+import ninja.dudley.yamr.svc.FetcherAsync;
 import ninja.dudley.yamr.svc.Navigation;
 import ninja.dudley.yamr.ui.activities.Settings;
 import ninja.dudley.yamr.ui.util.TouchImageView;
@@ -39,6 +41,7 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
     private BroadcastReceiver loadPageCompleteReceiver;
     private BroadcastReceiver prevPageFailedReceiver;
     private BroadcastReceiver nextPageFailedReceiver;
+    private BroadcastReceiver pageLoadStatusReceiver;
 
     @Override
     public void onAttach(Activity activity)
@@ -75,8 +78,8 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
                 }
 
                 imageView.setImageDrawable(d);
-                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
-                loadingText.setVisibility(View.INVISIBLE);
+                ProgressBar loadingBar= (ProgressBar) getActivity().findViewById(R.id.page_loading);
+                loadingBar.setVisibility(View.INVISIBLE);
 
                 if (series != null)
                 {
@@ -98,8 +101,8 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
-                loadingText.setVisibility(View.INVISIBLE);
+                ProgressBar loadingBar = (ProgressBar) getActivity().findViewById(R.id.page_loading);
+                loadingBar.setVisibility(View.INVISIBLE);
                 // TODO:: Make sure series is available for this
                 new AlertDialog.Builder(getActivity())
                         .setTitle("E.N.D.")
@@ -114,14 +117,25 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
-                loadingText.setVisibility(View.INVISIBLE);
+                ProgressBar loadingBar = (ProgressBar) getActivity().findViewById(R.id.page_loading);
+                loadingBar.setVisibility(View.INVISIBLE);
                 // TODO:: Make sure series is available for this
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Genesis")
                         .setMessage("You've reached the beginning of  + series.getName() + . Nothing older")
                         .setNegativeButton("K.", null)
                         .show();
+            }
+        };
+
+        pageLoadStatusReceiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                ProgressBar loadingBar = (ProgressBar) getActivity().findViewById(R.id.page_loading);
+                float percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_PAGE_STATUS, 0.0f);
+                loadingBar.setProgress((int) percent);
             }
         };
 
@@ -181,6 +195,8 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
         IntentFilter nextFailedFilter = new IntentFilter();
         nextFailedFilter.addAction(Navigation.NEXT_PAGE_DOESNT_EXIST);
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(nextPageFailedReceiver, nextFailedFilter);
+
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(pageLoadStatusReceiver, new IntentFilter(FetcherAsync.FETCH_PAGE_STATUS));
     }
 
     @Override
@@ -190,6 +206,7 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(loadPageCompleteReceiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(prevPageFailedReceiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(nextPageFailedReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(pageLoadStatusReceiver);
         getActivity().getActionBar().show();
     }
 
@@ -201,9 +218,9 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             nextIntent.setAction(Navigation.NEXT_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
-            TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
-            loadingText.setText("Loading next page");
-            loadingText.setVisibility(View.VISIBLE);
+            ProgressBar loadingBar = (ProgressBar) getActivity().findViewById(R.id.page_loading);
+            loadingBar.setProgress(0);
+            loadingBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -215,9 +232,9 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             nextIntent.setAction(Navigation.PREV_PAGE);
             nextIntent.setData(page.uri());
             getActivity().startService(nextIntent);
-            TextView loadingText = (TextView) getActivity().findViewById(R.id.page_loading_text);
-            loadingText.setText("Loading previous page");
-            loadingText.setVisibility(View.VISIBLE);
+            ProgressBar loadingBar = (ProgressBar) getActivity().findViewById(R.id.page_loading);
+            loadingBar.setProgress(0);
+            loadingBar.setVisibility(View.VISIBLE);
         }
     }
 

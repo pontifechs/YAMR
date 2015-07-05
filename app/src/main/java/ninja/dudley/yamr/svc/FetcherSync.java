@@ -7,9 +7,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -152,6 +155,66 @@ public abstract class FetcherSync
         }
     }
 
+    private void downloadImage(String imageUrl, String imagePath)
+    {
+        InputStream in = null;
+        ByteArrayOutputStream out = null;
+        int count;
+        try
+        {
+            URL url = new URL(imageUrl);
+            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            conn.setDoInput(true);
+            conn.connect();
+            in = conn.getInputStream();
+            out = new ByteArrayOutputStream();
+
+            int length = conn.getContentLength();
+            int done = 0;
+            byte data[] = new byte[1024];
+            while ((count = in.read(data)) != -1) {
+                done += count;
+
+                if (listener != null)
+                {
+                    listener.notifyPageStatus(done / (float) length);
+                }
+
+                out.write(data, 0, count);
+            }
+
+            // flushing output
+            out.flush();
+
+            Bitmap bmp = BitmapFactory.decodeByteArray(out.toByteArray(), 0, length);
+            FileOutputStream fileOut = new FileOutputStream(imagePath);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
+        }
+        catch (MalformedURLException e)
+        {
+            // TODO:: better error handling/checking
+            throw new RuntimeException(e);
+        }
+        catch (IOException e)
+        {
+             // TODO:: better error handling/checking
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            try
+            {
+                out.close();
+            }
+            catch (IOException e)
+            {
+                //TODO:: better error handling/checking
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     protected void savePageImage(Page p)
     {
@@ -180,36 +243,8 @@ public abstract class FetcherSync
         String pagePath = chapterDirectory +
                 "/" + formatFloat(pageNumber) + ".png";
 
-        FileOutputStream out = null;
-        try
-        {
-            URL url = new URL(p.getImageUrl());
-            Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-            out = new FileOutputStream(pagePath);
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-        }
-        catch (MalformedURLException e)
-        {
-            // TODO:: better error handling/checking
-            throw new RuntimeException(e);
-        }
-        catch (IOException e)
-        {
-             // TODO:: better error handling/checking
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            try
-            {
-                out.close();
-            }
-            catch (IOException e)
-            {
-                //TODO:: better error handling/checking
-                throw new RuntimeException(e);
-            }
-        }
+        downloadImage(p.getImageUrl(), pagePath);
+
         p.setImagePath(pagePath);
         context.getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
         heritage.close();
