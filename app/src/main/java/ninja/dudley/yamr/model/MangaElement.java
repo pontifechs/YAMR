@@ -6,19 +6,26 @@ import android.database.Cursor;
 import java.util.NoSuchElementException;
 
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.Id;
 
 /**
  * Created by mdudley on 6/2/15.
  */
 public class MangaElement
 {
-    protected int _id = -1;
+    @Id
+    protected int id = -1;
+
+    public static final String urlCol= "url";
+    @Column(name=urlCol)
     protected String url;
+
+    public static final String fullyParsedCol = "fully_parsed";
+    @Column(name=fullyParsedCol)
     protected boolean fullyParsed = false;
 
     public MangaElement() {}
-
-    // Provider IO
     public MangaElement(Cursor c)
     {
         if (c.getCount() <= 0)
@@ -30,21 +37,21 @@ public class MangaElement
         {
             c.moveToFirst();
         }
-        _id = getInt(c, DBHelper.MangaElementEntry._ID);
-        url = getString(c, DBHelper.MangaElementEntry.COLUMN_URL);
-        fullyParsed = getBool(c, DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED);
+        id = getInt(c, DBHelper.ID);
+        url = getString(c, urlCol);
+        fullyParsed = getBool(c, fullyParsedCol);
         // Can't close yet, others need the cursor still
     }
 
     public ContentValues getContentValues()
     {
         ContentValues values = new ContentValues();
-        if (_id != -1)
+        if (id != -1)
         {
-            values.put(DBHelper.MangaElementEntry._ID, _id);
+            values.put(DBHelper.ID , id);
         }
-        values.put(DBHelper.MangaElementEntry.COLUMN_URL, url);
-        values.put(DBHelper.MangaElementEntry.COLUMN_FULLY_PARSED, fullyParsed);
+        values.put(urlCol, url);
+        values.put(fullyParsedCol, fullyParsed);
         return values;
     }
 
@@ -78,12 +85,12 @@ public class MangaElement
 
     public int getId()
     {
-        return _id;
+        return id;
     }
 
     public void setId(int id)
     {
-        this._id = id;
+        this.id = id;
     }
 
     public String getUrl()

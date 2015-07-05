@@ -137,7 +137,7 @@ public abstract class FetcherSync
 
     private static String stripBadCharsForFile(String file)
     {
-        return file.replaceAll("[\\\\/\\?%\\*:\\|\"<>]", ".");
+        return file.replaceAll("[ \\\\/\\?%\\*:\\|\"<>]", ".");
     }
 
     private static String formatFloat(float f)
@@ -171,7 +171,7 @@ public abstract class FetcherSync
 
         File root = Environment.getExternalStorageDirectory();
         String chapterPath = root.getAbsolutePath() +
-                "/" + stripBadCharsForFile(providerName) +
+                "/." + stripBadCharsForFile(providerName) +
                 "/" + stripBadCharsForFile(seriesName) +
                 "/" + formatFloat(chapterNumber);
 

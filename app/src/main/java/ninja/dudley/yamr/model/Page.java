@@ -5,16 +5,32 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.ForeignKey;
+import ninja.dudley.yamr.db.util.Table;
 
 /**
  * Created by mdudley on 5/19/15.
  */
+@Table(Page.tableName)
 public class Page extends MangaElement
 {
+    public static final String tableName = "page";
+
+    public static final String chapterIdCol = Chapter.tableName + DBHelper.ID;
+    @ForeignKey(value=Chapter.class, name=chapterIdCol)
     private int chapterId;
 
+    public static final String numberCol = "number";
+    @Column(name=numberCol, type=Column.Type.Real)
     private float number;
+
+    public static final String imageUrlCol = "image_url";
+    @Column(name=imageUrlCol)
     private String imageUrl;
+
+    public static final String imagePathCol = "image_path";
+    @Column(name=imagePathCol)
     private String imagePath;
 
     public static Uri baseUri()
@@ -33,14 +49,10 @@ public class Page extends MangaElement
     public Page(Cursor c)
     {
         super(c);
-        int chapterIdCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_CHAPTER_ID);
-        int numberCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_NUMBER);
-        int imageUrlCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_IMAGE_URL);
-        int imagePathCol = c.getColumnIndex(DBHelper.PageEntry.COLUMN_IMAGE_PATH);
-        chapterId = c.getInt(chapterIdCol);
-        number = c.getFloat(numberCol);
-        imageUrl = c.getString(imageUrlCol);
-        imagePath = c.getString(imagePathCol);
+        chapterId = getInt(c, chapterIdCol);
+        number = getFloat(c, numberCol);
+        imageUrl = getString(c, imageUrlCol);
+        imagePath = getString(c, imagePathCol);
         c.close();
     }
 
@@ -48,16 +60,16 @@ public class Page extends MangaElement
     public ContentValues getContentValues()
     {
         ContentValues values = super.getContentValues();
-        values.put(DBHelper.PageEntry.COLUMN_CHAPTER_ID, chapterId);
-        values.put(DBHelper.PageEntry.COLUMN_NUMBER, number);
-        values.put(DBHelper.PageEntry.COLUMN_IMAGE_URL, imageUrl);
-        values.put(DBHelper.PageEntry.COLUMN_IMAGE_PATH, imagePath);
+        values.put(chapterIdCol, chapterId);
+        values.put(numberCol, number);
+        values.put(imageUrlCol, imageUrl);
+        values.put(imagePathCol, imagePath);
         return values;
     }
 
     public Uri uri()
     {
-        return uri(_id);
+        return uri(id);
     }
 
     public int getChapterId()

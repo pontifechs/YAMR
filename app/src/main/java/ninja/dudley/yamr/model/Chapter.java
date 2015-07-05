@@ -4,20 +4,30 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
-import java.util.List;
-
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.ForeignKey;
+import ninja.dudley.yamr.db.util.Table;
 
 /**
  * Created by mdudley on 5/19/15.
  */
+@Table(Chapter.tableName)
 public class Chapter extends MangaElement
 {
+    public static final String tableName = "chapter";
+
+    public static final String seriesIdCol = Series.tableName + DBHelper.ID;
+    @ForeignKey(value=Series.class, name=seriesIdCol)
     private int seriesId;
 
+    public static final String nameCol = "name";
+    @Column(name=nameCol)
     private String name;
+
+    public static final String numberCol = "number";
+    @Column(name=numberCol, type= Column.Type.Real)
     private float number;
-    private List<Page> pages;
 
     public static Uri baseUri()
     {
@@ -35,12 +45,9 @@ public class Chapter extends MangaElement
     public Chapter(Cursor c)
     {
         super(c);
-        int seriesIdCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_SERIES_ID);
-        int nameCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_NAME);
-        int numberCol = c.getColumnIndex(DBHelper.ChapterEntry.COLUMN_NUMBER);
-        seriesId = c.getInt(seriesIdCol);
-        name = c.getString(nameCol);
-        number = c.getFloat(numberCol);
+        seriesId = getInt(c, seriesIdCol);
+        name = getString(c, nameCol);
+        number = getFloat(c, numberCol);
         c.close();
     }
 
@@ -48,15 +55,15 @@ public class Chapter extends MangaElement
     public ContentValues getContentValues()
     {
         ContentValues values = super.getContentValues();
-        values.put(DBHelper.ChapterEntry.COLUMN_SERIES_ID, seriesId);
-        values.put(DBHelper.ChapterEntry.COLUMN_NAME, name);
-        values.put(DBHelper.ChapterEntry.COLUMN_NUMBER, number);
+        values.put(seriesIdCol, seriesId);
+        values.put(nameCol, name);
+        values.put(numberCol, number);
         return values;
     }
 
     public Uri uri()
     {
-        return uri(_id);
+        return uri(id);
     }
 
     public int getSeriesId()
@@ -87,15 +94,5 @@ public class Chapter extends MangaElement
     public void setNumber(float number)
     {
         this.number = number;
-    }
-
-    public List<Page> getPages()
-    {
-        return pages;
-    }
-
-    public void setPages(List<Page> pages)
-    {
-        this.pages = pages;
     }
 }

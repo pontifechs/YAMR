@@ -10,6 +10,12 @@ import android.util.Log;
 
 import java.util.List;
 
+import ninja.dudley.yamr.model.Chapter;
+import ninja.dudley.yamr.model.Genre;
+import ninja.dudley.yamr.model.Page;
+import ninja.dudley.yamr.model.Provider;
+import ninja.dudley.yamr.model.Series;
+
 /**
  * Created by mdudley on 5/21/15.
  */
@@ -20,52 +26,52 @@ public class DBProvider extends ContentProvider
     private static final UriMatcher matcher;
 
     // Matcher codes ------------------------------------------------------
-    private static final int Provider = 0;
+    private static final int ProviderMatch = 0;
     private static final int ProviderByID = 1;
     private static final int ProviderSeries = 5;
     private static final int ProviderAll = 9;
-    private static final int Series = 10;
+    private static final int SeriesMatch = 10;
     private static final int SeriesByID = 11;
     private static final int SeriesChapters = 15;
     private static final int SeriesFavorites = 16;
     private static final int SeriesGenres = 17;
-    private static final int Chapter = 20;
+    private static final int ChapterMatch = 20;
     private static final int ChapterByID = 21;
     private static final int PrevChapterInSeries = 22;
     private static final int NextChapterInSeries = 23;
     private static final int ChapterPages = 25;
-    private static final int Page = 30;
+    private static final int PageMatch = 30;
     private static final int PageByID = 31;
     private static final int PrevPageInChapter = 32;
     private static final int NextPageInChapter = 33;
     private static final int PageHeritage = 39;
-    private static final int Genre = 50;
+    private static final int GenreMatch = 50;
     private static final int GenreSeries = 51;
     private static final int SeriesGenreRelator = 60;
 
     static
     {
         matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        matcher.addURI(DBHelper.AUTHORITY, "/provider", Provider);
+        matcher.addURI(DBHelper.AUTHORITY, "/provider", ProviderMatch);
         matcher.addURI(DBHelper.AUTHORITY, "/provider/all", ProviderAll);
         matcher.addURI(DBHelper.AUTHORITY, "/provider/#", ProviderByID);
         matcher.addURI(DBHelper.AUTHORITY, "/provider/#/series", ProviderSeries);
-        matcher.addURI(DBHelper.AUTHORITY, "/series", Series);
+        matcher.addURI(DBHelper.AUTHORITY, "/series", SeriesMatch);
         matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", SeriesFavorites);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#", SeriesByID);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", SeriesChapters);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", PrevChapterInSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", NextChapterInSeries);
         matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", SeriesGenres);
-        matcher.addURI(DBHelper.AUTHORITY, "/chapter", Chapter);
+        matcher.addURI(DBHelper.AUTHORITY, "/chapter", ChapterMatch);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", ChapterByID);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", ChapterPages);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", PrevPageInChapter);
         matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", NextPageInChapter);
-        matcher.addURI(DBHelper.AUTHORITY, "/page", Page);
+        matcher.addURI(DBHelper.AUTHORITY, "/page", PageMatch);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#", PageByID);
         matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", PageHeritage);
-        matcher.addURI(DBHelper.AUTHORITY, "/genre", Genre);
+        matcher.addURI(DBHelper.AUTHORITY, "/genre", GenreMatch);
         matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", SeriesGenreRelator);
         matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", GenreSeries);
     }
@@ -114,20 +120,20 @@ public class DBProvider extends ContentProvider
         int code = matcher.match(uri);
         switch (code)
         {
-            case Provider:
-                Log.d("Query", "Provider " + code + " : " + Provider);
-                return db.query(DBHelper.ProviderEntry.TABLE_NAME,
-                        DBHelper.ProviderEntry.projection,
-                        DBHelper.ProviderEntry.COLUMN_URL + "=?",
+            case ProviderMatch:
+                Log.d("Query", "ProviderMatch " + code + " : " + ProviderMatch);
+                return db.query(Provider.tableName,
+                        DBHelper.projections.get(Provider.tableName),
+                        Provider.urlCol + "=?",
                         selectionArgs,
                         null,
                         null,
                         sortOrder);
             case ProviderByID:
                 Log.d("Query", "ProviderByID " + code + " : " + ProviderByID);
-                return db.query(DBHelper.ProviderEntry.TABLE_NAME,
-                        DBHelper.ProviderEntry.projection,
-                        DBHelper.ProviderEntry._ID + "=?",
+                return db.query(Provider.tableName,
+                        DBHelper.projections.get(Provider.tableName),
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
@@ -136,7 +142,7 @@ public class DBProvider extends ContentProvider
                 );
             case ProviderSeries:
                 Log.d("Query", "ProviderSeries " + code + " : " + ProviderSeries);
-                String querySelection = DBHelper.SeriesEntry.COLUMN_PROVIDER_ID + "=?";
+                String querySelection = Series.providerIdCol + "=?";
                 if (selection != null)
                 {
                     querySelection += " and " + selection;
@@ -150,19 +156,18 @@ public class DBProvider extends ContentProvider
                 {
                     querySelectionArgs = new String[]{Integer.toString(getId(code, uri)), selectionArgs[0]};
                 }
-
-                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry.projection,
+                return db.query(Series.tableName,
+                        DBHelper.projections.get(Series.tableName),
                         querySelection,
                         querySelectionArgs,
                         null,
                         null,
-                        sortOrder == null ? DBHelper.SeriesEntry.COLUMN_NAME : sortOrder
+                        sortOrder == null ? Series.nameCol : sortOrder
                 );
             case ProviderAll:
                 Log.d("Query", "ProviderAll " + code + " : " + ProviderAll);
-                return db.query(DBHelper.ProviderEntry.TABLE_NAME,
-                        DBHelper.ProviderEntry.projection,
+                return db.query(Provider.tableName,
+                        DBHelper.projections.get(Provider.tableName),
                         null,
                         null,
                         null,
@@ -173,42 +178,42 @@ public class DBProvider extends ContentProvider
                 Log.d("Query", "PrevChapterInSeries " + code + " : " + PrevChapterInSeries);
                 String chapterNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float chapterNumberForPrev = Float.parseFloat(chapterNumberStringForPrev);
-                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry.projection,
-                        DBHelper.ChapterEntry.COLUMN_SERIES_ID + "=? and " + DBHelper.ChapterEntry.COLUMN_NUMBER + "<?",
+                return db.query(Chapter.tableName,
+                        DBHelper.projections.get(Chapter.tableName),
+                        Chapter.seriesIdCol + "=? and " + Chapter.numberCol + "<?",
                         new String[]{Integer.toString(getId(code, uri)), Float.toString(chapterNumberForPrev)},
                         null,
                         null,
-                        DBHelper.ChapterEntry.COLUMN_NUMBER + " desc",
+                        Chapter.numberCol + " desc",
                         "1"
                 );
             case NextChapterInSeries:
                 Log.d("Query", "NextChapterInSeries " + code + " : " + NextChapterInSeries);
                 String chapterNumberStringForNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float chapterNumberForNext = Float.parseFloat(chapterNumberStringForNext);
-                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry.projection,
-                        DBHelper.ChapterEntry.COLUMN_SERIES_ID + "=? and " + DBHelper.ChapterEntry.COLUMN_NUMBER + ">?",
+                return db.query(Chapter.tableName,
+                        DBHelper.projections.get(Chapter.tableName),
+                        Chapter.seriesIdCol + "=? and " + Chapter.numberCol + ">?",
                         new String[]{Integer.toString(getId(code, uri)), Float.toString(chapterNumberForNext)},
                         null,
                         null,
-                        DBHelper.ChapterEntry.COLUMN_NUMBER + " asc",
+                        Chapter.numberCol + " asc",
                         "1"
                 );
-            case Series:
-                Log.d("Query", "Series " + code + " : " + Series);
-                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry.projection,
-                        DBHelper.SeriesEntry.COLUMN_URL + "=?",
+            case SeriesMatch:
+                Log.d("Query", "SeriesMatch " + code + " : " + SeriesMatch);
+                return db.query(Series.tableName,
+                        DBHelper.projections.get(Series.tableName),
+                        Series.urlCol + "=?",
                         selectionArgs,
                         null,
                         null,
                         sortOrder);
             case SeriesByID:
                 Log.d("Query", "SeriesByID " + code + " : " + SeriesByID);
-                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry.projection,
-                        DBHelper.SeriesEntry._ID + "=?",
+                return db.query(Series.tableName,
+                        DBHelper.projections.get(Series.tableName),
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
@@ -217,19 +222,19 @@ public class DBProvider extends ContentProvider
                 );
             case SeriesChapters:
                 Log.d("Query", "SeriesChapters " + code + " : " + SeriesChapters);
-                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry.projection,
-                        DBHelper.ChapterEntry.COLUMN_SERIES_ID + "=?",
+                return db.query(Chapter.tableName,
+                        DBHelper.projections.get(Chapter.tableName),
+                        Chapter.seriesIdCol + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
-                        sortOrder == null ? DBHelper.ChapterEntry.COLUMN_NUMBER : sortOrder
+                        sortOrder == null ? Chapter.numberCol : sortOrder
                 );
             case SeriesFavorites:
                 Log.d("Query", "SeriesFavorites " + code + " : " + SeriesFavorites);
-                return db.query(DBHelper.SeriesEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry.projection,
-                        DBHelper.SeriesEntry.COLUMN_FAVORITE + " > 0",
+                return db.query(Series.tableName,
+                        DBHelper.projections.get(Series.tableName),
+                        Series.favoriteCol + " > 0",
                         null,
                         null,
                         null,
@@ -238,7 +243,7 @@ public class DBProvider extends ContentProvider
             case SeriesGenres:
                 Log.d("Query", "SeriesGenres " + code + " : " + SeriesGenres);
                 return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME,
-                        DBHelper.GenreEntry.projection,
+                        DBHelper.SeriesGenreEntry.projection,
                         DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID + " =?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
@@ -248,27 +253,27 @@ public class DBProvider extends ContentProvider
             case GenreSeries:
                 Log.d("Query", "GenreSeries " + code + " : " + GenreSeries);
                 return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry.projection,
-                        DBHelper.GenreEntry._ID + " =?",
+                        DBHelper.SeriesGenreEntry.projection,
+                        DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID + " =?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
                         null
                 );
-            case Chapter:
-                Log.d("Query", "Chapter " + code + " : " + Chapter);
-                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry.projection,
-                        DBHelper.ChapterEntry.COLUMN_URL + "=?",
+            case ChapterMatch:
+                Log.d("Query", "ChapterMatch " + code + " : " + ChapterMatch);
+                return db.query(Chapter.tableName,
+                        DBHelper.projections.get(Chapter.tableName),
+                        Chapter.urlCol + "=?",
                         selectionArgs,
                         null,
                         null,
                         sortOrder);
             case ChapterByID:
                 Log.d("Query", "ChapterByID " + code + " : " + ChapterByID);
-                return db.query(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry.projection,
-                        DBHelper.ChapterEntry._ID + "=?",
+                return db.query(Chapter.tableName,
+                        DBHelper.projections.get(Chapter.tableName),
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
@@ -277,54 +282,54 @@ public class DBProvider extends ContentProvider
                 );
             case ChapterPages:
                 Log.d("Query", "ChapterPages " + code + " : " + ChapterPages );
-                return db.query(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry.projection,
-                        DBHelper.PageEntry.COLUMN_CHAPTER_ID + "=?",
+                return db.query(Page.tableName,
+                        DBHelper.projections.get(Page.tableName),
+                        Page.chapterIdCol + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
-                        sortOrder == null ? DBHelper.PageEntry.COLUMN_NUMBER : sortOrder
+                        sortOrder == null ? Page.numberCol : sortOrder
                 );
             case PrevPageInChapter:
                 Log.d("Query", "PrevPageInChapter " + code + " : " + PrevPageInChapter);
                 String pageNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float pageNumberForPrev = Float.parseFloat(pageNumberStringForPrev);
-                return db.query(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry.projection,
-                        DBHelper.PageEntry.COLUMN_CHAPTER_ID + "=? and " + DBHelper.PageEntry.COLUMN_NUMBER + "<?",
+                return db.query(Page.tableName,
+                        DBHelper.projections.get(Page.tableName),
+                        Page.chapterIdCol + "=? and " + Page.numberCol + "<?",
                         new String[]{Integer.toString(getId(code, uri)), Float.toString(pageNumberForPrev)},
                         null,
                         null,
-                        DBHelper.PageEntry.COLUMN_NUMBER + " desc",
+                        Page.numberCol + " desc",
                         "1"
                 );
             case NextPageInChapter:
                 Log.d("Query", "NextPageInChapter " + code + " : " + NextPageInChapter);
                 String pageNumberStringNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
                 float pageNumberNext = Float.parseFloat(pageNumberStringNext);
-                return db.query(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry.projection,
-                        DBHelper.PageEntry.COLUMN_CHAPTER_ID + "=? and " + DBHelper.PageEntry.COLUMN_NUMBER + ">?",
+                return db.query(Page.tableName,
+                        DBHelper.projections.get(Page.tableName),
+                        Page.chapterIdCol + "=? and " + Page.numberCol + ">?",
                         new String[]{Integer.toString(getId(code, uri)), Float.toString(pageNumberNext)},
                         null,
                         null,
-                        DBHelper.PageEntry.COLUMN_NUMBER + " asc",
+                        Page.numberCol + " asc",
                         "1"
                 );
-            case Page:
-                Log.d("Query", "Page " + code + " : " + Page);
-                return db.query(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry.projection,
-                        DBHelper.PageEntry.COLUMN_URL + "=?",
+            case PageMatch:
+                Log.d("Query", "PageMatch " + code + " : " + PageMatch);
+                return db.query(Page.tableName,
+                        DBHelper.projections.get(Page.tableName),
+                        Page.urlCol + "=?",
                         selectionArgs,
                         null,
                         null,
                         sortOrder);
             case PageByID:
                 Log.d("Query", "PageByID " + code + " : " + PageByID);
-                return db.query(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry.projection,
-                        DBHelper.PageEntry._ID + "=?",
+                return db.query(Page.tableName,
+                        DBHelper.projections.get(Page.tableName),
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))},
                         null,
                         null,
@@ -342,11 +347,11 @@ public class DBProvider extends ContentProvider
                         null,
                         "1"
                 );
-            case Genre:
-                Log.d("Query", "Genre " + code + " : " + Genre);
-                return db.query(DBHelper.GenreEntry.TABLE_NAME,
-                        DBHelper.GenreEntry.projection,
-                        DBHelper.GenreEntry.COLUMN_NAME + "=?",
+            case GenreMatch:
+                Log.d("Query", "GenreMatch " + code + " : " + GenreMatch);
+                return db.query(Genre.tableName,
+                        DBHelper.projections.get(Genre.tableName),
+                        Genre.nameCol + "=?",
                         selectionArgs,
                         null,
                         null,
@@ -364,30 +369,30 @@ public class DBProvider extends ContentProvider
         int code = matcher.match(uri);
         switch (code)
         {
-            case Provider:
+            case ProviderMatch:
             case ProviderByID:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.ProviderEntry.TABLE_NAME;
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Provider.tableName;
             case ProviderSeries:
             case SeriesFavorites:
             case GenreSeries:
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.SeriesEntry.TABLE_NAME;
-            case Series:
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Series.tableName;
+            case SeriesMatch:
             case SeriesByID:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.SeriesEntry.TABLE_NAME;
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Series.tableName;
             case SeriesChapters:
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.ChapterEntry.TABLE_NAME;
-            case Chapter:
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Chapter.tableName;
+            case ChapterMatch:
             case ChapterByID:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.ChapterEntry.TABLE_NAME;
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Chapter.tableName;
             case ChapterPages:
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.PageEntry.TABLE_NAME;
-            case Page:
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Page.tableName;
+            case PageMatch:
             case PageByID:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.PageEntry.TABLE_NAME;
-            case Genre:
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.GenreEntry.TABLE_NAME;
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Page.tableName;
+            case GenreMatch:
+                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Genre.tableName;
             case SeriesGenres:
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + DBHelper.GenreEntry.TABLE_NAME;
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Genre.tableName;
             default:
                 throw new IllegalArgumentException("Invalid uri: " + uri.toString());
         }
@@ -402,30 +407,30 @@ public class DBProvider extends ContentProvider
         int code = matcher.match(uri);
         switch (code)
         {
-            case Provider:
-                id = db.insert(DBHelper.ProviderEntry.TABLE_NAME, null, values);
+            case ProviderMatch:
+                id = db.insert(Provider.tableName, null, values);
                 inserted = ninja.dudley.yamr.model.Provider.uri((int) id);
                 return inserted;
-            case Series:
-                id = db.insert(DBHelper.SeriesEntry.TABLE_NAME, null, values);
+            case SeriesMatch:
+                id = db.insert(Series.tableName, null, values);
                 inserted = ninja.dudley.yamr.model.Series.uri((int) id);
                 Uri providerSeries = ninja.dudley.yamr.model.Provider.uri(getId(code, uri)).buildUpon().appendPath("series").build();
                 getContext().getContentResolver().notifyChange(providerSeries, null);
                 return inserted;
-            case Chapter:
-                id = db.insert(DBHelper.ChapterEntry.TABLE_NAME, null, values);
+            case ChapterMatch:
+                id = db.insert(Chapter.tableName, null, values);
                 inserted = ninja.dudley.yamr.model.Chapter.uri((int) id);
                 Uri seriesChapters = ninja.dudley.yamr.model.Series.uri(getId(code, uri)).buildUpon().appendPath("chapters").build();
                 getContext().getContentResolver().notifyChange(seriesChapters, null);
                 return inserted;
-            case Page:
-                id = db.insert(DBHelper.PageEntry.TABLE_NAME, null, values);
+            case PageMatch:
+                id = db.insert(Page.tableName, null, values);
                 inserted = ninja.dudley.yamr.model.Page.uri((int) id);
                 Uri chapterPages = ninja.dudley.yamr.model.Chapter.uri(getId(code, uri)).buildUpon().appendPath("pages").build();
                 getContext().getContentResolver().notifyChange(chapterPages, null);
                 return inserted;
-            case Genre:
-                id = db.insert(DBHelper.GenreEntry.TABLE_NAME, null, values);
+            case GenreMatch:
+                id = db.insert(Genre.tableName, null, values);
                 inserted = ninja.dudley.yamr.model.Genre.uri((int) id);
                 return inserted;
             case SeriesGenreRelator:
@@ -444,23 +449,23 @@ public class DBProvider extends ContentProvider
         switch (code)
         {
             case ProviderByID:
-                return db.delete(DBHelper.ProviderEntry.TABLE_NAME,
-                        DBHelper.ProviderEntry._ID + "=?",
+                return db.delete(Provider.tableName,
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case SeriesByID:
-                return db.delete(DBHelper.SeriesEntry.TABLE_NAME,
-                        DBHelper.SeriesEntry._ID + "=?",
+                return db.delete(Series.tableName,
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case ChapterByID:
-                return db.delete(DBHelper.ChapterEntry.TABLE_NAME,
-                        DBHelper.ChapterEntry._ID + "=?",
+                return db.delete(Chapter.tableName,
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case PageByID:
-                return db.delete(DBHelper.PageEntry.TABLE_NAME,
-                        DBHelper.PageEntry._ID + "=?",
+                return db.delete(Page.tableName,
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             default:
@@ -476,27 +481,27 @@ public class DBProvider extends ContentProvider
         switch (code)
         {
             case ProviderByID:
-                return db.update(DBHelper.ProviderEntry.TABLE_NAME,
+                return db.update(Provider.tableName,
                         values,
-                        DBHelper.ProviderEntry._ID + "=?",
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case SeriesByID:
-                return db.update(DBHelper.SeriesEntry.TABLE_NAME,
+                return db.update(Series.tableName,
                         values,
-                        DBHelper.SeriesEntry._ID + "=?",
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case ChapterByID:
-                return db.update(DBHelper.ChapterEntry.TABLE_NAME,
+                return db.update(Chapter.tableName,
                         values,
-                        DBHelper.ChapterEntry._ID + "=?",
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             case PageByID:
-                return db.update(DBHelper.PageEntry.TABLE_NAME,
+                return db.update(Page.tableName,
                         values,
-                        DBHelper.PageEntry._ID + "=?",
+                        DBHelper.ID + "=?",
                         new String[]{Integer.toString(getId(code, uri))}
                 );
             default:

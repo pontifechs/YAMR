@@ -5,92 +5,50 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
+import org.jsoup.helper.StringUtil;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.ForeignKey;
+import ninja.dudley.yamr.db.util.Id;
+import ninja.dudley.yamr.db.util.Table;
+import ninja.dudley.yamr.db.util.Unique;
+import ninja.dudley.yamr.model.Chapter;
+import ninja.dudley.yamr.model.Genre;
+import ninja.dudley.yamr.model.Page;
+import ninja.dudley.yamr.model.Provider;
+import ninja.dudley.yamr.model.Series;
+
 /**
  * Created by mdudley on 5/19/15.
  */
 public class DBHelper extends SQLiteOpenHelper
 {
-
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
 
-    private enum SQLite3Types
+    public static final String ID = "_id";
+
+    public static final Map<String, String[]> projections;
+
+    static
     {
-        Text,
-        Integer,
-        Real
-    }
-
-    public static abstract class MangaElementEntry implements BaseColumns
-    {
-        public static final String COLUMN_URL = "url";
-        public static final SQLite3Types COLUMN_URL_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_FULLY_PARSED = "fully_parsed";
-        public static final SQLite3Types COLUMN_FULLY_PARSED_TYPE = SQLite3Types.Integer;
-    }
-
-    public static abstract class ProviderEntry extends MangaElementEntry
-    {
-        public static final String TABLE_NAME = "provider";
-
-        public static final String COLUMN_NAME = "name";
-        public static final SQLite3Types COLUMN_NAME_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_NEW_URL = "new_url";
-        public static final SQLite3Types COLUMN_NEW_URL_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_LATEST_CHAPTER_ID = "latest_chapter_id";
-        public static final SQLite3Types COLUMN_LATEST_CHAPTER_ID_TYPE = SQLite3Types.Integer;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_NEW_URL, COLUMN_LATEST_CHAPTER_ID};
-        }
-    }
-
-    public static abstract class SeriesEntry extends MangaElementEntry
-    {
-        public static final String TABLE_NAME = "series";
-
-        public static final String COLUMN_NAME = "name";
-        public static final SQLite3Types COLUMN_NAME_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_DESCRIPTION = "description";
-        public static final SQLite3Types COLUMN_DESCRIPTION_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_PROVIDER_ID = "provider_id";
-        public static final SQLite3Types COLUMN_PROVIDER_ID_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_FAVORITE = "favorite";
-        public static final SQLite3Types COLUMN_FAVORITE_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_ALTERNATE_NAME = "alt_name";
-        public static final SQLite3Types COLUMN_ALTERNATE_NAME_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_COMPLETE = "complete";
-        public static final SQLite3Types COLUMN_COMPLETE_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_AUTHOR = "author";
-        public static final SQLite3Types COLUMN_AUTHOR_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_ARTIST = "artist";
-        public static final SQLite3Types COLUMN_ARTIST_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_THUMBNAIL_URL = "thumbnail_url";
-        public static final SQLite3Types COLUMN_THUMBNAIL_URL_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_THUMBNAIL_PATH = "thumbnail_path";
-        public static final SQLite3Types COLUMN_THUMBNAIL_PATH_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_PROGRESS_CHAPTER_ID = "progress_chapter_id";
-        public static final SQLite3Types COLUMN_PROGRESS_CHAPTER_ID_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_PROGRESS_PAGE_ID = "progress_page_id";
-        public static final SQLite3Types COLUMN_PROGRESS_PAGE_ID_TYPE = SQLite3Types.Integer;
-        public static final String COLUMN_UPDATED_CHAPTER = "updated_chapter";
-        public static final SQLite3Types COLUMN_UPDATED_CHAPTER_TYPE = SQLite3Types.Integer;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_DESCRIPTION,
-                    COLUMN_PROVIDER_ID, COLUMN_FAVORITE, COLUMN_ALTERNATE_NAME, COLUMN_COMPLETE,
-                    COLUMN_AUTHOR, COLUMN_ARTIST, COLUMN_THUMBNAIL_URL, COLUMN_THUMBNAIL_PATH, COLUMN_PROGRESS_CHAPTER_ID,
-                    COLUMN_PROGRESS_PAGE_ID, COLUMN_UPDATED_CHAPTER
-            };
-        }
+        projections = new HashMap<>();
+        projections.put(Provider.tableName, projection(Provider.class));
+        projections.put(Series.tableName, projection(Series.class));
+        projections.put(Chapter.tableName, projection(Chapter.class));
+        projections.put(Page.tableName, projection(Page.class));
+        projections.put(Genre.tableName, projection(Genre.class));
     }
 
     public static abstract class SeriesGenreEntry implements BaseColumns
@@ -98,9 +56,9 @@ public class DBHelper extends SQLiteOpenHelper
         public static final String TABLE_NAME = "series_genres";
 
         public static final String COLUMN_SERIES_ID = "series_id";
-        public static final SQLite3Types COLUMN_SERIES_ID_TYPE = SQLite3Types.Integer;
+        public static final Column.Type COLUMN_SERIES_ID_TYPE = Column.Type.Integer;
         public static final String COLUMN_GENRE_ID = "genre_id";
-        public static final SQLite3Types COLUMN_GENRE_ID_TYPE = SQLite3Types.Integer;
+        public static final Column.Type COLUMN_GENRE_ID_TYPE = Column.Type.Integer;
 
         public static final String[] projection;
 
@@ -110,75 +68,20 @@ public class DBHelper extends SQLiteOpenHelper
         }
     }
 
-    public static abstract class GenreEntry implements BaseColumns
-    {
-        public static final String TABLE_NAME = "genres";
-
-        public static final String COLUMN_NAME = "name";
-        public static final SQLite3Types COLUMN_NAME_TYPE = SQLite3Types.Text;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_NAME};
-        }
-    }
-
-    public static abstract class ChapterEntry extends MangaElementEntry
-    {
-        public static final String TABLE_NAME = "chapter";
-
-        public static final String COLUMN_NAME = "name";
-        public static final SQLite3Types COLUMN_NAME_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_NUMBER = "number";
-        public static final SQLite3Types COLUMN_NUMBER_TYPE = SQLite3Types.Real;
-        public static final String COLUMN_SERIES_ID = "series_id";
-        public static final SQLite3Types COLUMN_SERIES_ID_TYPE = SQLite3Types.Integer;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NAME, COLUMN_NUMBER, COLUMN_SERIES_ID};
-        }
-    }
-
-    public static abstract class PageEntry extends MangaElementEntry
-    {
-        public static final String TABLE_NAME = "page";
-
-        public static final String COLUMN_NUMBER = "number";
-        public static final SQLite3Types COLUMN_NUMBER_TYPE = SQLite3Types.Real;
-        public static final String COLUMN_IMAGE_URL = "image_url";
-        public static final SQLite3Types COLUMN_IMAGE_URL_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_IMAGE_PATH = "path";
-        public static final SQLite3Types COLUMN_IMAGE_PATH_TYPE = SQLite3Types.Text;
-        public static final String COLUMN_CHAPTER_ID = "chapter_id";
-        public static final SQLite3Types COLUMN_CHAPTER_ID_TYPE = SQLite3Types.Integer;
-
-        public static final String[] projection;
-
-        static
-        {
-            projection = new String[]{_ID, COLUMN_URL, COLUMN_FULLY_PARSED, COLUMN_NUMBER, COLUMN_IMAGE_URL, COLUMN_IMAGE_PATH, COLUMN_CHAPTER_ID};
-        }
-    }
-
     public static abstract class PageHeritageViewEntry
     {
         public static final String TABLE_NAME="page_heritage";
 
         public static final String COLUMN_PROVIDER_NAME = "provider_name";
-        public static final SQLite3Types COLUMN_PROVIDER_NAME_TYPE = SQLite3Types.Text;
+        public static final Column.Type COLUMN_PROVIDER_NAME_TYPE = Column.Type.Text;
         public static final String COLUMN_SERIES_NAME = "series_name";
-        public static final SQLite3Types COLUMN_SERIES_NAME_TYPE = SQLite3Types.Text;
+        public static final Column.Type COLUMN_SERIES_NAME_TYPE = Column.Type.Text;
         public static final String COLUMN_CHAPTER_NUMBER = "chapter_number";
-        public static final SQLite3Types COLUMN_CHAPTER_NUMBER_TYPE = SQLite3Types.Real;
+        public static final Column.Type COLUMN_CHAPTER_NUMBER_TYPE = Column.Type.Real;
         public static final String COLUMN_PAGE_NUMBER = "page_number";
-        public static final SQLite3Types COLUMN_PAGE_NUMBER_TYPE = SQLite3Types.Real;
+        public static final Column.Type COLUMN_PAGE_NUMBER_TYPE = Column.Type.Real;
         public static final String COLUMN_PAGE_ID = "page_id";
-        public static final SQLite3Types COLUMN_PAGE_ID_TYPE = SQLite3Types.Integer;
+        public static final Column.Type COLUMN_PAGE_ID_TYPE = Column.Type.Integer;
 
         public static final String[] projection;
 
@@ -188,46 +91,30 @@ public class DBHelper extends SQLiteOpenHelper
         }
     }
 
-    public static abstract class SeriesGenreViewEntry extends SeriesEntry
+    private static String makeColumn(String name, Column.Type type)
     {
-        public static final String TABLE_NAME = "series_genre_view";
-    }
-
-    public static abstract class GenreSeriesViewEntry extends GenreEntry
-    {
-        public static final String TABLE_NAME = "genre_series_view";
-    }
-
-    private static String mangaElementColumns()
-    {
-        return MangaElementEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(MangaElementEntry.COLUMN_URL, MangaElementEntry.COLUMN_URL_TYPE) +
-                makeColumn(MangaElementEntry.COLUMN_FULLY_PARSED, MangaElementEntry.COLUMN_FULLY_PARSED_TYPE);
-    }
-
-    private static String makeColumn(String name, SQLite3Types type)
-    {
-        return makeColumn(name, type, true);
-    }
-
-    private static String makeColumn(String name, SQLite3Types type, boolean addComma)
-    {
-        return name + " " + type.toString() + (addComma ? "," : "");
+        return name + " " + type.toString();
     }
 
     private static String makeForeignKey(String keyColumn, String refTable, String refColumn)
     {
-        return makeForeignKey(keyColumn, refTable, refColumn, true);
+        return "FOREIGN KEY(" + keyColumn + ") REFERENCES " + refTable + "(" + refColumn + ") ON DELETE CASCADE";
     }
 
-    private static String makeForeignKey(String keyColumn, String refTable, String refColumn, boolean addComma)
+    private static String uniqueColumns(List<String> column)
     {
-        return "FOREIGN KEY(" + keyColumn + ") REFERENCES " + refTable + "(" + refColumn + ") ON DELETE CASCADE" + (addComma ? "," : "");
-    }
+        if (column.size() <= 0)
+        {
+            return "";
+        }
 
-    private static String uniqueConstraint()
-    {
-       return " UNIQUE ("+ MangaElementEntry.COLUMN_URL +") ON CONFLICT ABORT";
+        String constraint = " UNIQUE (" + column.get(0);
+        for (int i = 1; i < column.size(); ++i)
+        {
+            constraint += ", " + column.get(i);
+        }
+        constraint += ") ON CONFLICT ABORT";
+        return constraint;
     }
 
     private static String joinedAliasedColumn(String tableName, String fieldName, String alias)
@@ -240,6 +127,115 @@ public class DBHelper extends SQLiteOpenHelper
         return " join " + rhsTable + " ON " + lhsTable + "." + lhsField + " = " + rhsTable + "." + rhsField;
     }
 
+    public static String schema(Class<?> klass)
+    {
+        Table t = klass.getAnnotation(Table.class);
+        if (t == null)
+        {
+            throw new AssertionError(klass + " Isn't annotated with Table");
+        }
+
+        String schema = "CREATE TABLE " + t.value() + " (";
+
+        Set<Field> fields = new HashSet<>();
+        fields.addAll(Arrays.asList(klass.getDeclaredFields()));
+
+        Class<?> superK = klass.getSuperclass();
+        while (superK != Object.class)
+        {
+            fields.addAll(Arrays.asList(superK.getDeclaredFields()));
+            superK = superK.getSuperclass();
+        }
+
+        // SQL columns
+        List<String> definitions = new ArrayList<>();
+        for (Field field : fields)
+        {
+            Column column = field.getAnnotation(Column.class);
+            ForeignKey fk = field.getAnnotation(ForeignKey.class);
+            Id id = field.getAnnotation(Id.class);
+
+            if (id != null)
+            {
+                definitions.add(makeColumn(ID, Column.Type.Integer) + " PRIMARY KEY ");
+            }
+            else if (column != null)
+            {
+                definitions.add(makeColumn(column.name(), column.type()));
+            }
+            else if (fk != null)
+            {
+                Class<?> foreign = fk.value();
+                Table parent = foreign.getAnnotation(Table.class);
+                definitions.add(makeColumn(fk.name(), Column.Type.Integer));
+            }
+        }
+
+        // Foreign keys
+        for (Field field : fields)
+        {
+            ForeignKey fk = field.getAnnotation(ForeignKey.class);
+            if (fk == null)
+            {
+                continue;
+            }
+
+            Class<?> parent = fk.value();
+            Table foreign = parent.getAnnotation(Table.class);
+            definitions.add(makeForeignKey(fk.name(), foreign.value(), ID));
+        }
+        schema += StringUtil.join(definitions, ",");
+
+        // Unique constraints
+        List<String> uniqueFields = new ArrayList<>();
+        for (Field field : fields)
+        {
+            Unique unique = field.getAnnotation(Unique.class);
+            if (unique == null)
+            {
+                continue;
+            }
+            Column column = field.getAnnotation(Column.class);
+            uniqueFields.add(column.name());
+        }
+        schema += uniqueColumns(uniqueFields) + ")";
+        return schema;
+    }
+
+    private static String[] projection(Class<?> klass)
+    {
+        List<Field> fields = new ArrayList<>();
+        fields.addAll(Arrays.asList(klass.getDeclaredFields()));
+
+        Class<?> superK = klass.getSuperclass();
+        while (superK != Object.class)
+        {
+            fields.addAll(Arrays.asList(superK.getDeclaredFields()));
+            superK = superK.getSuperclass();
+        }
+        List<String> ret = new ArrayList<>();
+        for (Field field : fields)
+        {
+            Column column = field.getAnnotation(Column.class);
+            ForeignKey fk = field.getAnnotation(ForeignKey.class);
+            Id id = field.getAnnotation(Id.class);
+            if (column != null)
+            {
+                ret.add(column.name());
+            }
+            else if (fk != null)
+            {
+                ret.add(fk.name());
+            }
+            else if (id != null)
+            {
+                ret.add(ID);
+            }
+        }
+        String[] stupidJava = new String[ret.size()];
+        ret.toArray(stupidJava);
+        return (stupidJava);
+    }
 
     public DBHelper(Context context)
     {
@@ -249,94 +245,41 @@ public class DBHelper extends SQLiteOpenHelper
     @Override
     public void onCreate(SQLiteDatabase db)
     {
-        String providerCreate = "CREATE TABLE " + ProviderEntry.TABLE_NAME + " (" +
-                mangaElementColumns() +
-                makeColumn(ProviderEntry.COLUMN_NAME, ProviderEntry.COLUMN_NAME_TYPE) +
-                makeColumn(ProviderEntry.COLUMN_NEW_URL, ProviderEntry.COLUMN_NEW_URL_TYPE) +
-                makeColumn(ProviderEntry.COLUMN_LATEST_CHAPTER_ID, ProviderEntry.COLUMN_LATEST_CHAPTER_ID_TYPE) +
-                makeForeignKey(ProviderEntry.COLUMN_LATEST_CHAPTER_ID, ChapterEntry.TABLE_NAME, ChapterEntry._ID) +
-                uniqueConstraint() +
-                ")";
-        db.execSQL(providerCreate);
-
-        String seriesCreate = "CREATE TABLE " + SeriesEntry.TABLE_NAME + " (" +
-                mangaElementColumns() +
-                makeColumn(SeriesEntry.COLUMN_NAME, SeriesEntry.COLUMN_NAME_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_DESCRIPTION, SeriesEntry.COLUMN_DESCRIPTION_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_PROVIDER_ID, SeriesEntry.COLUMN_PROVIDER_ID_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_FAVORITE, SeriesEntry.COLUMN_FAVORITE_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_ALTERNATE_NAME, SeriesEntry.COLUMN_ALTERNATE_NAME_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_COMPLETE, SeriesEntry.COLUMN_COMPLETE_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_AUTHOR, SeriesEntry.COLUMN_AUTHOR_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_ARTIST, SeriesEntry.COLUMN_ARTIST_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_THUMBNAIL_URL, SeriesEntry.COLUMN_THUMBNAIL_URL_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_THUMBNAIL_PATH, SeriesEntry.COLUMN_THUMBNAIL_PATH_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, SeriesEntry.COLUMN_PROGRESS_PAGE_ID_TYPE) +
-                makeColumn(SeriesEntry.COLUMN_UPDATED_CHAPTER, SeriesEntry.COLUMN_UPDATED_CHAPTER_TYPE) +
-                makeForeignKey(SeriesEntry.COLUMN_PROVIDER_ID, ProviderEntry.TABLE_NAME, ProviderEntry._ID) +
-                makeForeignKey(SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, ChapterEntry.TABLE_NAME, ChapterEntry._ID) +
-                makeForeignKey(SeriesEntry.COLUMN_PROGRESS_PAGE_ID, PageEntry.TABLE_NAME, PageEntry._ID) +
-                uniqueConstraint() +
-                ")";
-        db.execSQL(seriesCreate);
-
-        String chapterCreate = "CREATE TABLE " + ChapterEntry.TABLE_NAME + " (" +
-                mangaElementColumns() +
-                makeColumn(ChapterEntry.COLUMN_NAME, ChapterEntry.COLUMN_NAME_TYPE) +
-                makeColumn(ChapterEntry.COLUMN_NUMBER, ChapterEntry.COLUMN_NUMBER_TYPE) +
-                makeColumn(ChapterEntry.COLUMN_SERIES_ID, ChapterEntry.COLUMN_SERIES_ID_TYPE) +
-                makeForeignKey(ChapterEntry.COLUMN_SERIES_ID, SeriesEntry.TABLE_NAME, SeriesEntry._ID) +
-                uniqueConstraint() +
-                ")";
-        db.execSQL(chapterCreate);
-
-        String pageCreate = "CREATE TABLE " + PageEntry.TABLE_NAME + " (" +
-                mangaElementColumns() +
-                makeColumn(PageEntry.COLUMN_NUMBER, PageEntry.COLUMN_NUMBER_TYPE) +
-                makeColumn(PageEntry.COLUMN_IMAGE_URL, PageEntry.COLUMN_IMAGE_URL_TYPE) +
-                makeColumn(PageEntry.COLUMN_IMAGE_PATH, PageEntry.COLUMN_IMAGE_PATH_TYPE) +
-                makeColumn(PageEntry.COLUMN_CHAPTER_ID, PageEntry.COLUMN_CHAPTER_ID_TYPE) +
-                makeForeignKey(PageEntry.COLUMN_CHAPTER_ID, ChapterEntry.TABLE_NAME, ChapterEntry._ID) +
-                uniqueConstraint() +
-                ")";
-        db.execSQL(pageCreate);
+        db.execSQL(schema(Provider.class));
+        db.execSQL(schema(Series.class));
+        db.execSQL(schema(Chapter.class));
+        db.execSQL(schema(Page.class));
+        db.execSQL(schema(Genre.class));
 
         String pageHeritageView = "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
-               "select " + joinedAliasedColumn(PageEntry.TABLE_NAME, PageEntry._ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
-                         + joinedAliasedColumn(ProviderEntry.TABLE_NAME, ProviderEntry.COLUMN_NAME, PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", "
-                         + joinedAliasedColumn(SeriesEntry.TABLE_NAME, SeriesEntry.COLUMN_NAME, PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", "
-                         + joinedAliasedColumn(ChapterEntry.TABLE_NAME, ChapterEntry.COLUMN_NUMBER, PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", "
-                         + joinedAliasedColumn(PageEntry.TABLE_NAME, PageEntry.COLUMN_NUMBER, PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
-               " from " + ProviderEntry.TABLE_NAME + joinStatement(ProviderEntry.TABLE_NAME, ProviderEntry._ID, SeriesEntry.TABLE_NAME, SeriesEntry.COLUMN_PROVIDER_ID)
-                       + joinStatement(SeriesEntry.TABLE_NAME, SeriesEntry._ID, ChapterEntry.TABLE_NAME, ChapterEntry.COLUMN_SERIES_ID)
-                       + joinStatement(ChapterEntry.TABLE_NAME, ChapterEntry._ID, PageEntry.TABLE_NAME, PageEntry.COLUMN_CHAPTER_ID)
+                "select " + joinedAliasedColumn(Page.tableName, ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
+                + joinedAliasedColumn(Provider.tableName, "name", PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", "
+                + joinedAliasedColumn(Series.tableName, "name", PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", "
+                + joinedAliasedColumn(Chapter.tableName, "number", PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", "
+                + joinedAliasedColumn(Page.tableName, "number", PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
+                " from " + Provider.tableName + joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID)
+                + joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID)
+                + joinStatement(Chapter.tableName, ID, Page.tableName, Chapter.tableName + ID)
                 ;
         db.execSQL(pageHeritageView);
 
-        String genreCreate = "CREATE TABLE " + GenreEntry.TABLE_NAME + " (" +
-                GenreEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(GenreEntry.COLUMN_NAME, GenreEntry.COLUMN_NAME_TYPE, false) +
-                ")";
-        db.execSQL(genreCreate);
-
         String seriesGenreCreate = "CREATE TABLE " + SeriesGenreEntry.TABLE_NAME + " (" +
                 SeriesGenreEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID, SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) +
-                makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID, SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) +
-                makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID, SeriesEntry.TABLE_NAME, SeriesEntry._ID) +
-                makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID, GenreEntry.TABLE_NAME, GenreEntry._ID, false) +
+                makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID, SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) + ", " +
+                makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID, SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) + ", " +
+                makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, DBHelper.ID) + ", " +
+                makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, DBHelper.ID) +
                 ")";
         db.execSQL(seriesGenreCreate);
 
-        String seriesGenreVewCreate = "CREATE VIEW " + SeriesGenreViewEntry.TABLE_NAME + " AS " +
-                "select " + SeriesEntry.TABLE_NAME + ".* " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, SeriesEntry.TABLE_NAME, SeriesEntry._ID);
+        String seriesGenreVewCreate = "CREATE VIEW series_genre_view AS " +
+                "select " + Series.tableName + ".* " +
+                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, ID);
         db.execSQL(seriesGenreVewCreate);
 
-        String genreSeriesViewCreate = "CREATE VIEW " + GenreSeriesViewEntry.TABLE_NAME + " AS " +
-                "select " + GenreEntry.TABLE_NAME + ".* " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, GenreEntry.TABLE_NAME, GenreEntry._ID);
+        String genreSeriesViewCreate = "CREATE VIEW genre_series_view AS " +
+                "select " + Genre.tableName+ ".* " +
+                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
 
         db.execSQL("INSERT INTO provider (url, new_url, name) values (\"http://www.mangapanda.com/alphabetical\", \"http://www.mangapanda.com/latest\", \"MangaPanda\")");
@@ -344,15 +287,7 @@ public class DBHelper extends SQLiteOpenHelper
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
-    {
-        db.execSQL("DROP TABLE IF EXISTS " + PageEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + ChapterEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + SeriesGenreEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + GenreEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + SeriesEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + ProviderEntry.TABLE_NAME);
-        onCreate(db);
-    }
+    {}
 
     @Override
     public void onOpen(SQLiteDatabase db)

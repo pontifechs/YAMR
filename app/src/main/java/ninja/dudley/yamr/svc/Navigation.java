@@ -279,7 +279,7 @@ public class Navigation extends IntentService
     private Page firstPageFromChapter(Chapter chapter)
     {
         Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
-        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, DBHelper.PageEntry.COLUMN_NUMBER + " asc");
+        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " asc");
         Page firstPage = new Page(pages);
         new MangaPandaFetcher(getBaseContext()).fetchPage(firstPage);
         return firstPage;
@@ -288,7 +288,7 @@ public class Navigation extends IntentService
     private Page lastPageFromChapter(Chapter chapter)
     {
         Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
-        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, DBHelper.PageEntry.COLUMN_NUMBER + " desc");
+        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " desc");
         Page lastPage = new Page(pages);
         new MangaPandaFetcher(getBaseContext()).fetchPage(lastPage);
         return lastPage;
@@ -297,7 +297,7 @@ public class Navigation extends IntentService
     private Chapter firstChapterFromSeries(Series series)
     {
         Uri chaptersQuery = series.uri().buildUpon().appendPath("chapters").build();
-        Cursor chapters = getContentResolver().query(chaptersQuery, null, null, null, DBHelper.ChapterEntry.COLUMN_NUMBER + " asc");
+        Cursor chapters = getContentResolver().query(chaptersQuery, null, null, null, Chapter.numberCol + " asc");
         Chapter firstChapter = new Chapter(chapters);
         new MangaPandaFetcher(getBaseContext()).fetchChapter(firstChapter);
         return firstChapter;

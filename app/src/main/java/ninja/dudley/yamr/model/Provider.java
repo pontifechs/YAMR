@@ -5,13 +5,23 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.Table;
 
 /**
  * Created by mdudley on 6/2/15.
  */
+@Table(Provider.tableName)
 public class Provider extends MangaElement
 {
+    public static final String tableName = "provider";
+
+    public static final String nameCol = "name";
+    @Column(name=nameCol)
     private String name;
+
+    public static final String newUrlCol = "new_url";
+    @Column(name=newUrlCol)
     private String newUrl;
 
     public static Uri baseUri()
@@ -26,14 +36,11 @@ public class Provider extends MangaElement
     }
 
     public Provider() {}
-
     public Provider(Cursor c)
     {
         super(c);
-        int nameCol = c.getColumnIndex(DBHelper.ProviderEntry.COLUMN_NAME);
-        int newUrlCol = c.getColumnIndex(DBHelper.ProviderEntry.COLUMN_NEW_URL);
-        name = c.getString(nameCol);
-        newUrl = c.getString(newUrlCol);
+        name = getString(c, nameCol);
+        newUrl = getString(c, newUrlCol);
         c.close();
     }
 
@@ -41,13 +48,14 @@ public class Provider extends MangaElement
     public ContentValues getContentValues()
     {
         ContentValues values = super.getContentValues();
-        values.put(DBHelper.ProviderEntry.COLUMN_NAME, name);
+        values.put(nameCol, name);
+        values.put(newUrlCol, newUrl);
         return values;
     }
 
     public Uri uri()
     {
-        return uri(_id);
+        return uri(id);
     }
 
     public String getName()

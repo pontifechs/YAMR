@@ -6,25 +6,68 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.ForeignKey;
+import ninja.dudley.yamr.db.util.Table;
 
 /**
  * Created by mdudley on 5/19/15.
  */
+@Table(Series.tableName)
 public class Series extends MangaElement
 {
+    public static final String tableName = "series";
+
+    public static final String providerIdCol = Provider.tableName + DBHelper.ID;
+    @ForeignKey(value=Provider.class, name=providerIdCol)
     private int providerId;
 
+    public static final String nameCol = "name";
+    @Column(name=nameCol)
     private String name;
+
+    public static final String descriptionCol = "description";
+    @Column(name=descriptionCol)
     private String description;
+
+    public static final String favoriteCol = "favorite";
+    @Column(name=favoriteCol, type=Column.Type.Integer)
     private boolean favorite = false;
+
+    public static final String alternateNameCol = "alternate_name";
+    @Column(name=alternateNameCol)
     private String alternateName;
+
+    public static final String completeCol = "complete";
+    @Column(name=completeCol, type=Column.Type.Integer)
     private boolean complete = false;
+
+    public static final String authorCol = "author";
+    @Column(name=authorCol)
     private String author;
+
+    public static final String artistCol = "artist";
+    @Column(name=artistCol)
     private String artist;
+
+    public static final String thumbnailUrlCol = "thumbnail_url";
+    @Column(name=thumbnailUrlCol)
     private String thumbnailUrl;
+
+    public static final String thumbnailPathCol = "thumbnail_path";
+    @Column(name=thumbnailPathCol)
     private String thumbnailPath;
+
+    public static final String progressChapterIdCol = "progress_" + Chapter.tableName + DBHelper.ID;
+    @ForeignKey(value=Chapter.class, name=progressChapterIdCol)
     private int progressChapterId = -1;
+
+    public static final String progressPageIdCol = "progress_" + Page.tableName + DBHelper.ID;
+    @ForeignKey(value=Page.class, name=progressPageIdCol)
     private int progressPageId = -1;
+
+    public static final String updatedCol = "updated";
+    @Column(name=updatedCol, type=Column.Type.Integer)
     private boolean updated = false;
 
     public static Uri baseUri()
@@ -54,19 +97,19 @@ public class Series extends MangaElement
 
     private void parse(Cursor c, boolean close)
     {
-        providerId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROVIDER_ID);
-        name = getString(c, DBHelper.SeriesEntry.COLUMN_NAME);
-        description = getString(c, DBHelper.SeriesEntry.COLUMN_DESCRIPTION);
-        favorite = getBool(c, DBHelper.SeriesEntry.COLUMN_FAVORITE);
-        alternateName = getString(c, DBHelper.SeriesEntry.COLUMN_ALTERNATE_NAME);
-        complete = getBool(c, DBHelper.SeriesEntry.COLUMN_COMPLETE);
-        author = getString(c, DBHelper.SeriesEntry.COLUMN_AUTHOR);
-        artist = getString(c, DBHelper.SeriesEntry.COLUMN_ARTIST);
-        thumbnailUrl = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL);
-        thumbnailPath = getString(c, DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH);
-        progressChapterId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID);
-        progressPageId = getInt(c, DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID);
-        updated = getBool(c, DBHelper.SeriesEntry.COLUMN_UPDATED_CHAPTER);
+        providerId = getInt(c, providerIdCol);
+        name = getString(c, nameCol);
+        description = getString(c, descriptionCol);
+        favorite = getBool(c, favoriteCol);
+        alternateName = getString(c, alternateNameCol);
+        complete = getBool(c, completeCol);
+        author = getString(c, authorCol);
+        artist = getString(c, artistCol);
+        thumbnailUrl = getString(c, thumbnailUrlCol);
+        thumbnailPath = getString(c, thumbnailPathCol);
+        progressChapterId = getInt(c, progressChapterIdCol);
+        progressPageId = getInt(c, progressPageIdCol);
+        updated = getBool(c, updatedCol);
         if (close)
         {
             c.close();
@@ -77,31 +120,31 @@ public class Series extends MangaElement
     public ContentValues getContentValues()
     {
         ContentValues values = super.getContentValues();
-        values.put(DBHelper.SeriesEntry.COLUMN_PROVIDER_ID, providerId);
-        values.put(DBHelper.SeriesEntry.COLUMN_NAME, name);
-        values.put(DBHelper.SeriesEntry.COLUMN_DESCRIPTION, description);
-        values.put(DBHelper.SeriesEntry.COLUMN_FAVORITE, favorite);
-        values.put(DBHelper.SeriesEntry.COLUMN_ALTERNATE_NAME, alternateName);
-        values.put(DBHelper.SeriesEntry.COLUMN_COMPLETE, complete);
-        values.put(DBHelper.SeriesEntry.COLUMN_AUTHOR, author);
-        values.put(DBHelper.SeriesEntry.COLUMN_ARTIST, artist);
-        values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_URL, thumbnailUrl);
-        values.put(DBHelper.SeriesEntry.COLUMN_THUMBNAIL_PATH, thumbnailPath);
+        values.put(providerIdCol, providerId);
+        values.put(nameCol, name);
+        values.put(descriptionCol, description);
+        values.put(favoriteCol, favorite);
+        values.put(alternateNameCol, alternateName);
+        values.put(completeCol, complete);
+        values.put(authorCol, author);
+        values.put(artistCol, artist);
+        values.put(thumbnailUrlCol, thumbnailUrl);
+        values.put(thumbnailPathCol, thumbnailPath);
         if (progressChapterId != -1)
         {
-            values.put(DBHelper.SeriesEntry.COLUMN_PROGRESS_CHAPTER_ID, progressChapterId);
+            values.put(progressChapterIdCol, progressChapterId);
         }
         if (progressPageId != -1)
         {
-            values.put(DBHelper.SeriesEntry.COLUMN_PROGRESS_PAGE_ID, progressPageId);
+            values.put(progressPageIdCol, progressPageId);
         }
-        values.put(DBHelper.SeriesEntry.COLUMN_UPDATED_CHAPTER, updated);
+        values.put(updatedCol, updated);
         return values;
     }
 
     public Uri uri()
     {
-        return uri(_id);
+        return uri(id);
     }
 
     public int getProviderId()

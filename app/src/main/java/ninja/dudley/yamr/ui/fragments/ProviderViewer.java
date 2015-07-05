@@ -97,7 +97,7 @@ public class ProviderViewer extends ListFragment
                 getActivity(),
                 R.layout.simple_series_item,
                 null,
-                new String[]{DBHelper.SeriesEntry.COLUMN_NAME},
+                new String[]{Series.nameCol},
                 new int[]{R.id.series_name},
                 0
         );
@@ -195,7 +195,7 @@ public class ProviderViewer extends ListFragment
                     getActivity(),
                     mangaPandaSeries,
                     null,
-                    DBHelper.SeriesEntry.COLUMN_NAME + " like ?",
+                    Series.nameCol + " like ?",
                     new String[]{'%' + filter + '%'},
                     null
             );

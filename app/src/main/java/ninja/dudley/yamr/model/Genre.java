@@ -8,20 +8,26 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ninja.dudley.yamr.db.DBHelper;
+import ninja.dudley.yamr.db.util.Column;
+import ninja.dudley.yamr.db.util.Id;
+import ninja.dudley.yamr.db.util.Table;
 
 /**
  * Created by mdudley on 6/25/15.
  */
+@Table(Genre.tableName)
 public class Genre
 {
+    public static final String tableName = "genre";
+
     public static Set<Genre> genres(Cursor c)
     {
         Set<Genre> genres = new HashSet<>();
         while (c.moveToNext())
         {
-            int idCol = c.getColumnIndex(DBHelper.GenreEntry._ID);
-            int nameCol = c.getColumnIndex(DBHelper.GenreEntry.COLUMN_NAME);
-            Genre g = new Genre(c.getInt(idCol), c.getString(nameCol));
+            int idCol = c.getColumnIndex(DBHelper.ID);
+            int nameColIndex = c.getColumnIndex(nameCol);
+            Genre g = new Genre(c.getInt(idCol), c.getString(nameColIndex));
             genres.add(g);
         }
         return genres;
@@ -35,7 +41,11 @@ public class Genre
         return values;
     }
 
+    @Id
     private int _id = -1;
+
+    public static final String nameCol = "name";
+    @Column(name=nameCol)
     private String name;
 
     public static Uri baseUri()
@@ -59,12 +69,11 @@ public class Genre
         ContentValues values = new ContentValues();
         if (_id != -1)
         {
-            values.put(DBHelper.GenreEntry._ID, _id);
+            values.put(DBHelper.ID, _id);
         }
-        values.put(DBHelper.GenreEntry.COLUMN_NAME, name);
+        values.put(nameCol, name);
         return values;
     }
-
 
     private Genre(int _id, String name)
     {
@@ -80,10 +89,10 @@ public class Genre
     public Genre(Cursor c)
     {
         c.moveToFirst();
-        int idCol = c.getColumnIndex(DBHelper.GenreEntry._ID);
-        int nameCol = c.getColumnIndex(DBHelper.GenreEntry.COLUMN_NAME);
+        int idCol = c.getColumnIndex(DBHelper.ID);
+        int nameColIndex = c.getColumnIndex(nameCol);
         this._id = c.getInt(idCol);
-        this.name = c.getString(nameCol);
+        this.name = c.getString(nameColIndex);
         c.close();
     }
 

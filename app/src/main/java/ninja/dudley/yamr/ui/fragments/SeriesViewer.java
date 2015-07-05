@@ -119,7 +119,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
                 getActivity(),
                 R.layout.chapter_item,
                 null,
-                new String[]{DBHelper.ChapterEntry.COLUMN_NAME, DBHelper.ChapterEntry.COLUMN_NUMBER},
+                new String[]{Chapter.nameCol, Chapter.numberCol},
                 new int[]{R.id.chapter_name, R.id.chapter_number},
                 0
         );
