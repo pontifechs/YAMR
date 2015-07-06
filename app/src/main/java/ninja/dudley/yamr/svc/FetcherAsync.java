@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
@@ -24,7 +27,7 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
     public static final String FETCH_SERIES = BASE + ".FetchSeries";
     public static final String FETCH_CHAPTER = BASE + ".FetchChapter";
     public static final String FETCH_PAGE = BASE + ".FetchPage";
-    public static final String FETCH_NEW = BASE + ".FetchNew";
+    public static final String FETCH_NEW = BASE + ".FetchStarter";
 
     public static final String FETCH_PROVIDER_STATUS = FETCH_PROVIDER + ".Status";
     public static final String FETCH_PROVIDER_COMPLETE = FETCH_PROVIDER + ".Complete";
@@ -101,10 +104,16 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
             case FETCH_NEW:
             {
                 Provider p = new Provider(getContentResolver().query(argument, null, null, null, null));
-                fetcher.fetchNew(p);
-                Intent  complete = new Intent(FETCH_NEW_COMPLETE);
-                complete.setData(p.uri());
-                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete);
+                List<Uri> newChapters = fetcher.fetchNew(p);
+                Intent complete = new Intent(FETCH_NEW_COMPLETE);
+                ArrayList<String> uriStrings = new ArrayList<>();
+                for (Uri u : newChapters)
+                {
+                    uriStrings.add(u.toString());
+                }
+                complete.putStringArrayListExtra(FETCH_NEW_COMPLETE, uriStrings);
+
+                sendBroadcast(complete);
                 break;
             }
         }

@@ -112,7 +112,7 @@ public class MainActivity extends Activity
             i.setAction(FetcherAsync.FETCH_NEW);
             i.setData(Provider.uri(1));
             startService(i);
-            Log.d("FetchNew", "Starting a fetch new ");
+            Log.d("FetchStarter", "Starting a fetch new ");
         }
 
         return super.onOptionsItemSelected(item);

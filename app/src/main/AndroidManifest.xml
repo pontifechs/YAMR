@@ -15,10 +15,10 @@
         <service android:name=".svc.Navigation" />
 
         <receiver
-            android:name=".svc.FetchNew"
-            android:enabled="false" >
+            android:name=".svc.FetchStarter">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="ninja.dudley.yamr.FetchStarter"/>
             </intent-filter>
         </receiver>
 

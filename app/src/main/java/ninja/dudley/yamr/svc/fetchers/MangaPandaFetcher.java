@@ -11,6 +11,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Genre;
@@ -266,11 +268,13 @@ public class MangaPandaFetcher extends FetcherSync
     }
 
     @Override
-    public void fetchNew(Provider provider)
+    public List<Uri> fetchNew(Provider provider)
     {
-        Log.d("FetchNew", "Starting");
+        Log.d("FetchStarter", "Starting");
+        List<Uri> newChapters = new ArrayList<>();
         try
         {
+
             Document doc = fetchUrl(provider.getNewUrl());
             Elements rows = doc.select(".c2");
             for (Element row : rows)
@@ -315,6 +319,10 @@ public class MangaPandaFetcher extends FetcherSync
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues());
                         newChapter = true;
+                        if (series.isFavorite())
+                        {
+                            newChapters.add(chapter.uri());
+                        }
                     }
                 }
                 if (newChapter)
@@ -329,5 +337,6 @@ public class MangaPandaFetcher extends FetcherSync
             // Panic? IDK what might cause this.
             throw new RuntimeException(e);
         }
+        return newChapters;
     }
 }

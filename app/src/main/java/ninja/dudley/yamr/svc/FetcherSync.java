@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
@@ -96,7 +97,7 @@ public abstract class FetcherSync
     }
     public abstract Page fetchPage(Page page, FetchBehavior behavior);
 
-    public abstract void fetchNew(Provider provider);
+    public abstract List<Uri> fetchNew(Provider provider);
 
     protected boolean providerExists(String url)
     {
