@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.model.Provider;
-import ninja.dudley.yamr.svc.FetcherAsync;
+import ninja.dudley.yamr.svc.FetchStarter;
 
 public class MainActivity extends Activity
 {
@@ -108,11 +107,10 @@ public class MainActivity extends Activity
 
         if (id == R.id.action_settings)
         {
-            Intent i = new Intent(this, FetcherAsync.class);
-            i.setAction(FetcherAsync.FETCH_NEW);
-            i.setData(Provider.uri(1));
-            startService(i);
-            Log.d("FetchStarter", "Starting a fetch new ");
+            Intent i = new Intent(this, FetchStarter.class);
+            i.setAction(FetchStarter.StartChecking);
+            sendBroadcast(i); // Can't be local, as Android will be creating and managing our BroadcastReceiver
+            Log.d("MainActivity", "Starting a fetch new ");
         }
 
         return super.onOptionsItemSelected(item);

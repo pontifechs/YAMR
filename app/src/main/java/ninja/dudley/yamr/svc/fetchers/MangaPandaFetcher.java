@@ -319,7 +319,7 @@ public class MangaPandaFetcher extends FetcherSync
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues());
                         newChapter = true;
-                        if (series.isFavorite())
+                        if (!series.isFavorite())
                         {
                             newChapters.add(chapter.uri());
                         }

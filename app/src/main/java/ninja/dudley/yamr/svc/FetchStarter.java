@@ -9,14 +9,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
-import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.util.List;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Provider;
-import ninja.dudley.yamr.svc.fetchers.MangaPandaFetcher;
 import ninja.dudley.yamr.ui.activities.Favorites;
 
 /**
@@ -24,19 +22,21 @@ import ninja.dudley.yamr.ui.activities.Favorites;
  */
 public class FetchStarter extends BroadcastReceiver
 {
-    private static final String StartChecking = "ninja.dudley.yamr.FetchStarter";
+    public static final String StartChecking = "ninja.dudley.yamr.FetchStarter";
+
 
     @Override
     public void onReceive(Context context, Intent intent)
     {
+        Log.d("FetchStarter", "Received " + intent.getAction());
         if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED))
         {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             Intent i = new Intent(StartChecking);
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    AlarmManager.INTERVAL_HALF_DAY,
-                    AlarmManager.INTERVAL_HALF_DAY, pi);
+                    AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5,
+                    AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5, pi);
         }
         else if (intent.getAction().equals(StartChecking))
         {
@@ -44,6 +44,7 @@ public class FetchStarter extends BroadcastReceiver
             Intent i = new Intent(context, FetcherAsync.class);
             i.setAction(FetcherAsync.FETCH_NEW);
             i.setData(Provider.uri(1));   // Hard-code to the first (mangapanda) for now.
+            Log.d("FetchStarter", "Kicking it off");
             context.startService(i);
 
             BroadcastReceiver onFetchNewComplete = new BroadcastReceiver()
@@ -56,6 +57,7 @@ public class FetchStarter extends BroadcastReceiver
                     // None! Nada!
                     if (newUris.size() == 0)
                     {
+                        Log.d("FetchStarter", "No URIs");
                         return;
                     }
 
@@ -78,7 +80,6 @@ public class FetchStarter extends BroadcastReceiver
                 }
             };
             context.getApplicationContext().registerReceiver(onFetchNewComplete, new IntentFilter(FetcherAsync.FETCH_NEW_COMPLETE));
-//            LocalBroadcastManager.getInstance(context).registerReceiver(onFetchNewComplete, new IntentFilter(FetcherAsync.FETCH_NEW_COMPLETE));
         }
     }
 }

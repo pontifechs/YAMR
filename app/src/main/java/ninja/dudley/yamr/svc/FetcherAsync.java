@@ -112,7 +112,6 @@ public class FetcherAsync extends IntentService implements FetcherSync.NotifySta
                     uriStrings.add(u.toString());
                 }
                 complete.putStringArrayListExtra(FETCH_NEW_COMPLETE, uriStrings);
-
                 sendBroadcast(complete);
                 break;
             }
