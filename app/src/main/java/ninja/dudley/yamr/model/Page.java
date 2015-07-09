@@ -18,21 +18,23 @@ public class Page extends MangaElement
     public static final String tableName = "page";
 
     public static final String chapterIdCol = Chapter.tableName + DBHelper.ID;
-    @ForeignKey(value=Chapter.class, name=chapterIdCol)
-    private int chapterId;
+    @ForeignKey(value = Chapter.class, name = chapterIdCol)
+    public final int chapterId;
 
     public static final String numberCol = "number";
-    @Column(name=numberCol, type=Column.Type.Real)
-    private float number;
+    @Column(name = numberCol, type = Column.Type.Real)
+    public float number;
 
     public static final String imageUrlCol = "image_url";
-    @Column(name=imageUrlCol)
-    private String imageUrl;
+    @Column(name = imageUrlCol)
+    public String imageUrl;
 
     public static final String imagePathCol = "image_path";
-    @Column(name=imagePathCol)
-    private String imagePath;
+    @Column(name = imagePathCol)
+    public String imagePath;
 
+
+    // Uri Handling --------------------------------------------------------------------------------
     public static Uri baseUri()
     {
         return Uri.parse("content://" + DBHelper.AUTHORITY + "/page");
@@ -40,12 +42,27 @@ public class Page extends MangaElement
 
     public static Uri uri(int id)
     {
-        Uri base = baseUri();
-        return base.buildUpon().appendPath(Integer.toString(id)).build();
+        return baseUri().buildUpon().appendPath(Integer.toString(id)).build();
     }
 
-    public Page() {}
+    public Uri uri()
+    {
+        return uri(id);
+    }
 
+    public static Uri heritage(int id)
+    {
+        return uri(id).buildUpon().appendPath("heritage").build();
+    }
+
+    public Uri heritage()
+    {
+        return heritage(id);
+    }
+
+    // Construction / Persistence ------------------------------------------------------------------
+    public Page() { chapterId = -1; }
+    public Page(int chapterId) { this.chapterId = chapterId; }
     public Page(Cursor c)
     {
         super(c);
@@ -65,50 +82,5 @@ public class Page extends MangaElement
         values.put(imageUrlCol, imageUrl);
         values.put(imagePathCol, imagePath);
         return values;
-    }
-
-    public Uri uri()
-    {
-        return uri(id);
-    }
-
-    public int getChapterId()
-    {
-        return chapterId;
-    }
-
-    public void setChapterId(int chapterId)
-    {
-        this.chapterId = chapterId;
-    }
-
-    public float getNumber()
-    {
-        return number;
-    }
-
-    public void setNumber(float number)
-    {
-        this.number = number;
-    }
-
-    public String getImageUrl()
-    {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl)
-    {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getImagePath()
-    {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath)
-    {
-        this.imagePath = imagePath;
     }
 }

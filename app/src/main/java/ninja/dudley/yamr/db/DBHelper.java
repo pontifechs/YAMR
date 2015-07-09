@@ -73,15 +73,10 @@ public class DBHelper extends SQLiteOpenHelper
         public static final String TABLE_NAME="page_heritage";
 
         public static final String COLUMN_PROVIDER_NAME = "provider_name";
-        public static final Column.Type COLUMN_PROVIDER_NAME_TYPE = Column.Type.Text;
         public static final String COLUMN_SERIES_NAME = "series_name";
-        public static final Column.Type COLUMN_SERIES_NAME_TYPE = Column.Type.Text;
         public static final String COLUMN_CHAPTER_NUMBER = "chapter_number";
-        public static final Column.Type COLUMN_CHAPTER_NUMBER_TYPE = Column.Type.Real;
         public static final String COLUMN_PAGE_NUMBER = "page_number";
-        public static final Column.Type COLUMN_PAGE_NUMBER_TYPE = Column.Type.Real;
         public static final String COLUMN_PAGE_ID = "page_id";
-        public static final Column.Type COLUMN_PAGE_ID_TYPE = Column.Type.Integer;
 
         public static final String[] projection;
 
@@ -165,8 +160,6 @@ public class DBHelper extends SQLiteOpenHelper
             }
             else if (fk != null)
             {
-                Class<?> foreign = fk.value();
-                Table parent = foreign.getAnnotation(Table.class);
                 definitions.add(makeColumn(fk.name(), Column.Type.Integer));
             }
         }
@@ -272,10 +265,10 @@ public class DBHelper extends SQLiteOpenHelper
                 ")";
         db.execSQL(seriesGenreCreate);
 
-        String seriesGenreVewCreate = "CREATE VIEW series_genre_view AS " +
+        String seriesGenreViewCreate = "CREATE VIEW series_genre_view AS " +
                 "select " + Series.tableName + ".* " +
                 "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, ID);
-        db.execSQL(seriesGenreVewCreate);
+        db.execSQL(seriesGenreViewCreate);
 
         String genreSeriesViewCreate = "CREATE VIEW genre_series_view AS " +
                 "select " + Genre.tableName+ ".* " +

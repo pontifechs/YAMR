@@ -27,38 +27,38 @@ public class ProgressTracker
             throw new IllegalArgumentException("Must have the bookmark to track progress");
         }
 
-        Cursor pageCursor = resolver.query(Page.uri(series.getProgressPageId()), null, null, null, null);
+        Cursor pageCursor = resolver.query(Page.uri(series.progressPageId), null, null, null, null);
         progressPage = new Page(pageCursor);
-        Cursor chapterCursor = resolver.query(Chapter.uri(progressPage.getChapterId()), null, null, null, null);
+        Cursor chapterCursor = resolver.query(Chapter.uri(progressPage.chapterId), null, null, null, null);
         progressChapter = new Chapter(chapterCursor);
     }
 
     public void handleNextPage(Page p)
     {
         // Check if we're still on the same chapter.
-        if (progressChapter.getId() == p.getChapterId())
+        if (progressChapter.id == p.chapterId)
         {
             // Just need to check the numbers.
-            if (p.getNumber() > progressPage.getNumber())
+            if (p.number > progressPage.number)
             {
                 progressPage = p;
-                series.setProgressPageId(progressPage.getId());
+                series.progressPageId = progressPage.id;
                 resolver.update(series.uri(), series.getContentValues(), null, null);
             }
         }
         // Check if the new chapter is higher numbered than the progress chapter
         else
         {
-            Cursor chapterCursor = resolver.query(Chapter.uri(p.getChapterId()), null, null, null, null);
+            Cursor chapterCursor = resolver.query(Chapter.uri(p.chapterId), null, null, null, null);
             Chapter c = new Chapter(chapterCursor);
 
             // Check it's still the same series, and then check numbering
-            if (c.getSeriesId() == progressChapter.getSeriesId() && c.getNumber() > progressChapter.getNumber())
+            if (c.seriesId == progressChapter.seriesId && c.number > progressChapter.number)
             {
                 progressChapter = c;
                 progressPage = p;
-                series.setProgressChapterId(progressChapter.getId());
-                series.setProgressPageId(progressPage.getId());
+                series.progressChapterId = progressChapter.id;
+                series.progressPageId = progressPage.id;
                 resolver.update(series.uri(), series.getContentValues(), null, null);
             }
         }

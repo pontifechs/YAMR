@@ -23,7 +23,7 @@ public class OrientationAware {
 
     public interface I
     {
-        public void onPortrait(Configuration newConfig);
-        public void onLandscape(Configuration newConfig);
+        void onPortrait(Configuration newConfig);
+        void onLandscape(Configuration newConfig);
     }
 }

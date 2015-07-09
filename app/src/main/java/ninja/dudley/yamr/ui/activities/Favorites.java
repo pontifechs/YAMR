@@ -55,20 +55,20 @@ public class Favorites extends ListActivity implements LoaderManager.LoaderCallb
             TextView name = (TextView) view.findViewById(R.id.seriesName);
             TextView progress = (TextView) view.findViewById(R.id.seriesProgress);
 
-            if (series.getThumbnailPath() != null)
+            if (series.thumbnailPath != null)
             {
-                Drawable d = Drawable.createFromPath(series.getThumbnailPath());
+                Drawable d = Drawable.createFromPath(series.thumbnailPath);
                 thumb.setImageDrawable(d);
             }
 
-            name.setText(series.getName());
+            name.setText(series.name);
 
-            if (series.getProgressPageId() != -1)
+            if (series.progressPageId != -1)
             {
-                Page p = new Page(context.getContentResolver().query(Page.uri(series.getProgressPageId()), null, null, null, null));
-                Chapter c = new Chapter(context.getContentResolver().query(Chapter.uri(p.getChapterId()), null, null, null, null));
+                Page p = new Page(context.getContentResolver().query(Page.uri(series.progressPageId), null, null, null, null));
+                Chapter c = new Chapter(context.getContentResolver().query(Chapter.uri(p.chapterId), null, null, null, null));
 
-                progress.setText("Chapter: " + c.getNumber() + ", Page: " + p.getNumber());
+                progress.setText("Chapter: " + c.number + ", Page: " + p.number);
             }
             else
             {
@@ -126,8 +126,7 @@ public class Favorites extends ListActivity implements LoaderManager.LoaderCallb
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args)
     {
-        Uri favorites = Series.baseUri().buildUpon().appendPath("favorites").build();
-        return new CursorLoader(this, favorites, null, null, null, null);
+        return new CursorLoader(this, Series.favorites(), null, null, null, null);
     }
 
     @Override

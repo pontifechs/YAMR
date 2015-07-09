@@ -68,9 +68,9 @@ public class SeriesCard extends Fragment
         fourthSlot = (TextView) layout.findViewById(R.id.fourthSlot);
 
         Drawable d;
-        if (series.getThumbnailPath() != null)
+        if (series.thumbnailPath != null)
         {
-            d = Drawable.createFromPath(series.getThumbnailPath());
+            d = Drawable.createFromPath(series.thumbnailPath);
         }
         else
         {
@@ -82,21 +82,21 @@ public class SeriesCard extends Fragment
             thumbnail.setImageDrawable(d);
         }
 
-        seriesName.setText(series.getName());
+        seriesName.setText(series.name);
 
         List<String> info = new ArrayList<>();
-        if (!StringUtil.isBlank(series.getAuthor()))
+        if (!StringUtil.isBlank(series.author))
         {
-            info.add("<b>Author: </b>" + series.getAuthor());
+            info.add("<b>Author: </b>" + series.author);
         }
-        if (!StringUtil.isBlank(series.getArtist()))
+        if (!StringUtil.isBlank(series.artist))
         {
-            info.add("<b>Artist: </b>" + series.getArtist());
+            info.add("<b>Artist: </b>" + series.artist);
         }
-        info.add("<b>Status: </b>" + (series.isComplete() ? "Complete" : "Ongoing"));
-        if (!StringUtil.isBlank(series.getDescription()))
+        info.add("<b>Status: </b>" + (series.complete ? "Complete" : "Ongoing"));
+        if (!StringUtil.isBlank(series.description))
         {
-            info.add(series.getDescription());
+            info.add(series.description);
         }
 
         if (info.size() >= 1)

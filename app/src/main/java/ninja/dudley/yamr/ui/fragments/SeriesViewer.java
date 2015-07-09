@@ -27,7 +27,6 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
@@ -129,8 +128,8 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
 
         loading = new ProgressDialog(getActivity());
         loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        loading.setTitle("Loading Chapters for " + series.getName());
-        if (!series.isFullyParsed())
+        loading.setTitle("Loading Chapters for " + series.name);
+        if (!series.fullyParsed)
         {
             loading.show();
         }
@@ -166,7 +165,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
         inflater.inflate(R.menu.menu_series_viewer, menu);
-        if (series != null && series.isFavorite())
+        if (series != null && series.favorite)
         {
             menu.findItem(R.id.favorite).setIcon(R.drawable.ic_favorite_border_white_48dp);
         }
@@ -178,13 +177,13 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
         switch (item.getItemId())
         {
             case R.id.favorite:
-                if (series.isFavorite())
+                if (series.favorite)
                 {
-                    series.setFavorite(false);
+                    series.favorite = false;
                 }
                 else
                 {
-                    series.setFavorite(true);
+                    series.favorite = true;
                 }
                 getActivity().getContentResolver().update(series.uri(), series.getContentValues(), null, null);
                 getActivity().invalidateOptionsMenu();
@@ -208,7 +207,7 @@ public class SeriesViewer extends ListFragment implements LoaderManager.LoaderCa
     {
         return new CursorLoader(
                 getActivity(),
-                series.uri().buildUpon().appendPath("chapters").build(),
+                series.chapters(),
                 null,
                 null,
                 null,

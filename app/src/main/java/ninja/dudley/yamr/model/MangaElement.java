@@ -15,17 +15,17 @@ import ninja.dudley.yamr.db.util.Id;
 public class MangaElement
 {
     @Id
-    protected int id = -1;
+    public final int id;
 
     public static final String urlCol= "url";
     @Column(name=urlCol)
-    protected String url;
+    public String url;
 
     public static final String fullyParsedCol = "fully_parsed";
     @Column(name=fullyParsedCol)
-    protected boolean fullyParsed = false;
+    public boolean fullyParsed = false;
 
-    public MangaElement() {}
+    public MangaElement() { id = -1; }
     public MangaElement(Cursor c)
     {
         if (c.getCount() <= 0)
@@ -81,35 +81,5 @@ public class MangaElement
     {
         int colNum = c.getColumnIndex(col);
         return c.getInt(colNum) > 0;
-    }
-
-    public int getId()
-    {
-        return id;
-    }
-
-    public void setId(int id)
-    {
-        this.id = id;
-    }
-
-    public String getUrl()
-    {
-        return url;
-    }
-
-    public void setUrl(String url)
-    {
-        this.url = url;
-    }
-
-    public boolean isFullyParsed()
-    {
-        return fullyParsed;
-    }
-
-    public void setFullyParsed(boolean fullyParsed)
-    {
-        this.fullyParsed = fullyParsed;
     }
 }

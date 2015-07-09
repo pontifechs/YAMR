@@ -49,12 +49,12 @@ public class MangaPandaFetcher extends FetcherSync
         Log.d("Fetch", "Starting a Provider fetch");
         try
         {
-            if (behavior == FetchBehavior.LazyFetch && provider.isFullyParsed())
+            if (behavior == FetchBehavior.LazyFetch && provider.fullyParsed)
             {
                 Log.d("Fetch", "Already parsed, skipping");
                 return provider;
             }
-            Document doc = fetchUrl(provider.getUrl());
+            Document doc = fetchUrl(provider.url);
             Elements elements = doc.select(".series_alpha li a[href]");
 
             final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
@@ -74,13 +74,12 @@ public class MangaPandaFetcher extends FetcherSync
                 {
                     continue;
                 }
-                Series s = new Series();
-                s.setProviderId(provider.getId());
-                s.setUrl(url);
-                s.setName(e.ownText());
+                Series s = new Series(provider.id);
+                s.url = url;
+                s.name = e.ownText();
                 context.getContentResolver().insert(Series.baseUri(), s.getContentValues());
             }
-            provider.setFullyParsed(true);
+            provider.fullyParsed = true;
             context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null);
             Log.d("Fetch", "Iteration complete. Provider Fetched.");
         }
@@ -98,12 +97,12 @@ public class MangaPandaFetcher extends FetcherSync
         Log.d("Fetch", "Starting Series fetch");
         try
         {
-            if (behavior == FetchBehavior.LazyFetch && series.isFullyParsed())
+            if (behavior == FetchBehavior.LazyFetch && series.fullyParsed)
             {
                 Log.d("Fetch", "Already parsed. Ignoring");
                 return series;
             }
-            Document doc = fetchUrl(series.getUrl());
+            Document doc = fetchUrl(series.url);
             // Parse series info
             Elements propertyElements = doc.select(".propertytitle");
             for (Element property : propertyElements)
@@ -113,16 +112,16 @@ public class MangaPandaFetcher extends FetcherSync
                 switch (propTitle)
                 {
                     case "Alternate Name:":
-                        series.setAlternateName(sibling.text());
+                        series.alternateName = sibling.text();
                         break;
                     case "Status:":
-                        series.setComplete(!sibling.text().equals("Ongoing"));
+                        series.complete = !sibling.text().equals("Ongoing");
                         break;
                     case "Author":
-                        series.setAuthor(sibling.text());
+                        series.author = sibling.text();
                         break;
                     case "Artist:":
-                        series.setArtist(sibling.text());
+                        series.artist = sibling.text();
                         break;
                     case "Genre:":
                     {
@@ -139,8 +138,7 @@ public class MangaPandaFetcher extends FetcherSync
                             Genre g = new Genre(context.getContentResolver().query(Genre.baseUri(), null, null, new String[]{genreName}, null));
 
                             // Now that we have the genre for sure, add the relation.
-                            Uri genreRelator = Genre.baseUri().buildUpon().appendPath("relator").build();
-                            context.getContentResolver().insert(genreRelator, Genre.SeriesGenreRelator(series.getId(), g.getId()));
+                            context.getContentResolver().insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id));
                         }
                         break;
                     }
@@ -148,12 +146,12 @@ public class MangaPandaFetcher extends FetcherSync
             }
             // Parse thumbnail
             Element thumb = doc.select("#mangaimg img[src]").first();
-            series.setThumbnailUrl(thumb.absUrl("src"));
-            series.setThumbnailPath(saveThumbnail(series));
+            series.thumbnailUrl = thumb.absUrl("src");
+            series.thumbnailPath = saveThumbnail(series);
 
             // Parse description
             Element summary = doc.select("#readmangasum p").first();
-            series.setDescription(summary.text());
+            series.description = summary.text();
 
             // Parse chapters
             Elements chapterElements = doc.select("td .chico_manga ~ a[href]");
@@ -175,14 +173,13 @@ public class MangaPandaFetcher extends FetcherSync
                     continue;
                 }
 
-                Chapter c = new Chapter();
-                c.setSeriesId(series.getId());
-                c.setUrl(url);
-                c.setName(e.parent().ownText().replace(":", ""));
-                c.setNumber(Float.parseFloat(e.text().replace(series.getName(), "")));
+                Chapter c = new Chapter(series.id);
+                c.url = url;
+                c.name = e.parent().ownText().replace(":", "");
+                c.number = Float.parseFloat(e.text().replace(series.name, ""));
                 context.getContentResolver().insert(Chapter.baseUri(), c.getContentValues());
             }
-            series.setFullyParsed(true);
+            series.fullyParsed = true;
             context.getContentResolver().update(series.uri(), series.getContentValues(), null, null);
             Log.d("Fetch", "Iteration complete. Series Fetched.");
         }
@@ -199,12 +196,12 @@ public class MangaPandaFetcher extends FetcherSync
     {
         try
         {
-            if (behavior == FetchBehavior.LazyFetch && chapter.isFullyParsed())
+            if (behavior == FetchBehavior.LazyFetch && chapter.fullyParsed)
             {
                 Log.d("Fetch", "Already parsed. Ignoring");
                 return chapter;
             }
-            Document doc = fetchUrl(chapter.getUrl());
+            Document doc = fetchUrl(chapter.url);
             Elements elements = doc.select("#pageMenu option[value]");
             final int statusStride = (int)Math.ceil(elements.size() / 100.0f);
             int index = 0;
@@ -224,13 +221,12 @@ public class MangaPandaFetcher extends FetcherSync
                     continue;
                 }
 
-                Page p = new Page();
-                p.setChapterId(chapter.getId());
-                p.setUrl(url);
-                p.setNumber(Float.parseFloat(e.text()));
+                Page p = new Page(chapter.id);
+                p.url = url;
+                p.number = Float.parseFloat(e.text());
                 context.getContentResolver().insert(Page.baseUri(), p.getContentValues());
             }
-            chapter.setFullyParsed(true);
+            chapter.fullyParsed = true;
             context.getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null);
             Log.d("Fetch", "Iteration complete. Chapter fetched");
         }
@@ -247,15 +243,15 @@ public class MangaPandaFetcher extends FetcherSync
     {
         try
         {
-            if (behavior == FetchBehavior.LazyFetch && page.isFullyParsed())
+            if (behavior == FetchBehavior.LazyFetch && page.fullyParsed)
             {
                 Log.d("FetchPage", "Already parsed. Ignoring");
                 return page;
             }
-            Document doc = fetchUrl(page.getUrl());
+            Document doc = fetchUrl(page.url);
             Element element = doc.select("img[src]").first();
-            page.setImageUrl(element.absUrl("src"));
-            page.setFullyParsed(true);
+            page.imageUrl = element.absUrl("src");
+            page.fullyParsed = true;
             savePageImage(page);
             Log.d("FetchPage", "Done");
         }
@@ -275,7 +271,7 @@ public class MangaPandaFetcher extends FetcherSync
         try
         {
 
-            Document doc = fetchUrl(provider.getNewUrl());
+            Document doc = fetchUrl(provider.newUrl);
             Elements rows = doc.select(".c2");
             for (Element row : rows)
             {
@@ -290,10 +286,9 @@ public class MangaPandaFetcher extends FetcherSync
                 else
                 {
                     Log.d("Fetch", "Completely New Series!!");
-                    series = new Series();
-                    series.setUrl(seriesUrl);
-                    series.setProviderId(provider.getId());
-                    series.setName(seriesElement.text());
+                    series = new Series(provider.id);
+                    series.url = seriesUrl;
+                    series.name = seriesElement.text();
                     Uri inserted = context.getContentResolver().insert(Series.baseUri(), series.getContentValues());
                     series = new Series(context.getContentResolver().query(inserted, null, null, null, null));
                     fetchSeries(series);
@@ -309,17 +304,16 @@ public class MangaPandaFetcher extends FetcherSync
                     if (!chapterExists(chapterUrl))
                     {
                         Log.d("Fetch", "Haven't seen this one.");
-                        chapter = new Chapter();
-                        chapter.setUrl(chapterUrl);
-                        chapter.setSeriesId(series.getId());
+                        chapter = new Chapter(series.id);
+                        chapter.url = chapterUrl;
 
                         String body = chapterElement.text();
-                        float number = Float.parseFloat(body.replace(series.getName(), ""));
-                        chapter.setNumber(number);
+                        float number = Float.parseFloat(body.replace(series.name, ""));
+                        chapter.number = number;
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues());
                         newChapter = true;
-                        if (!series.isFavorite())
+                        if (!series.favorite)
                         {
                             newChapters.add(chapter.uri());
                         }
@@ -327,7 +321,7 @@ public class MangaPandaFetcher extends FetcherSync
                 }
                 if (newChapter)
                 {
-                    series.setUpdated(true);
+                    series.updated = true;
                 }
                 context.getContentResolver().update(series.uri(), series.getContentValues(), null, null);
             }

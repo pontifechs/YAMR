@@ -19,16 +19,18 @@ public class Chapter extends MangaElement
 
     public static final String seriesIdCol = Series.tableName + DBHelper.ID;
     @ForeignKey(value=Series.class, name=seriesIdCol)
-    private int seriesId;
+    public final int seriesId;
 
     public static final String nameCol = "name";
     @Column(name=nameCol)
-    private String name;
+    public String name;
 
     public static final String numberCol = "number";
     @Column(name=numberCol, type= Column.Type.Real)
-    private float number;
+    public float number;
 
+
+    // Uri Handling --------------------------------------------------------------------------------
     public static Uri baseUri()
     {
         return Uri.parse("content://" + DBHelper.AUTHORITY + "/chapter");
@@ -36,12 +38,44 @@ public class Chapter extends MangaElement
 
     public static Uri uri(int id)
     {
-        Uri base = baseUri();
-        return base.buildUpon().appendPath(Integer.toString(id)).build();
+        return baseUri().buildUpon().appendPath(Integer.toString(id)).build();
+    }
+    public Uri uri()
+    {
+        return uri(id);
     }
 
-    public Chapter() {}
+    public static Uri pages(int id)
+    {
+        return uri(id).buildUpon().appendPath("pages").build();
+    }
+    public Uri pages()
+    {
+        return pages(id);
+    }
 
+    public static Uri prevPage(int id, float num)
+    {
+        return pages(id).buildUpon().appendPath(Float.toString(num)).appendPath("prev").build();
+    }
+    public Uri prevPage(float num)
+    {
+        return prevPage(id, num);
+    }
+
+    public static Uri nextPage(int id, float num)
+    {
+        return pages(id).buildUpon().appendPath(Float.toString(num)).appendPath("next").build();
+    }
+    public Uri nextPage(float num)
+    {
+        return nextPage(id, num);
+    }
+
+
+    // Construction / Persistence ------------------------------------------------------------------
+    public Chapter() { seriesId = -1; }
+    public Chapter(int seriesId) { this.seriesId = seriesId; }
     public Chapter(Cursor c)
     {
         super(c);
@@ -59,40 +93,5 @@ public class Chapter extends MangaElement
         values.put(nameCol, name);
         values.put(numberCol, number);
         return values;
-    }
-
-    public Uri uri()
-    {
-        return uri(id);
-    }
-
-    public int getSeriesId()
-    {
-        return seriesId;
-    }
-
-    public void setSeriesId(int seriesId)
-    {
-        this.seriesId = seriesId;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public float getNumber()
-    {
-        return number;
-    }
-
-    public void setNumber(float number)
-    {
-        this.number = number;
     }
 }

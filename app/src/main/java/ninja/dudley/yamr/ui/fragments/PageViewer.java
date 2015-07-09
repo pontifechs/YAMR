@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import ninja.dudley.yamr.R;
 import ninja.dudley.yamr.model.Page;
@@ -66,12 +65,12 @@ public class PageViewer extends Fragment implements TouchImageView.SwipeListener
             public void onReceive(Context context, Intent intent)
             {
                 page = new Page(getActivity().getContentResolver().query(intent.getData(), null, null, null, null));
-                if (series != null && series.getProgressPageId() == -1)
+                if (series != null && series.progressPageId == -1)
                 {
                     series = new Series(getActivity().getContentResolver().query(series.uri(), null, null, null, null));
                 }
                 TouchImageView imageView = (TouchImageView) getActivity().findViewById(R.id.imageView);
-                Drawable d = Drawable.createFromPath(page.getImagePath());
+                Drawable d = Drawable.createFromPath(page.imagePath);
                 if (d == null)
                 {
                     // TODO:: Handle no image or corrupt image.

@@ -18,12 +18,13 @@ public class Provider extends MangaElement
 
     public static final String nameCol = "name";
     @Column(name=nameCol)
-    private String name;
+    public String name;
 
     public static final String newUrlCol = "new_url";
     @Column(name=newUrlCol)
-    private String newUrl;
+    public String newUrl;
 
+    // Uri Handling --------------------------------------------------------------------------------
     public static Uri baseUri()
     {
         return Uri.parse("content://" + DBHelper.AUTHORITY + "/provider");
@@ -34,7 +35,26 @@ public class Provider extends MangaElement
         Uri base = baseUri();
         return base.buildUpon().appendPath(Integer.toString(id)).build();
     }
+    public Uri uri()
+    {
+        return uri(id);
+    }
 
+    public static Uri series(int id)
+    {
+        return uri(id).buildUpon().appendPath("series").build();
+    }
+    public Uri series()
+    {
+        return series(id);
+    }
+
+    public static Uri all()
+    {
+        return baseUri().buildUpon().appendPath("all").build();
+    }
+
+    // Construction / Persistence ------------------------------------------------------------------
     public Provider() {}
     public Provider(Cursor c)
     {
@@ -51,30 +71,5 @@ public class Provider extends MangaElement
         values.put(nameCol, name);
         values.put(newUrlCol, newUrl);
         return values;
-    }
-
-    public Uri uri()
-    {
-        return uri(id);
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public String getNewUrl()
-    {
-        return newUrl;
-    }
-
-    public void setNewUrl(String newUrl)
-    {
-        this.newUrl = newUrl;
     }
 }

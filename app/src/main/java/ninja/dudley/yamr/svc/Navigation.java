@@ -9,7 +9,6 @@ import android.util.Log;
 
 import java.util.NoSuchElementException;
 
-import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Series;
@@ -169,7 +168,7 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
                 case PAGE_FROM_SERIES:
                 {
                     Series arg = series(intent.getData());
-                    if (arg.getProgressPageId() == -1)
+                    if (arg.progressPageId == -1)
                     {
                         arg = bookmarkFirstPage(arg);
                     }
@@ -205,13 +204,13 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
 
     private Chapter chapterFromPage(Page p)
     {
-        Uri chapter = Chapter.uri(p.getChapterId());
+        Uri chapter = Chapter.uri(p.chapterId);
         return new Chapter(getContentResolver().query(chapter, null, null, null, null));
     }
 
     private Series seriesFromChapter(Chapter c)
     {
-        Uri series = Series.uri(c.getSeriesId());
+        Uri series = Series.uri(c.seriesId);
         return new Series(getContentResolver().query(series, null, null, null, null));
     }
 
@@ -238,8 +237,9 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
     private Page neighboringPage(Page currentPage, Direction direction)
     {
         Chapter chapter = chapterFromPage(currentPage);
-        Uri getNextPageUri = chapter.uri().buildUpon().appendPath("pages")
-                .appendPath(Float.toString(currentPage.getNumber())).appendPath(direction.toString()).build();
+        Uri getNextPageUri = direction == Direction.Previous
+                ? chapter.prevPage(currentPage.number)
+                : chapter.nextPage(currentPage.number);
         Cursor nextPageCursor = getContentResolver().query(getNextPageUri, null, null, null, null);
         Page page = new Page(nextPageCursor); // Let it throw, Let it throw!!! Can't hold it back anymore!!!
         fetcher.fetchPage(page);
@@ -250,8 +250,9 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
     private Chapter neighboringChapter(Chapter currentChapter, Direction direction)
     {
         Series series = seriesFromChapter(currentChapter);
-        Uri getNextChapterUri = series.uri().buildUpon().appendPath("chapters")
-                .appendPath(Float.toString(currentChapter.getNumber())).appendPath(direction.toString()).build();
+        Uri getNextChapterUri = direction == Direction.Previous
+                ? series.prevChapter(currentChapter.number)
+                : series.nextChapter(currentChapter.number);
         Cursor nextChapterCursor = getContentResolver().query(getNextChapterUri, null, null, null, null);
         Chapter chapter= new Chapter(nextChapterCursor); // Let it throw, Let it throw!!! Can't hold it back anymore
         fetcher.fetchChapter(currentChapter);
@@ -318,8 +319,7 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
 
     private Page firstPageFromChapter(Chapter chapter)
     {
-        Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
-        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " asc");
+        Cursor pages = getContentResolver().query(chapter.pages(), null, null, null, Page.numberCol + " asc");
         Page firstPage = new Page(pages);
         fetcher.fetchPage(firstPage);
         return firstPage;
@@ -327,8 +327,7 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
 
     private Page lastPageFromChapter(Chapter chapter)
     {
-        Uri pagesQuery = chapter.uri().buildUpon().appendPath("pages").build();
-        Cursor pages = getContentResolver().query(pagesQuery, null, null, null, Page.numberCol + " desc");
+        Cursor pages = getContentResolver().query(chapter.pages(), null, null, null, Page.numberCol + " desc");
         Page lastPage = new Page(pages);
         fetcher.fetchPage(lastPage);
         return lastPage;
@@ -336,8 +335,7 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
 
     private Chapter firstChapterFromSeries(Series series)
     {
-        Uri chaptersQuery = series.uri().buildUpon().appendPath("chapters").build();
-        Cursor chapters = getContentResolver().query(chaptersQuery, null, null, null, Chapter.numberCol + " asc");
+        Cursor chapters = getContentResolver().query(series.chapters(), null, null, null, Chapter.numberCol + " asc");
         Chapter firstChapter = new Chapter(chapters);
         fetcher.fetchChapter(firstChapter);
         return firstChapter;
@@ -354,15 +352,15 @@ public class Navigation extends IntentService implements FetcherSync.NotifyStatu
     {
         Chapter firstChapter = firstChapterFromSeries(series);
         Page firstPage = firstPageFromSeries(series);
-        series.setProgressChapterId(firstChapter.getId());
-        series.setProgressPageId(firstPage.getId());
+        series.progressChapterId = firstChapter.id;
+        series.progressPageId = firstPage.id;
         getContentResolver().update(series.uri(), series.getContentValues(), null, null);
         return series;
     }
 
     private Page pageFromBookmark(Series series)
     {
-        Uri pageUri = Page.uri(series.getProgressPageId());
+        Uri pageUri = Page.uri(series.progressPageId);
         Page page = page(pageUri);
         fetcher.fetchPage(page);
         return page;

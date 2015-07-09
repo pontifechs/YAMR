@@ -24,7 +24,6 @@ public class FetchStarter extends BroadcastReceiver
 {
     public static final String StartChecking = "ninja.dudley.yamr.FetchStarter";
 
-
     @Override
     public void onReceive(Context context, Intent intent)
     {

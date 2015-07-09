@@ -20,84 +20,132 @@ public class Series extends MangaElement
 
     public static final String providerIdCol = Provider.tableName + DBHelper.ID;
     @ForeignKey(value=Provider.class, name=providerIdCol)
-    private int providerId;
+    public final int providerId;
 
     public static final String nameCol = "name";
     @Column(name=nameCol)
-    private String name;
+    public String name;
 
     public static final String descriptionCol = "description";
     @Column(name=descriptionCol)
-    private String description;
+    public String description;
 
     public static final String favoriteCol = "favorite";
     @Column(name=favoriteCol, type=Column.Type.Integer)
-    private boolean favorite = false;
+    public boolean favorite = false;
 
     public static final String alternateNameCol = "alternate_name";
     @Column(name=alternateNameCol)
-    private String alternateName;
+    public String alternateName;
 
     public static final String completeCol = "complete";
     @Column(name=completeCol, type=Column.Type.Integer)
-    private boolean complete = false;
+    public boolean complete = false;
 
     public static final String authorCol = "author";
     @Column(name=authorCol)
-    private String author;
+    public String author;
 
     public static final String artistCol = "artist";
     @Column(name=artistCol)
-    private String artist;
+    public String artist;
 
     public static final String thumbnailUrlCol = "thumbnail_url";
     @Column(name=thumbnailUrlCol)
-    private String thumbnailUrl;
+    public String thumbnailUrl;
 
     public static final String thumbnailPathCol = "thumbnail_path";
     @Column(name=thumbnailPathCol)
-    private String thumbnailPath;
+    public String thumbnailPath;
 
     public static final String progressChapterIdCol = "progress_" + Chapter.tableName + DBHelper.ID;
     @ForeignKey(value=Chapter.class, name=progressChapterIdCol)
-    private int progressChapterId = -1;
+    public int progressChapterId = -1;
 
     public static final String progressPageIdCol = "progress_" + Page.tableName + DBHelper.ID;
     @ForeignKey(value=Page.class, name=progressPageIdCol)
-    private int progressPageId = -1;
+    public int progressPageId = -1;
 
     public static final String updatedCol = "updated";
     @Column(name=updatedCol, type=Column.Type.Integer)
-    private boolean updated = false;
+    public boolean updated = false;
 
+
+    // Uri Handling --------------------------------------------------------------------------------
     public static Uri baseUri()
     {
         return Uri.parse("content://" + DBHelper.AUTHORITY + "/series");
     }
-
     public static Uri uri(int id)
     {
-        Uri base = baseUri();
-        return base.buildUpon().appendPath(Integer.toString(id)).build();
+        return baseUri().buildUpon().appendPath(Integer.toString(id)).build();
+    }
+    public Uri uri()
+    {
+        return uri(id);
     }
 
-    public Series() {}
+    public static Uri favorites()
+    {
+        return baseUri().buildUpon().appendPath("favorites").build();
+    }
 
+    public static Uri chapters(int id)
+    {
+        return uri(id).buildUpon().appendPath("chapters").build();
+    }
+    public Uri chapters()
+    {
+        return chapters(id);
+    }
+
+    public static Uri prevChapter(int id, float num)
+    {
+        return uri(id).buildUpon().appendPath(Float.toString(num)).appendPath("prev").build();
+    }
+    public Uri prevChapter(float num)
+    {
+        return prevChapter(id, num);
+    }
+
+    public static Uri nextChapter(int id, float num)
+    {
+        return uri(id).buildUpon().appendPath(Float.toString(num)).appendPath("next").build();
+    }
+    public Uri nextChapter(float num)
+    {
+        return nextChapter(id, num);
+    }
+
+    public static Uri genres(int id)
+    {
+        return uri(id).buildUpon().appendPath("genres").build();
+    }
+    public Uri genres()
+    {
+        return genres(id);
+    }
+
+
+    // Construction / Persistence ------------------------------------------------------------------
+    public Series() { providerId = -1; }
+    public Series(int providerId) { this.providerId = providerId; }
     public Series(Cursor c)
     {
         super(c);
+        providerId = getInt(c, providerIdCol);
         parse(c,true);
     }
 
     public Series(Cursor c, boolean close)
     {
         super(c);
+        providerId = getInt(c, providerIdCol);
         parse(c,close);
     }
 
     private void parse(Cursor c, boolean close)
     {
-        providerId = getInt(c, providerIdCol);
         name = getString(c, nameCol);
         description = getString(c, descriptionCol);
         favorite = getBool(c, favoriteCol);
@@ -140,140 +188,5 @@ public class Series extends MangaElement
         }
         values.put(updatedCol, updated);
         return values;
-    }
-
-    public Uri uri()
-    {
-        return uri(id);
-    }
-
-    public int getProviderId()
-    {
-        return providerId;
-    }
-
-    public void setProviderId(int providerId)
-    {
-        this.providerId = providerId;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    public boolean isFavorite()
-    {
-        return favorite;
-    }
-
-    public void setFavorite(boolean favorite)
-    {
-        this.favorite = favorite;
-    }
-
-    public String getAlternateName()
-    {
-        return alternateName;
-    }
-
-    public void setAlternateName(String alternateName)
-    {
-        this.alternateName = alternateName;
-    }
-
-    public boolean isComplete()
-    {
-        return complete;
-    }
-
-    public void setComplete(boolean complete)
-    {
-        this.complete = complete;
-    }
-
-    public String getAuthor()
-    {
-        return author;
-    }
-
-    public void setAuthor(String author)
-    {
-        this.author = author;
-    }
-
-    public String getArtist()
-    {
-        return artist;
-    }
-
-    public void setArtist(String artist)
-    {
-        this.artist = artist;
-    }
-
-    public String getThumbnailUrl()
-    {
-        return thumbnailUrl;
-    }
-
-    public void setThumbnailUrl(String thumbnailUrl)
-    {
-        this.thumbnailUrl = thumbnailUrl;
-    }
-
-    public String getThumbnailPath()
-    {
-        return thumbnailPath;
-    }
-
-    public void setThumbnailPath(String thumbnailPath)
-    {
-        this.thumbnailPath = thumbnailPath;
-    }
-
-    public int getProgressChapterId()
-    {
-        return progressChapterId;
-    }
-
-    public void setProgressChapterId(int progressChapterId)
-    {
-        this.progressChapterId = progressChapterId;
-    }
-
-    public int getProgressPageId()
-    {
-        return progressPageId;
-    }
-
-    public void setProgressPageId(int progressPageId)
-    {
-        this.progressPageId = progressPageId;
-    }
-
-    public boolean isUpdated()
-    {
-        return updated;
-    }
-
-    public void setUpdated(boolean updated)
-    {
-        this.updated = updated;
     }
 }

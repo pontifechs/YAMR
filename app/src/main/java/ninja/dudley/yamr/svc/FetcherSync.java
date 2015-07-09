@@ -158,7 +158,7 @@ public abstract class FetcherSync
 
     private void downloadImage(String imageUrl, String imagePath)
     {
-        InputStream in = null;
+        InputStream in;
         ByteArrayOutputStream out = null;
         int count;
         try
@@ -219,8 +219,7 @@ public abstract class FetcherSync
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     protected void savePageImage(Page p)
     {
-        Uri heritageQuery = p.uri().buildUpon().appendPath("heritage").build();
-        Cursor heritage = context.getContentResolver().query(heritageQuery, null, null, null, null);
+        Cursor heritage = context.getContentResolver().query(p.heritage(), null, null, null, null);
         heritage.moveToFirst();
 
         int providerNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME);
@@ -244,31 +243,30 @@ public abstract class FetcherSync
         String pagePath = chapterDirectory +
                 "/" + formatFloat(pageNumber) + ".png";
 
-        downloadImage(p.getImageUrl(), pagePath);
+        downloadImage(p.imageUrl, pagePath);
 
-        p.setImagePath(pagePath);
+        p.imagePath = pagePath;
         context.getContentResolver().update(p.uri(), p.getContentValues(), null, null); // Save the path off
         heritage.close();
     }
 
     protected String saveThumbnail(Series s)
     {
-        Provider p = new Provider(context.getContentResolver().query(Provider.uri(s.getProviderId()), null, null, null, null));
+        Provider p = new Provider(context.getContentResolver().query(Provider.uri(s.providerId), null, null, null, null));
 
         File root = Environment.getExternalStorageDirectory();
         String seriesPath = root.getAbsolutePath() +
-                "/" + stripBadCharsForFile(p.getName()) +
-                "/" + stripBadCharsForFile(s.getName());
+                "/" + stripBadCharsForFile(p.name) +
+                "/" + stripBadCharsForFile(s.name);
         File chapterDirectory = new File(seriesPath);
         chapterDirectory.mkdirs();
         String thumbPath = chapterDirectory +
                 "/thumb.png";
 
-        s.setThumbnailPath(thumbPath);
         FileOutputStream out = null;
         try
         {
-            URL url = new URL(s.getThumbnailUrl());
+            URL url = new URL(s.thumbnailUrl);
             Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
             out = new FileOutputStream(thumbPath);
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);

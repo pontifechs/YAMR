@@ -27,7 +27,6 @@ import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 
 import ninja.dudley.yamr.R;
-import ninja.dudley.yamr.db.DBHelper;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
 import ninja.dudley.yamr.svc.FetcherAsync;
@@ -177,7 +176,7 @@ public class ProviderViewer extends ListFragment
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args)
     {
-        Uri mangaPandaSeries = Provider.uri(1).buildUpon().appendPath("series").build();
+        Uri mangaPandaSeries = Provider.series(1);
         if (filter == null)
         {
             return new CursorLoader(

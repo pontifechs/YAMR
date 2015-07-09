@@ -42,12 +42,14 @@ public class Genre
     }
 
     @Id
-    private int _id = -1;
+    public int id = -1;
 
     public static final String nameCol = "name";
-    @Column(name=nameCol)
-    private String name;
+    @Column(name = nameCol)
+    public String name;
 
+
+    // Uri Handling --------------------------------------------------------------------------------
     public static Uri baseUri()
     {
         return Uri.parse("content://" + DBHelper.AUTHORITY + "/genre");
@@ -55,29 +57,34 @@ public class Genre
 
     public static Uri uri(int id)
     {
-        Uri baseUri = baseUri();
-        return baseUri.buildUpon().appendPath(Integer.toString(id)).build();
+        return baseUri().buildUpon().appendPath(Integer.toString(id)).build();
     }
 
     public Uri uri()
     {
-        return uri(this._id);
+        return uri(this.id);
     }
 
-    public ContentValues getContentValues()
+    public static Uri relator()
     {
-        ContentValues values = new ContentValues();
-        if (_id != -1)
-        {
-            values.put(DBHelper.ID, _id);
-        }
-        values.put(nameCol, name);
-        return values;
+        return baseUri().buildUpon().appendPath("relator").build();
     }
 
+    public static Uri series(int id)
+    {
+        return uri(id).buildUpon().appendPath("series").build();
+    }
+
+    public Uri series()
+    {
+        return series(id);
+    }
+
+
+    // Construction / Persistence ------------------------------------------------------------------
     private Genre(int _id, String name)
     {
-        this._id = _id;
+        this.id = _id;
         this.name = name;
     }
 
@@ -91,28 +98,19 @@ public class Genre
         c.moveToFirst();
         int idCol = c.getColumnIndex(DBHelper.ID);
         int nameColIndex = c.getColumnIndex(nameCol);
-        this._id = c.getInt(idCol);
+        this.id = c.getInt(idCol);
         this.name = c.getString(nameColIndex);
         c.close();
     }
 
-    public int getId()
+    public ContentValues getContentValues()
     {
-        return _id;
-    }
-
-    public void setId(int _id)
-    {
-        this._id = _id;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
+        ContentValues values = new ContentValues();
+        if (id != -1)
+        {
+            values.put(DBHelper.ID, id);
+        }
+        values.put(nameCol, name);
+        return values;
     }
 }

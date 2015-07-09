@@ -14,5 +14,5 @@ public @interface ForeignKey
 {
     Class value();
 
-    String name() default "";
+    String name();
 }
