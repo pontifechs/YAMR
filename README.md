@@ -6,7 +6,8 @@ Code Smells
 -----------
 
 #### General
-* I want to run some of this through some static analysis. Maybe there's one that's android specific as well that can help with lifecycle BS?
+* I want to run some of this through some static analysis. Maybe there's one that's android specific as well that can help with lifecycle BS?]
+* I kinda want to try Kotlin. Some of the battles I had been losing against android/Java I could probably solve with lambdas.
 
 #### DBProvider.java
 * The implicit synchronization problem between the URI format the model creates and the UriMatcher matching
