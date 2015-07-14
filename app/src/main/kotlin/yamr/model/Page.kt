@@ -17,15 +17,12 @@ public class Page : MangaElement
 {
     ForeignKey(value = Chapter::class, name = chapterIdCol)
     public val chapterId: Int
-
     Column(name = numberCol, type = Column.Type.Real)
-    public var number: Float = 0f;
-
+    public val number: Float
     Column(name = imageUrlCol)
-    public var imageUrl: String? = null;
-
+    public var imageUrl: String? = null
     Column(name = imagePathCol)
-    public var imagePath: String? = null;
+    public var imagePath: String? = null
 
     public fun uri(): Uri
     {
@@ -38,9 +35,10 @@ public class Page : MangaElement
     }
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(chapterId: Int, url: String) : super(url)
+    public constructor(chapterId: Int, url: String, number: Float) : super(url)
     {
         this.chapterId = chapterId
+        this.number = number
     }
 
     public constructor(c: Cursor) : super(c)
@@ -65,13 +63,9 @@ public class Page : MangaElement
     companion object
     {
         public val tableName: String = "page"
-
         public val chapterIdCol: String = Chapter.tableName + DBHelper.ID
-
         public val numberCol: String = "number"
-
         public val imageUrlCol: String = "image_url"
-
         public val imagePathCol: String = "image_path"
 
 

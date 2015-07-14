@@ -18,9 +18,9 @@ public class Chapter : MangaElement
     ForeignKey(value = Series::class, name = seriesIdCol)
     public val seriesId: Int
     Column(name = nameCol)
-    public var name: String? = null;
+    public var name: String? = null
     Column(name = numberCol, type = Column.Type.Real)
-    public var number: Float = 0.toFloat()
+    public val number: Float
 
     public fun uri(): Uri
     {
@@ -44,9 +44,10 @@ public class Chapter : MangaElement
 
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(seriesId: Int, url: String) : super(url)
+    public constructor(seriesId: Int, url: String, number: Float) : super(url)
     {
         this.seriesId = seriesId
+        this.number = number
     }
 
     public constructor(c: Cursor) : super(c)
@@ -69,11 +70,8 @@ public class Chapter : MangaElement
     companion object
     {
         public val tableName: String = "chapter"
-
         public val seriesIdCol: String = Series.tableName + DBHelper.ID
-
         public val nameCol: String = "name"
-
         public val numberCol: String = "number"
 
 

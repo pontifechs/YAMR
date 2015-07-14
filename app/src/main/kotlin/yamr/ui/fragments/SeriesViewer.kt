@@ -79,7 +79,7 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
         {
             override fun onReceive(context: Context, intent: Intent)
             {
-                getLoaderManager().restartLoader(0, null, this@SeriesViewer)
+                getLoaderManager().restartLoader(0, Bundle(), this@SeriesViewer)
                 adapter!!.notifyDataSetChanged()
                 if (loading != null)
                 {
@@ -112,7 +112,7 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
         adapter = SimpleCursorAdapter(getActivity(), R.layout.chapter_item, null, arrayOf(Chapter.nameCol, Chapter.numberCol), intArrayOf(R.id.chapter_name, R.id.chapter_number), 0)
         setListAdapter(adapter)
 
-        getLoaderManager().initLoader(0, null, this)
+        getLoaderManager().initLoader(0, Bundle(), this)
 
         loading = ProgressDialog(getActivity())
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)

@@ -36,7 +36,6 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
     // TODO:: See about generalizing this so that FetcherSync can load up what/how to parse based on
     // either pure selectors, pure xpath, or a mix of selectors/javascript (via rhino)?
     // Kind of huge, but whatever haha.
-
     override fun fetchProvider(provider: Provider, behavior: FetcherSync.FetchBehavior): Provider
     {
         Log.d("Fetch", "Starting a Provider fetch")
@@ -67,8 +66,7 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
                 {
                     continue
                 }
-                val s = Series(provider.id, url)
-                s.name = e.ownText()
+                val s = Series(provider.id, url, e.ownText())
                 context.getContentResolver().insert(Series.baseUri(), s.getContentValues())
             }
             provider.fullyParsed = true
@@ -156,9 +154,8 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
                     continue
                 }
 
-                val c = Chapter(series.id, url)
+                val c = Chapter(series.id, url, java.lang.Float.parseFloat(e.text().replace(series.name, "")))
                 c.name = e.parent().ownText().replace(":", "")
-                c.number = java.lang.Float.parseFloat(e.text().replace(series.name!!, ""))
                 context.getContentResolver().insert(Chapter.baseUri(), c.getContentValues())
             }
             series.fullyParsed = true
@@ -203,8 +200,7 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
                     continue
                 }
 
-                val p = Page(chapter.id, url)
-                p.number = java.lang.Float.parseFloat(e.text())
+                val p = Page(chapter.id, url, java.lang.Float.parseFloat(e.text()))
                 context.getContentResolver().insert(Page.baseUri(), p.getContentValues())
             }
             chapter.fullyParsed = true
@@ -267,8 +263,7 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
                 else
                 {
                     Log.d("Fetch", "Completely New Series!!")
-                    series = Series(provider.id, seriesUrl)
-                    series.name = seriesElement.text()
+                    series = Series(provider.id, seriesUrl, seriesElement.text())
                     val inserted = context.getContentResolver().insert(Series.baseUri(), series.getContentValues())
                     series = Series(context.getContentResolver().query(inserted, null, null, null, null))
                     fetchSeries(series)
@@ -284,11 +279,9 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
                     if (!chapterExists(chapterUrl))
                     {
                         Log.d("Fetch", "Haven't seen this one.")
-                        chapter = Chapter(series.id, chapterUrl)
-
                         val body = chapterElement.text()
-                        val number = java.lang.Float.parseFloat(body.replace(series.name!!, ""))
-                        chapter.number = number
+                        val number = java.lang.Float.parseFloat(body.replace(series.name, ""))
+                        chapter = Chapter(series.id, chapterUrl, number)
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
                         newChapter = true

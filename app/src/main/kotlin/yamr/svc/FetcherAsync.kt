@@ -28,7 +28,8 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
         val behavior: FetcherSync.FetchBehavior
         try
         {
-            behavior = FetcherSync.FetchBehavior.valueOf(intent.getStringExtra(FETCH_BEHAVIOR))
+            val behaviorString: String? = intent.getStringExtra(FETCH_BEHAVIOR)
+            behavior = FetcherSync.FetchBehavior.valueOf(behaviorString!!)
         }
         catch (e: IllegalArgumentException)
         {

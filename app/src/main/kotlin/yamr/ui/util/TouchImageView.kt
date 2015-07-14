@@ -49,7 +49,7 @@ public class TouchImageView : ImageView
     // These do not drive the positioning, rather they are updated to reflect the current positions
     // in lieu of calling new float[9]; matrix.getValues everywhere.
     private var scale = 1.0f
-    private val translate = PointF()
+    private val translate: PointF? = PointF()
 
     // Actual constructor
     private fun init(context: Context)
@@ -74,6 +74,7 @@ public class TouchImageView : ImageView
     {
         if (overScroller!!.computeScrollOffset())
         {
+            translate!!
             val m = Matrix(getImageMatrix())
             val newPos = PointF(overScroller!!.getCurrX().toFloat(), overScroller!!.getCurrY().toFloat())
             m.postTranslate(newPos.x - translate.x, newPos.y - translate.y)
@@ -164,6 +165,7 @@ public class TouchImageView : ImageView
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean
         {
+            translate!!
             // Detect swipe left
             if (parent != null && translate.x.toInt() == 0 && velocityX > 0 && Math.abs(velocityX) > Math.abs(velocityY))
             {
@@ -238,8 +240,8 @@ public class TouchImageView : ImageView
 
         matrix.setValues(guts)
         scale = guts[Matrix.MSCALE_X]
-        translate.x = guts[Matrix.MTRANS_X]
-        translate.y = guts[Matrix.MTRANS_Y]
+        translate?.x = guts[Matrix.MTRANS_X]
+        translate?.y = guts[Matrix.MTRANS_Y]
         super.setImageMatrix(matrix)
     }
 

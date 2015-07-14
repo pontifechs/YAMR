@@ -45,19 +45,18 @@ public class DBProvider : ContentProvider()
             return Integer.toString(code)
         }
 
-        public fun `val`(): Int
+        public fun value(): Int
         {
             return code
         }
 
         companion object
         {
-
             public fun from(code: Int): MatchCode
             {
                 for (matchCode in MatchCode.values())
                 {
-                    if (matchCode.`val`() == code)
+                    if (matchCode.value() == code)
                     {
                         return matchCode
                     }
@@ -73,7 +72,7 @@ public class DBProvider : ContentProvider()
         return true
     }
 
-    override fun query(uri: Uri, projection: Array<String>, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor
+    override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor
     {
         val db = dbh!!.getReadableDatabase()
         val code = matcher.match(uri)
@@ -239,7 +238,7 @@ public class DBProvider : ContentProvider()
         }
     }
 
-    override fun update(uri: Uri, values: ContentValues, selection: String, selectionArgs: Array<String>): Int
+    override fun update(uri: Uri, values: ContentValues, selection: String?, selectionArgs: Array<String>?): Int
     {
         val db = dbh!!.getWritableDatabase()
         val code = matcher.match(uri)
@@ -269,28 +268,28 @@ public class DBProvider : ContentProvider()
         init
         {
             matcher = UriMatcher(UriMatcher.NO_MATCH)
-            matcher.addURI(DBHelper.AUTHORITY, "/provider", MatchCode.ProviderMatch.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/provider/all", MatchCode.ProviderAll.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/provider/#", MatchCode.ProviderByID.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/provider/#/series", MatchCode.ProviderSeries.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series", MatchCode.SeriesMatch.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", MatchCode.SeriesFavorites.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/#", MatchCode.SeriesByID.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", MatchCode.SeriesChapters.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", MatchCode.PrevChapterInSeries.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", MatchCode.NextChapterInSeries.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", MatchCode.SeriesGenres.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter", MatchCode.ChapterMatch.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", MatchCode.ChapterByID.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", MatchCode.ChapterPages.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", MatchCode.PrevPageInChapter.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", MatchCode.NextPageInChapter.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/page", MatchCode.PageMatch.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/page/#", MatchCode.PageByID.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", MatchCode.PageHeritage.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/genre", MatchCode.GenreMatch.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", MatchCode.SeriesGenreRelator.`val`())
-            matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", MatchCode.GenreSeries.`val`())
+            matcher.addURI(DBHelper.AUTHORITY, "/provider", MatchCode.ProviderMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/provider/all", MatchCode.ProviderAll.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/provider/#", MatchCode.ProviderByID.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/provider/#/series", MatchCode.ProviderSeries.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series", MatchCode.SeriesMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", MatchCode.SeriesFavorites.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#", MatchCode.SeriesByID.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", MatchCode.SeriesChapters.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", MatchCode.PrevChapterInSeries.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", MatchCode.NextChapterInSeries.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", MatchCode.SeriesGenres.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter", MatchCode.ChapterMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", MatchCode.ChapterByID.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", MatchCode.ChapterPages.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", MatchCode.PrevPageInChapter.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", MatchCode.NextPageInChapter.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/page", MatchCode.PageMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/page/#", MatchCode.PageByID.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", MatchCode.PageHeritage.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/genre", MatchCode.GenreMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", MatchCode.SeriesGenreRelator.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", MatchCode.GenreSeries.value())
         }
 
         private fun getId(code: Int, uri: Uri): Int

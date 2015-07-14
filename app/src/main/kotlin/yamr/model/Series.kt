@@ -17,9 +17,9 @@ Table(Series.tableName)
 public class Series : MangaElement
 {
     ForeignKey(value = Provider::class, name = providerIdCol)
-    public var providerId: Int = -1;
+    public val providerId: Int
     Column(name = nameCol)
-    public var name: String? = null
+    public var name: String
     Column(name = descriptionCol)
     public var description: String? = null
     Column(name = favoriteCol, type = Column.Type.Integer)
@@ -68,28 +68,30 @@ public class Series : MangaElement
         return genres(id)
     }
 
-
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(providerId: Int, url: String) : super(url)
+    public constructor(providerId: Int, url: String, name: String) : super(url)
     {
         this.providerId = providerId
+        this.url = url
+        this.name = name
     }
 
     public constructor(c: Cursor) : super(c)
     {
         providerId = getInt(c, providerIdCol)
+        name = getString(c, nameCol)!!
         parse(c, true)
     }
 
     public constructor(c: Cursor, close: Boolean) : super(c)
     {
         providerId = getInt(c, providerIdCol)
+        name = getString(c, nameCol)!!
         parse(c, close)
     }
 
     private fun parse(c: Cursor, close: Boolean)
     {
-        name = getString(c, nameCol)
         description = getString(c, descriptionCol)
         favorite = getBool(c, favoriteCol)
         alternateName = getString(c, alternateNameCol)
@@ -135,33 +137,19 @@ public class Series : MangaElement
     companion object
     {
         public val tableName: String = "series"
-
         public val providerIdCol: String = Provider.tableName + DBHelper.ID
-
         public val nameCol: String = "name"
-
         public val descriptionCol: String = "description"
-
         public val favoriteCol: String = "favorite"
-
         public val alternateNameCol: String = "alternate_name"
-
         public val completeCol: String = "complete"
-
         public val authorCol: String = "author"
-
         public val artistCol: String = "artist"
-
         public val thumbnailUrlCol: String = "thumbnail_url"
-
         public val thumbnailPathCol: String = "thumbnail_path"
-
         public val progressChapterIdCol: String = "progress_" + Chapter.tableName + DBHelper.ID
-
         public val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
-
         public val updatedCol: String = "updated"
-
 
         // Uri Handling --------------------------------------------------------------------------------
         public fun baseUri(): Uri
@@ -186,12 +174,12 @@ public class Series : MangaElement
 
         public fun prevChapter(id: Int, num: Float): Uri
         {
-            return uri(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("prev").build()
+            return chapters(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("prev").build()
         }
 
         public fun nextChapter(id: Int, num: Float): Uri
         {
-            return uri(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("next").build()
+            return chapters(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("next").build()
         }
 
         public fun genres(id: Int): Uri

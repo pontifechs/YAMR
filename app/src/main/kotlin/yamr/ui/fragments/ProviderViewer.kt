@@ -74,7 +74,7 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         {
             override fun onReceive(context: Context, intent: Intent)
             {
-                getLoaderManager().restartLoader(0, null, this@ProviderViewer)
+                getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
                 adapter!!.notifyDataSetChanged()
                 loading!!.dismiss()
             }
@@ -88,7 +88,7 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         adapter = SimpleCursorAdapter(getActivity(), R.layout.simple_series_item, null, arrayOf(Series.nameCol), intArrayOf(R.id.series_name), 0)
         setListAdapter(adapter)
 
-        getLoaderManager().initLoader(0, null, this)
+        getLoaderManager().initLoader(0, Bundle(), this)
         loading = ProgressDialog(getActivity())
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
         loading!!.setTitle("Loading Series")
@@ -192,7 +192,7 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
     override fun onQueryTextChange(newText: String): Boolean
     {
         filter = if (!TextUtils.isEmpty(newText)) newText else null
-        getLoaderManager().restartLoader(0, null, this)
+        getLoaderManager().restartLoader(0, Bundle(), this)
         return true
     }
 

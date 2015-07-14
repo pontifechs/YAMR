@@ -48,14 +48,14 @@ public abstract class FetcherSync(protected var context: Context)
         this.listener = listener
     }
 
-    public enum class FetchBehavior(private val `val`: String)
+    public enum class FetchBehavior(private val value: String)
     {
         LazyFetch("LazyFetch"),
         ForceRefresh("ForceRefresh");
 
         override fun toString(): String
         {
-            return `val`
+            return value
         }
     }
 
@@ -64,28 +64,13 @@ public abstract class FetcherSync(protected var context: Context)
         return fetchProvider(provider, FetchBehavior.LazyFetch)
     }
 
-    public abstract fun fetchProvider(provider: Provider, behavior: FetchBehavior): Provider
+    public abstract fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
 
-    public fun fetchSeries(series: Series): Series
-    {
-        return fetchSeries(series, FetchBehavior.LazyFetch)
-    }
+    public abstract fun fetchSeries(series: Series, behavior: FetchBehavior = FetchBehavior.LazyFetch): Series
 
-    public abstract fun fetchSeries(series: Series, behavior: FetchBehavior): Series
+    public abstract fun fetchChapter(chapter: Chapter, behavior: FetchBehavior = FetchBehavior.LazyFetch): Chapter
 
-    public fun fetchChapter(chapter: Chapter): Chapter
-    {
-        return fetchChapter(chapter, FetchBehavior.LazyFetch)
-    }
-
-    public abstract fun fetchChapter(chapter: Chapter, behavior: FetchBehavior): Chapter
-
-    public fun fetchPage(page: Page): Page
-    {
-        return fetchPage(page, FetchBehavior.LazyFetch)
-    }
-
-    public abstract fun fetchPage(page: Page, behavior: FetchBehavior): Page
+    public abstract fun fetchPage(page: Page, behavior: FetchBehavior = FetchBehavior.LazyFetch): Page
 
     public abstract fun fetchNew(provider: Provider): List<Uri>
 
@@ -148,7 +133,7 @@ public abstract class FetcherSync(protected var context: Context)
 
     private fun downloadImage(imageUrl: String, imagePath: String)
     {
-        val `in`: InputStream
+        val inStream: InputStream
         var out: ByteArrayOutputStream? = null
         var count: Int = 0
         try
@@ -157,19 +142,18 @@ public abstract class FetcherSync(protected var context: Context)
             val conn = url.openConnection() as HttpURLConnection
             conn.setDoInput(true)
             conn.connect()
-            `in` = conn.getInputStream()
+            inStream = conn.getInputStream()
             out = ByteArrayOutputStream()
 
             val length = conn.getContentLength()
             var done = 0
             val data = ByteArray(1024)
-            while (count != -1)
+            while (done < length)
             {
-                count = `in`.read(data)
+                count = inStream.read(data)
                 done += count
 
                 listener?.notifyPageStatus(done / length.toFloat())
-
                 out.write(data, 0, count)
             }
 
