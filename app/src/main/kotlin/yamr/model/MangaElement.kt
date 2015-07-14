@@ -41,7 +41,6 @@ public open class MangaElement
         id = getInt(c, DBHelper.ID)
         url = this.getString(c, urlCol)!!
         fullyParsed = getBool(c, fullyParsedCol)
-        // Can't close yet, others need the cursor still
     }
 
     public open fun getContentValues(): ContentValues

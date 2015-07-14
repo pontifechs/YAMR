@@ -125,7 +125,15 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
         imageView.setOnClickListener(this)
         imageView.setOnLongClickListener(this)
 
-        if (getArguments().getParcelable<Parcelable>(ChapterArgumentKey) != null)
+        if (getArguments().getParcelable<Parcelable>(PageArgumentKey) != null)
+        {
+            val fetchPage = Intent(getActivity(), javaClass<FetcherAsync>())
+            fetchPage.setAction(FetcherAsync.FETCH_PAGE)
+            val pageUri = getArguments().getParcelable<Uri>(PageArgumentKey)
+            fetchPage.setData(pageUri)
+            getActivity().startService(fetchPage)
+        }
+        else if (getArguments().getParcelable<Parcelable>(ChapterArgumentKey) != null)
         {
             val fetchChapter = Intent(getActivity(), javaClass<Navigation>())
             fetchChapter.setAction(Navigation.FIRST_PAGE_FROM_CHAPTER)
@@ -157,6 +165,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
         pageCompleteFilter.addAction(Navigation.NEXT_PAGE_COMPLETE)
         pageCompleteFilter.addAction(Navigation.PREV_PAGE_COMPLETE)
         pageCompleteFilter.addAction(Navigation.PAGE_FROM_SERIES_COMPLETE)
+        pageCompleteFilter.addAction(FetcherAsync.FETCH_PAGE_COMPLETE)
         try
         {
             pageCompleteFilter.addDataType(getActivity().getContentResolver().getType(Page.baseUri()))
@@ -176,7 +185,6 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
         val nextFailedFilter = IntentFilter()
         nextFailedFilter.addAction(Navigation.NEXT_PAGE_DOESNT_EXIST)
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(nextPageFailedReceiver, nextFailedFilter)
-
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(pageLoadStatusReceiver, IntentFilter(FetcherAsync.FETCH_PAGE_STATUS))
     }
 
@@ -264,6 +272,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
 
     companion object
     {
+        public val PageArgumentKey: String = "page"
         public val ChapterArgumentKey: String = "chapter"
         public val SeriesArgumentKey: String = "series"
     }

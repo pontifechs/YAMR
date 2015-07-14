@@ -1,22 +1,25 @@
 package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
-import android.app.ListActivity
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.ui.fragments.ChapterViewer
 import ninja.dudley.yamr.ui.fragments.PageViewer
 import ninja.dudley.yamr.ui.fragments.ProviderViewer
 import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import ninja.dudley.yamr.ui.util.OrientationAware
 
-public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, OrientationAware.I {
-    override fun onCreate(savedInstanceState: Bundle?) {
+public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, ChapterViewer.LoadPage,  OrientationAware.I
+{
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super<Activity>.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reader)
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null)
+        {
             val transaction = getFragmentManager().beginTransaction()
             val providerViewer = ProviderViewer()
             transaction.replace(R.id.reader, providerViewer)
@@ -24,7 +27,8 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         }
     }
 
-    override fun loadSeries(series: Uri) {
+    override fun loadSeries(series: Uri)
+    {
         val transaction = getFragmentManager().beginTransaction()
         val seriesViewer = SeriesViewer()
         val args = Bundle()
@@ -35,7 +39,17 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         transaction.commit()
     }
 
-    override fun loadChapter(chapter: Uri) {
+    override fun loadChapter(chapter: Uri)
+    {
+        val transaction = getFragmentManager().beginTransaction()
+        val chapterViewer = ChapterViewer(chapter)
+        transaction.replace(R.id.reader, chapterViewer)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
+    override fun loadFirstPageOfChapter(chapter: Uri)
+    {
         val transaction = getFragmentManager().beginTransaction()
         val pageViewer = PageViewer()
         val args = Bundle()
@@ -46,22 +60,38 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         transaction.commit()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
+    override fun loadPage(page: Uri)
+    {
+        val transaction = getFragmentManager().beginTransaction()
+        val pageViewer = PageViewer()
+        val args = Bundle()
+        args.putParcelable(PageViewer.PageArgumentKey, page)
+        pageViewer.setArguments(args)
+        transaction.replace(R.id.reader, pageViewer)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration)
+    {
         OrientationAware.handleOrientationAware(this, newConfig)
         super<Activity>.onConfigurationChanged(newConfig)
     }
 
-    override fun onPortrait(newConfig: Configuration) {
+    override fun onPortrait(newConfig: Configuration)
+    {
         val layout = findViewById(R.id.reader) as RelativeLayout
         layout.removeAllViews()
     }
 
-    override fun onLandscape(newConfig: Configuration) {
+    override fun onLandscape(newConfig: Configuration)
+    {
         val layout = findViewById(R.id.reader) as RelativeLayout
         layout.removeAllViews()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
+    override fun onSaveInstanceState(outState: Bundle)
+    {
         super<Activity>.onSaveInstanceState(outState)
     }
 }

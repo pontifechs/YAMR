@@ -1,38 +1,23 @@
 package ninja.dudley.yamr.ui.fragments
 
 import android.app.Activity
-import android.app.FragmentTransaction
 import android.app.ListFragment
 import android.app.LoaderManager
 import android.app.ProgressDialog
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.CursorLoader
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.Loader
+import android.content.*
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.ListView
-import android.widget.SimpleCursorAdapter
-
+import android.view.*
+import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
-public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>
+public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
 
     private var series: Series? = null
@@ -44,9 +29,10 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
 
     private var loading: ProgressDialog? = null
 
-
     public interface LoadChapter
     {
+        public fun loadFirstPageOfChapter(chapter: Uri)
+
         public fun loadChapter(chapter: Uri)
     }
 
@@ -65,6 +51,7 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
         val list = layout.findViewById(android.R.id.list) as ListView
         val headerContainer = inflater.inflate(R.layout.list_header_container, null) as FrameLayout
         list.addHeaderView(headerContainer)
+        list.setOnItemLongClickListener(this);
 
         fetchStatusReceiver = object : BroadcastReceiver()
         {
@@ -207,7 +194,13 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
+        parent!!.loadFirstPageOfChapter(Chapter.uri(id.toInt()))
+    }
+
+    override fun onItemLongClick(adapterView: AdapterView<*>?, view: View?, position: Int, id: Long): Boolean
+    {
         parent!!.loadChapter(Chapter.uri(id.toInt()))
+        return false;
     }
 
     companion object

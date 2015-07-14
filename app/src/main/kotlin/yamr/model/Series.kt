@@ -76,14 +76,7 @@ public class Series : MangaElement
         this.name = name
     }
 
-    public constructor(c: Cursor) : super(c)
-    {
-        providerId = getInt(c, providerIdCol)
-        name = getString(c, nameCol)!!
-        parse(c, true)
-    }
-
-    public constructor(c: Cursor, close: Boolean) : super(c)
+    public constructor(c: Cursor, close: Boolean = true) : super(c)
     {
         providerId = getInt(c, providerIdCol)
         name = getString(c, nameCol)!!

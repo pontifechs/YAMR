@@ -51,7 +51,6 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
     override fun onAttach(activity: Activity?)
     {
         super<ListFragment>.onAttach(activity)
-
         this.parent = activity as LoadSeries?
     }
 
@@ -198,7 +197,6 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
 
     companion object
     {
-
         private val filterArg = "filter"
     }
 }

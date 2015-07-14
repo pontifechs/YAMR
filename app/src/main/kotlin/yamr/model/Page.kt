@@ -41,13 +41,16 @@ public class Page : MangaElement
         this.number = number
     }
 
-    public constructor(c: Cursor) : super(c)
+    public constructor(c: Cursor, close: Boolean = true) : super(c)
     {
         chapterId = getInt(c, chapterIdCol)
         number = getFloat(c, numberCol)
         imageUrl = getString(c, imageUrlCol)
         imagePath = getString(c, imagePathCol)
-        c.close()
+        if (close)
+        {
+            c.close()
+        }
     }
 
     override fun getContentValues(): ContentValues
