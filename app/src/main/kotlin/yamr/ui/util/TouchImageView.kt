@@ -138,6 +138,11 @@ public class TouchImageView : ImageView
         return Math.max(0.0f, (getDrawable().getIntrinsicHeight() * scale) - screenHeight()).toInt()
     }
 
+    private fun unsafeVerticalSlop(): Float
+    {
+        return (getDrawable().getIntrinsicHeight() * scale) - screenHeight()
+    }
+
     private fun minScale(): Float
     {
         if (getDrawable() == null)
@@ -212,6 +217,18 @@ public class TouchImageView : ImageView
         // Clamp into place
         val guts = FloatArray(9)
         matrix!!.getValues(guts)
+
+        if (guts[Matrix.MSCALE_X] < minScale())
+        {
+            guts[Matrix.MSCALE_X] = minScale()
+        }
+        if (guts[Matrix.MSCALE_Y] < minScale())
+        {
+            guts[Matrix.MSCALE_Y] = minScale()
+        }
+        scale = guts[Matrix.MSCALE_X]
+
+
         if (guts[Matrix.MTRANS_X] > 0)
         {
             guts[Matrix.MTRANS_X] = 0f
@@ -229,19 +246,17 @@ public class TouchImageView : ImageView
             guts[Matrix.MTRANS_Y] = (-verticalSlop()).toFloat()
         }
 
-        if (guts[Matrix.MSCALE_X] < minScale())
-        {
-            guts[Matrix.MSCALE_X] = minScale()
-        }
-        if (guts[Matrix.MSCALE_Y] < minScale())
-        {
-            guts[Matrix.MSCALE_Y] = minScale()
-        }
 
-        matrix.setValues(guts)
-        scale = guts[Matrix.MSCALE_X]
         translate?.x = guts[Matrix.MTRANS_X]
         translate?.y = guts[Matrix.MTRANS_Y]
+
+        // Vertical is a little special. Center it vertically if the image is too small
+        if (verticalSlop() == 0)
+        {
+            guts[Matrix.MTRANS_Y] = -unsafeVerticalSlop() / 2;
+        }
+        matrix.setValues(guts)
+
         super.setImageMatrix(matrix)
     }
 
