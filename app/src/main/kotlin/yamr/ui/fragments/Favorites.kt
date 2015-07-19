@@ -7,9 +7,11 @@ import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
@@ -42,6 +44,11 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             val thumb = view.findViewById(R.id.seriesThumbnail) as ImageView
             val name = view.findViewById(R.id.seriesName) as TextView
             val progress = view.findViewById(R.id.seriesProgress) as TextView
+
+            if (series.updated)
+            {
+                view.setBackgroundColor(Color.argb(127, 102, 153, 255))
+            }
 
             if (series.thumbnailPath != null)
             {
@@ -136,5 +143,11 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
     override fun onLoaderReset(loader: Loader<Cursor>)
     {
         adapter!!.changeCursor(null)
+    }
+
+    override fun onResume()
+    {
+        super<ListFragment>.onResume()
+        getLoaderManager().restartLoader(0, Bundle(), this)
     }
 }

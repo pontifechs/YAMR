@@ -89,6 +89,12 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
                         progressTracker = ProgressTracker(getActivity().getContentResolver(), series)
                     }
                     progressTracker!!.handleNextPage(page!!)
+
+                    if (series!!.updated)
+                    {
+                        series!!.updated = false
+                        getActivity().getContentResolver().update(series!!.uri(), series!!.getContentValues(), null, null)
+                    }
                 }
             }
         }
