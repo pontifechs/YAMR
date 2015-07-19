@@ -10,12 +10,15 @@ import ninja.dudley.yamr.model.*
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.mozilla.javascript.Scriptable
+import org.mozilla.javascript.ScriptableObject
 import yamr.model.Heritage
+import yamr.model.js.JsProvider
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.*
+import java.util.ArrayList
 
 /**
  * Created by mdudley on 5/19/15.
@@ -53,6 +56,56 @@ public class FetcherSync(protected var context: Context)
         }
     }
 
+    private fun thing()
+    {
+        var b: JsProvider;
+        try
+        {
+            val response: Connection.Response  = Jsoup.connect("http://www.mangapanda.com/one-piece/697/3")
+                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                    .referrer("http://www.google.com")
+                    .method(Connection.Method.GET)
+                    .execute();
+            val doc: Document = response.parse();
+
+            val cx: org.mozilla.javascript.Context = org.mozilla.javascript.Context.enter();
+            cx.setOptimizationLevel(-1);
+            val scope: Scriptable  = cx.initStandardObjects();
+
+            try
+            {
+                ScriptableObject.defineClass(scope, javaClass<JsProvider>())
+            }
+            catch (e: Exception)
+            {
+                // Gotta catch 'em all!
+            }
+
+            val script =
+            "function parse(doc) { " +
+                    "   var element = doc.select('img[src]').first();" +
+                    "   var nicebob = new NotJsProvider();" +
+                    "   nicebob.url = element.absUrl('src');" +
+                    "   return nicebob;" +
+                    "};";
+
+            try
+            {
+                val fct: org.mozilla.javascript.Function = cx.compileFunction(scope, script, "script", 1, null);
+                b =  org.mozilla.javascript.Context.jsToJava(fct.call(cx, scope, scope, arrayOf(doc)), javaClass<JsProvider>()) as JsProvider
+                Log.d("RHINO", b.jsGet_url());
+            }
+            finally
+            {
+                org.mozilla.javascript.Context.exit();
+            }
+        }
+        catch (e: IOException)
+        {
+            // Panic? IDK what might cause this.
+            throw  RuntimeException(e);
+        }
+    }
 
     public fun fetchProvider(provider: Provider): Provider
     {
@@ -61,6 +114,8 @@ public class FetcherSync(protected var context: Context)
 
     public fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
     {
+        thing()
+
         Log.d("Fetch", "Starting a Provider fetch")
         try
         {
@@ -266,7 +321,7 @@ public class FetcherSync(protected var context: Context)
 
     public fun fetchNew(provider: Provider): List<Uri>
     {
-                Log.d("FetchStarter", "Starting")
+        Log.d("FetchStarter", "Starting")
         val newChapters = ArrayList<Uri>()
         try
         {
