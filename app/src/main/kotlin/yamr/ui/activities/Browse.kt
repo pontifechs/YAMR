@@ -6,18 +6,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.ui.fragments.ChapterViewer
 import ninja.dudley.yamr.ui.fragments.PageViewer
 import ninja.dudley.yamr.ui.fragments.ProviderViewer
 import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import ninja.dudley.yamr.ui.util.OrientationAware
 
-public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, ChapterViewer.LoadPage,  OrientationAware.I
+public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, ChapterViewer.LoadPage,  OrientationAware.I
 {
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super<Activity>.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_reader)
+        setContentView(R.layout.activity_browse)
         if (savedInstanceState == null)
         {
             val transaction = getFragmentManager().beginTransaction()
@@ -30,10 +31,7 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadSeries(series: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val seriesViewer = SeriesViewer()
-        val args = Bundle()
-        args.putParcelable(SeriesViewer.ArgumentKey, series)
-        seriesViewer.setArguments(args)
+        val seriesViewer = SeriesViewer(series)
         transaction.replace(R.id.reader, seriesViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -51,10 +49,7 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadFirstPageOfChapter(chapter: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer()
-        val args = Bundle()
-        args.putParcelable(PageViewer.ChapterArgumentKey, chapter)
-        pageViewer.setArguments(args)
+        val pageViewer = PageViewer(chapter, MangaElement.UriType.Chapter)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -63,10 +58,7 @@ public class Reader : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadPage(page: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer()
-        val args = Bundle()
-        args.putParcelable(PageViewer.PageArgumentKey, page)
-        pageViewer.setArguments(args)
+        val pageViewer = PageViewer(page, MangaElement.UriType.Page)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()

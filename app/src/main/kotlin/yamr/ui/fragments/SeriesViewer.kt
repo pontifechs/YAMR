@@ -17,7 +17,7 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
-public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
+public class SeriesViewer(private val seriesUri: Uri) : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
 
     private var series: Series? = null
@@ -81,8 +81,6 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
                 transaction.commit()
             }
         }
-
-        val seriesUri = getArguments().getParcelable<Uri>(ArgumentKey)
 
         series = Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null))
 
@@ -201,10 +199,5 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
     {
         parent!!.loadChapter(Chapter.uri(id.toInt()))
         return false;
-    }
-
-    companion object
-    {
-        public val ArgumentKey: String = "series"
     }
 }

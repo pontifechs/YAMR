@@ -44,7 +44,7 @@ public class Chapter : MangaElement
 
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(seriesId: Int, url: String, number: Float) : super(url)
+    public constructor(seriesId: Int, url: String, number: Float) : super(url, MangaElement.UriType.Chapter)
     {
         this.seriesId = seriesId
         this.number = number
@@ -52,6 +52,10 @@ public class Chapter : MangaElement
 
     public constructor(c: Cursor) : super(c)
     {
+        if (type != MangaElement.UriType.Chapter)
+        {
+            throw IllegalArgumentException("Attempted to make a chapter from a ${type}")
+        }
         seriesId = getInt(c, seriesIdCol)
         name = getString(c, nameCol)
         number = getFloat(c, numberCol)

@@ -33,6 +33,10 @@ public class Provider : MangaElement
 
     public constructor(c: Cursor) : super(c)
     {
+        if (type != MangaElement.UriType.Provider)
+        {
+            throw IllegalArgumentException("Attempted to make a provider from a ${type}")
+        }
         name = getString(c, nameCol)!!
         newUrl = getString(c, newUrlCol)!!
         c.close()

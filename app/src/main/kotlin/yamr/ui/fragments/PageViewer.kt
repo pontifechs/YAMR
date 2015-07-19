@@ -1,6 +1,5 @@
 package ninja.dudley.yamr.ui.fragments
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.app.Fragment
 import android.content.BroadcastReceiver
@@ -19,6 +18,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
@@ -26,9 +26,8 @@ import ninja.dudley.yamr.svc.Navigation
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
 
-public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
+public class PageViewer(private val uri: Uri, private val type: MangaElement.UriType) : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
-
     private var page: Page? = null
     private var series: Series? = null
     private var progressTracker: ProgressTracker? = null
@@ -38,9 +37,14 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
     private var nextPageFailedReceiver: BroadcastReceiver? = null
     private var pageLoadStatusReceiver: BroadcastReceiver? = null
 
-    override fun onAttach(activity: Activity?)
+    init
     {
-        super<Fragment>.onAttach(activity)
+        when (type)
+        {
+            MangaElement.UriType.Provider,
+            MangaElement.UriType.Genre->
+                throw AssertionError("Invalid PageViewer Construction")
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
@@ -125,34 +129,30 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
         imageView.setOnClickListener(this)
         imageView.setOnLongClickListener(this)
 
-        if (getArguments().getParcelable<Parcelable>(PageArgumentKey) != null)
+        when (type)
         {
-            val fetchPage = Intent(getActivity(), javaClass<FetcherAsync>())
-            fetchPage.setAction(FetcherAsync.FETCH_PAGE)
-            val pageUri = getArguments().getParcelable<Uri>(PageArgumentKey)
-            fetchPage.setData(pageUri)
-            getActivity().startService(fetchPage)
-        }
-        else if (getArguments().getParcelable<Parcelable>(ChapterArgumentKey) != null)
-        {
-            val fetchChapter = Intent(getActivity(), javaClass<Navigation>())
-            fetchChapter.setAction(Navigation.FIRST_PAGE_FROM_CHAPTER)
-            val chapterUri = getArguments().getParcelable<Uri>(ChapterArgumentKey)
-            fetchChapter.setData(chapterUri)
-            getActivity().startService(fetchChapter)
-        }
-        else if (getArguments().getParcelable<Parcelable>(SeriesArgumentKey) != null)
-        {
-            val fetchPage = Intent(getActivity(), javaClass<Navigation>())
-            fetchPage.setAction(Navigation.PAGE_FROM_SERIES)
-            val seriesUri = getArguments().getParcelable<Uri>(SeriesArgumentKey)
-            fetchPage.setData(seriesUri)
-            getActivity().startService(fetchPage)
-            series = Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null))
-        }
-        else
-        {
-            throw AssertionError("No Chapter or Bookmark argument. Check your intent's arguments")
+            MangaElement.UriType.Series ->
+            {
+                val fetchPage = Intent(getActivity(), javaClass<Navigation>())
+                fetchPage.setAction(Navigation.PAGE_FROM_SERIES)
+                fetchPage.setData(uri)
+                getActivity().startService(fetchPage)
+                series = Series(getActivity().getContentResolver().query(uri, null, null, null, null))
+            }
+            MangaElement.UriType.Chapter ->
+            {
+                val fetchChapter = Intent(getActivity(), javaClass<Navigation>())
+                fetchChapter.setAction(Navigation.FIRST_PAGE_FROM_CHAPTER)
+                fetchChapter.setData(uri)
+                getActivity().startService(fetchChapter)
+            }
+            MangaElement.UriType.Page ->
+            {
+                val fetchPage = Intent(getActivity(), javaClass<FetcherAsync>())
+                fetchPage.setAction(FetcherAsync.FETCH_PAGE)
+                fetchPage.setData(uri)
+                getActivity().startService(fetchPage)
+            }
         }
         return layout
     }
@@ -268,13 +268,6 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
             getActivity().getActionBar()!!.show()
         }
         return true
-    }
-
-    companion object
-    {
-        public val PageArgumentKey: String = "page"
-        public val ChapterArgumentKey: String = "chapter"
-        public val SeriesArgumentKey: String = "series"
     }
 }
 

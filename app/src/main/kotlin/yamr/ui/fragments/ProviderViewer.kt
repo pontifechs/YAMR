@@ -95,12 +95,6 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         return layout
     }
 
-    override fun onSaveInstanceState(outState: Bundle)
-    {
-        outState.putString(filterArg, filter)
-        super<ListFragment>.onSaveInstanceState(outState)
-    }
-
     override fun onResume()
     {
         super<ListFragment>.onResume()
@@ -193,10 +187,5 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         filter = if (!TextUtils.isEmpty(newText)) newText else null
         getLoaderManager().restartLoader(0, Bundle(), this)
         return true
-    }
-
-    companion object
-    {
-        private val filterArg = "filter"
     }
 }

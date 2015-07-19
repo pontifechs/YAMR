@@ -1,6 +1,5 @@
 package ninja.dudley.yamr.ui.activities
 
-import android.app.FragmentTransaction
 import android.app.ListActivity
 import android.app.LoaderManager
 import android.content.Context
@@ -10,21 +9,16 @@ import android.database.Cursor
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.SimpleCursorAdapter
-import android.widget.TextView
-
+import android.view.*
+import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
+import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
+import ninja.dudley.yamr.ui.fragments.ChapterViewer
 import ninja.dudley.yamr.ui.fragments.PageViewer
+import ninja.dudley.yamr.ui.fragments.SeriesViewer
 
 public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
 {
@@ -55,6 +49,10 @@ public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
             {
                 val d = Drawable.createFromPath(series.thumbnailPath)
                 thumb.setImageDrawable(d)
+            }
+            else
+            {
+                thumb.setImageDrawable(getResources().getDrawable(R.drawable.panic))
             }
 
             name.setText(series.name)
@@ -103,12 +101,9 @@ public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
-        val bookmarkUri = Series.uri(id.toInt())
+        val seriesUri = Series.uri(id.toInt())
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer()
-        val args = Bundle()
-        args.putParcelable(PageViewer.SeriesArgumentKey, bookmarkUri)
-        pageViewer.setArguments(args)
+        val pageViewer = PageViewer(seriesUri, MangaElement.UriType.Series)
         transaction.replace(R.id.favorites, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()

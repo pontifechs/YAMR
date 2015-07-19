@@ -36,18 +36,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activities.Reader"
+            android:name=".ui.activities.Browse"
             android:label="@string/title_activity_reader"
             android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
         <activity
             android:name=".ui.activities.Favorites"
             android:label="@string/title_activity_favorites"
-            android:parentActivityName=".ui.activities.MainActivity" >
-        </activity>
-        <activity
-            android:name=".ui.activities.Settings"
-            android:label="@string/title_activity_settings"
             android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
         <activity

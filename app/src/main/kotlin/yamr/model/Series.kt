@@ -69,7 +69,7 @@ public class Series : MangaElement
     }
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(providerId: Int, url: String, name: String) : super(url)
+    public constructor(providerId: Int, url: String, name: String) : super(url, MangaElement.UriType.Series)
     {
         this.providerId = providerId
         this.url = url
@@ -78,13 +78,12 @@ public class Series : MangaElement
 
     public constructor(c: Cursor, close: Boolean = true) : super(c)
     {
+        if (type != MangaElement.UriType.Series)
+        {
+            throw IllegalArgumentException("Attempted to make a series from a ${type}")
+        }
         providerId = getInt(c, providerIdCol)
         name = getString(c, nameCol)!!
-        parse(c, close)
-    }
-
-    private fun parse(c: Cursor, close: Boolean)
-    {
         description = getString(c, descriptionCol)
         favorite = getBool(c, favoriteCol)
         alternateName = getString(c, alternateNameCol)

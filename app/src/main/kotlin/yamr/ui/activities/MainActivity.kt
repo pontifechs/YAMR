@@ -59,7 +59,7 @@ public class MainActivity : Activity()
                 {
                     0 ->
                     {
-                        i = Intent(this@MainActivity, javaClass<Reader>())
+                        i = Intent(this@MainActivity, javaClass<Browse>())
                         startActivity(i)
                     }
                     1 ->

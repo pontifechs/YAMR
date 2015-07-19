@@ -275,7 +275,7 @@ public class DBHelper extends SQLiteOpenHelper
                 "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
 
-        db.execSQL("INSERT INTO provider (url, new_url, name) values (\"http://www.mangapanda.com/alphabetical\", \"http://www.mangapanda.com/latest\", \"MangaPanda\")");
+        db.execSQL("INSERT INTO provider (url, type, new_url, name) values (\"http://www.mangapanda.com/alphabetical\", \"Provider\", \"http://www.mangapanda.com/latest\", \"MangaPanda\")");
     }
 
     @Override

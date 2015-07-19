@@ -35,7 +35,7 @@ public class Page : MangaElement
     }
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(chapterId: Int, url: String, number: Float) : super(url)
+    public constructor(chapterId: Int, url: String, number: Float) : super(url, MangaElement.UriType.Page)
     {
         this.chapterId = chapterId
         this.number = number
@@ -43,6 +43,10 @@ public class Page : MangaElement
 
     public constructor(c: Cursor, close: Boolean = true) : super(c)
     {
+        if (type != MangaElement.UriType.Page)
+        {
+            throw IllegalArgumentException("Attempted to make a page from a ${type}")
+        }
         chapterId = getInt(c, chapterIdCol)
         number = getFloat(c, numberCol)
         imageUrl = getString(c, imageUrlCol)

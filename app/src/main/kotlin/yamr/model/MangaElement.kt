@@ -14,17 +14,29 @@ import ninja.dudley.yamr.db.util.Id
  */
 public open class MangaElement
 {
+    enum class UriType
+    {
+        Provider,
+        Series,
+        Genre,
+        Chapter,
+        Page,
+    }
+
     Id
     public val id: Int
     Column(name = urlCol)
     public var url: String
     Column(name = fullyParsedCol)
     public var fullyParsed: Boolean = false
+    Column(name = typeCol)
+    public var type: UriType
 
-    public constructor(url: String)
+    public constructor(url: String, type: MangaElement.UriType)
     {
         id = -1
         this.url = url;
+        this.type = type;
     }
 
     public constructor(c: Cursor)
@@ -39,8 +51,9 @@ public open class MangaElement
             c.moveToFirst()
         }
         id = getInt(c, DBHelper.ID)
-        url = this.getString(c, urlCol)!!
+        url = getString(c, urlCol)!!
         fullyParsed = getBool(c, fullyParsedCol)
+        type = UriType.valueOf(getString(c, typeCol)!!)
     }
 
     public open fun getContentValues(): ContentValues
@@ -52,6 +65,7 @@ public open class MangaElement
         }
         values.put(urlCol, url)
         values.put(fullyParsedCol, fullyParsed)
+        values.put(typeCol, type.name())
         return values
     }
 
@@ -87,5 +101,6 @@ public open class MangaElement
     {
         public val urlCol: String = "url"
         public val fullyParsedCol: String = "fully_parsed"
+        public val typeCol: String = "type"
     }
 }
