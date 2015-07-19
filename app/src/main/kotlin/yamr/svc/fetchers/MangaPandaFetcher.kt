@@ -285,7 +285,7 @@ public class MangaPandaFetcher(context: Context) : FetcherSync(context)
 
                         context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
                         newChapter = true
-                        if (!series.favorite)
+                        if (series.favorite)
                         {
                             newChapters.add(chapter.uri())
                         }
