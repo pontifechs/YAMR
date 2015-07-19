@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.preference.PreferenceManager
 import android.support.v4.content.LocalBroadcastManager
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
+import android.widget.TextView
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Page
@@ -26,8 +28,12 @@ import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
 import yamr.model.Heritage
 
-public class PageViewer(private val uri: Uri, private val type: MangaElement.UriType) : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
+public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
+
+    private var uri: Uri? = null
+    private var type: MangaElement.UriType? = null
+
     private var page: Page? = null
     private var series: Series? = null
     private var progressTracker: ProgressTracker? = null
@@ -37,12 +43,25 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
     private var nextPageFailedReceiver: BroadcastReceiver? = null
     private var pageLoadStatusReceiver: BroadcastReceiver? = null
 
-    init
+    override fun onCreate(savedInstanceState: Bundle?)
     {
+        super<Fragment>.onCreate(savedInstanceState)
+
+        if (savedInstanceState == null)
+        {
+            uri = Uri.parse(getArguments().getString(uriArgKey))
+            type = MangaElement.UriType.valueOf(getArguments().getString(typeArgKey))
+        }
+        else
+        {
+            uri = Uri.parse(savedInstanceState.getString(uriArgKey))
+            type = MangaElement.UriType.valueOf(savedInstanceState.getString(typeArgKey))
+        }
+
         when (type)
         {
             MangaElement.UriType.Provider,
-            MangaElement.UriType.Genre->
+            MangaElement.UriType.Genre ->
                 throw AssertionError("Invalid PageViewer Construction")
         }
     }
@@ -73,8 +92,22 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
                 }
 
                 imageView.setImageDrawable(d)
-                val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+                val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
+
+                val loadingText = getActivity().findViewById(R.id.page_loading_text) as TextView
+                loadingText.setVisibility(View.VISIBLE)
+                loadingText.setText("${heritage.seriesName}: ${heritage.chapterNumber}|${heritage.pageNumber}")
+
+                val handler = Handler()
+                handler.postDelayed(object : Runnable
+                {
+                    override fun run()
+                    {
+                        loadingText.setVisibility(View.INVISIBLE)
+                    }
+                }, 3000)
+
 
                 if (series!!.favorite)
                 {
@@ -103,7 +136,7 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
         {
             override fun onReceive(context: Context, intent: Intent)
             {
-                val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+                val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
                 // TODO:: Make sure series is available for this
                 AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of  + series.getName() + . Check back later for new chapters.").setNegativeButton("K.", null).show()
@@ -114,7 +147,7 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
         {
             override fun onReceive(context: Context, intent: Intent)
             {
-                val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+                val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
                 // TODO:: Make sure series is available for this
                 AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of  + series.getName() + . Nothing older").setNegativeButton("K.", null).show()
@@ -125,7 +158,7 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
         {
             override fun onReceive(context: Context, intent: Intent)
             {
-                val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+                val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 val percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_PAGE_STATUS, 0.0f)
                 loadingBar.setProgress(percent.toInt())
             }
@@ -212,7 +245,7 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
             nextIntent.setAction(Navigation.NEXT_PAGE)
             nextIntent.setData(page!!.uri())
             getActivity().startService(nextIntent)
-            val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+            val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
             loadingBar.setProgress(0)
             loadingBar.setVisibility(View.VISIBLE)
         }
@@ -226,7 +259,7 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
             nextIntent.setAction(Navigation.PREV_PAGE)
             nextIntent.setData(page!!.uri())
             getActivity().startService(nextIntent)
-            val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
+            val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
             loadingBar.setProgress(0)
             loadingBar.setVisibility(View.VISIBLE)
         }
@@ -274,6 +307,29 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
             getActivity().getActionBar()!!.show()
         }
         return true
+    }
+
+    override fun onSaveInstanceState(outState: Bundle)
+    {
+        super<Fragment>.onSaveInstanceState(outState)
+        outState.putString(uriArgKey, page!!.uri().toString())
+        outState.putString(typeArgKey, MangaElement.UriType.Page.name())
+    }
+
+    companion object
+    {
+        fun newInstance(uri: Uri, type: MangaElement.UriType): PageViewer
+        {
+            val viewer: PageViewer = PageViewer()
+            val stupidAssBundle: Bundle = Bundle()
+            stupidAssBundle.putString(uriArgKey, uri.toString())
+            stupidAssBundle.putString(typeArgKey, type.name())
+            viewer.setArguments(stupidAssBundle)
+            return viewer
+        }
+
+        private val uriArgKey: String = "uri"
+        private val typeArgKey: String = "type"
     }
 }
 

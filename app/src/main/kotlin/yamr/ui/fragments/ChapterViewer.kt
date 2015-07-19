@@ -22,8 +22,9 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.svc.FetcherAsync
 
-public class ChapterViewer(private val chapterUri: Uri) : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
+public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
 {
+    private var chapterUri: Uri? = null
     private var chapter: Chapter? = null
 
     private var fetchStatusReceiver: BroadcastReceiver? = null
@@ -85,6 +86,7 @@ public class ChapterViewer(private val chapterUri: Uri) : Fragment(), LoaderMana
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super<Fragment>.onCreate(savedInstanceState)
+        chapterUri = Uri.parse(getArguments().getString(uriArgKey))
         chapter = Chapter(getActivity().getContentResolver().query(chapterUri, null, null, null, null))
     }
 
@@ -178,5 +180,19 @@ public class ChapterViewer(private val chapterUri: Uri) : Fragment(), LoaderMana
     {
         Log.d("ChapterViewer", "onLoaderReset")
         adapter!!.changeCursor(null)
+    }
+
+    companion object
+    {
+        fun newInstance(uri: Uri): ChapterViewer
+        {
+            val chapterViewer: ChapterViewer = ChapterViewer()
+            val bundle: Bundle = Bundle()
+            bundle.putString(uriArgKey, uri.toString())
+            chapterViewer.setArguments(bundle)
+            return chapterViewer
+        }
+
+        private val uriArgKey = "uri"
     }
 }

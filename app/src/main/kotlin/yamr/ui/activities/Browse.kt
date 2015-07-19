@@ -53,7 +53,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadSeries(series: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val seriesViewer = SeriesViewer(series)
+        val seriesViewer = SeriesViewer.newInstance(series)
         transaction.replace(R.id.reader, seriesViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -62,7 +62,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadChapter(chapter: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val chapterViewer = ChapterViewer(chapter)
+        val chapterViewer = ChapterViewer.newInstance(chapter)
         transaction.replace(R.id.reader, chapterViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -71,7 +71,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadFirstPageOfChapter(chapter: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer(chapter, MangaElement.UriType.Chapter)
+        val pageViewer = PageViewer.newInstance(chapter, MangaElement.UriType.Chapter)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -80,7 +80,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadPage(page: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer(page, MangaElement.UriType.Page)
+        val pageViewer = PageViewer.newInstance(page, MangaElement.UriType.Page)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -89,7 +89,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun loadFirstPageOfSeries(series: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer(series, MangaElement.UriType.Series)
+        val pageViewer = PageViewer.newInstance(series, MangaElement.UriType.Series)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()

@@ -17,9 +17,9 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
-public class SeriesViewer(private val seriesUri: Uri) : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
+public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
-
+    private var seriesUri: Uri? = null
     private var series: Series? = null
 
     private var adapter: SimpleCursorAdapter? = null
@@ -41,6 +41,12 @@ public class SeriesViewer(private val seriesUri: Uri) : ListFragment(), LoaderMa
     {
         super<ListFragment>.onAttach(activity)
         this.parent = activity as LoadChapter?
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
+        super<ListFragment>.onCreate(savedInstanceState)
+        seriesUri = Uri.parse(getArguments().getString(uriArgKey))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
@@ -199,5 +205,19 @@ public class SeriesViewer(private val seriesUri: Uri) : ListFragment(), LoaderMa
     {
         parent!!.loadChapter(Chapter.uri(id.toInt()))
         return false;
+    }
+
+    companion object
+    {
+        fun newInstance(uri: Uri): SeriesViewer
+        {
+            val seriesViewer: SeriesViewer = SeriesViewer()
+            val bundle: Bundle = Bundle()
+            bundle.putString(uriArgKey, uri.toString())
+            seriesViewer.setArguments(bundle)
+            return seriesViewer
+        }
+
+        private val uriArgKey: String = "fuckandroid"
     }
 }

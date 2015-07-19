@@ -4,28 +4,18 @@ import android.app.Activity
 import android.app.ListFragment
 import android.app.LoaderManager
 import android.app.ProgressDialog
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.CursorLoader
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.Loader
+import android.content.*
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
 import android.text.TextUtils
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.SearchView
 import android.widget.SimpleCursorAdapter
-
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
@@ -175,6 +165,8 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
     {
         super<ListFragment>.onListItemClick(l, v, position, id)
         parent!!.loadSeries(Series.uri(id.toInt()))
+        val imm: InputMethodManager  = getActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(v!!.getWindowToken(), 0)
     }
 
     override fun onQueryTextSubmit(query: String): Boolean
