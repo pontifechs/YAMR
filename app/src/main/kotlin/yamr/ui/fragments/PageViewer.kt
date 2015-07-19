@@ -139,7 +139,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
                 // TODO:: Make sure series is available for this
-                AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of  + series.getName() + . Check back later for new chapters.").setNegativeButton("K.", null).show()
+                AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of ${series!!.name}. Check back later for new chapters.").setNegativeButton("K.", null).show()
             }
         }
 
@@ -150,7 +150,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
                 // TODO:: Make sure series is available for this
-                AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of  + series.getName() + . Nothing older").setNegativeButton("K.", null).show()
+                AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of ${series!!.name}. This is as ancient as it gets.").setNegativeButton("K.", null).show()
             }
         }
 
