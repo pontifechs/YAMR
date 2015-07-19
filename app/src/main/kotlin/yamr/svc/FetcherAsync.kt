@@ -11,7 +11,6 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.svc.fetchers.MangaPandaFetcher
 
 /**
  * Created by mdudley on 6/11/15.
@@ -21,7 +20,7 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
 
     override fun onHandleIntent(intent: Intent)
     {
-        val fetcher = MangaPandaFetcher(getBaseContext())
+        val fetcher = FetcherSync(getBaseContext())
         fetcher.register(this)
         val argument = intent.getData()
 

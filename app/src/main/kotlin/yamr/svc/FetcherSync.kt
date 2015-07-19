@@ -5,18 +5,22 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import ninja.dudley.yamr.db.DBHelper
+import android.util.Log
 import ninja.dudley.yamr.model.*
+import org.jsoup.Connection
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import yamr.model.Heritage
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.*
 
 /**
  * Created by mdudley on 5/19/15.
  */
-public abstract class FetcherSync(protected var context: Context)
+public class FetcherSync(protected var context: Context)
 {
 
     public interface NotifyStatus
@@ -49,22 +53,293 @@ public abstract class FetcherSync(protected var context: Context)
         }
     }
 
+
     public fun fetchProvider(provider: Provider): Provider
     {
         return fetchProvider(provider, FetchBehavior.LazyFetch)
     }
 
-    public abstract fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
+    public fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
+    {
+        Log.d("Fetch", "Starting a Provider fetch")
+        try
+        {
+            if (behavior === FetcherSync.FetchBehavior.LazyFetch && provider.fullyParsed)
+            {
+                Log.d("Fetch", "Already parsed, skipping")
+                return provider
+            }
+            val doc = fetchUrl(provider.url)
+            val elements = doc.select(".series_alpha li a[href]")
 
-    public abstract fun fetchSeries(series: Series, behavior: FetchBehavior = FetchBehavior.LazyFetch): Series
+            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
+            var index = 0
+            for (e in elements)
+            {
+                index++
+                if (index % statusStride == 0 && listener != null)
+                {
+                    val progress = index / elements.size().toFloat()
+                    Log.d("Fetch", "ProviderFetch progress: " + progress)
+                    listener?.notifyProviderStatus(progress)
+                }
 
-    public abstract fun fetchChapter(chapter: Chapter, behavior: FetchBehavior = FetchBehavior.LazyFetch): Chapter
+                val url = e.absUrl("href")
+                if (seriesExists(url))
+                {
+                    continue
+                }
+                val s = Series(provider.id, url, e.ownText())
+                context.getContentResolver().insert(Series.baseUri(), s.getContentValues())
+            }
+            provider.fullyParsed = true
+            context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null)
+            Log.d("Fetch", "Iteration complete. Provider Fetched.")
+        }
+        catch (e: IOException)
+        {
+            // Shrug?
+            throw RuntimeException(e)
+        }
 
-    public abstract fun fetchPage(page: Page, behavior: FetchBehavior = FetchBehavior.LazyFetch): Page
+        return provider
+    }
 
-    public abstract fun fetchNew(provider: Provider): List<Uri>
+    public fun fetchSeries(series: Series, behavior: FetchBehavior = FetchBehavior.LazyFetch): Series
+    {
+        Log.d("Fetch", "Starting Series fetch")
+        try
+        {
+            if (behavior === FetcherSync.FetchBehavior.LazyFetch && series.fullyParsed)
+            {
+                Log.d("Fetch", "Already parsed. Ignoring")
+                return series
+            }
+            val doc = fetchUrl(series.url)
+            // Parse series info
+            val propertyElements = doc.select(".propertytitle")
+            for (property in propertyElements)
+            {
+                val propTitle = property.text()
+                val sibling = property.parent().select("td:eq(1)").first()
+                when (propTitle)
+                {
+                    "Alternate Name:" -> series.alternateName = sibling.text()
+                    "Status:" -> series.complete = sibling.text() != "Ongoing"
+                    "Author" -> series.author = sibling.text()
+                    "Artist:" -> series.artist = sibling.text()
+                    "Genre:" ->
+                    {
+                        // Genre string
+                        val genreElements = sibling.select(".genretags")
+                        for (genre in genreElements)
+                        {
+                            val genreName = genre.text()
+                            if (!genreExists(genreName))
+                            {
+                                val g = Genre(genreName)
+                                context.getContentResolver().insert(Genre.baseUri(), g.getContentValues())
+                            }
+                            val g = Genre(context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(genreName), null))
 
-    protected fun providerExists(url: String): Boolean
+                            // Now that we have the genre for sure, add the relation.
+                            context.getContentResolver().insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
+                        }
+                    }
+                }
+            }
+            // Parse thumbnail
+            val thumb = doc.select("#mangaimg img[src]").first()
+            series.thumbnailUrl = thumb.absUrl("src")
+            series.thumbnailPath = saveThumbnail(series)
+
+            // Parse description
+            val summary = doc.select("#readmangasum p").first()
+            series.description = summary.text()
+
+            // Parse chapters
+            val chapterElements = doc.select("td .chico_manga ~ a[href]")
+            val statusStride = Math.ceil((chapterElements.size() / 100.0f).toDouble()).toInt()
+            var index = 0
+            for (e in chapterElements)
+            {
+                index++
+                if (index % statusStride == 0 && listener != null)
+                {
+                    val progress = index / chapterElements.size().toFloat()
+                    Log.d("Fetch", "ProviderFetch progress: " + progress)
+                    listener?.notifySeriesStatus(progress)
+                }
+
+                val url = e.absUrl("href")
+                if (chapterExists(url))
+                {
+                    continue
+                }
+
+                val c = Chapter(series.id, url, java.lang.Float.parseFloat(e.text().replace(series.name, "")))
+                c.name = e.parent().ownText().replace(":", "")
+                context.getContentResolver().insert(Chapter.baseUri(), c.getContentValues())
+            }
+            series.fullyParsed = true
+            context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+            Log.d("Fetch", "Iteration complete. Series Fetched.")
+        }
+        catch (e: IOException)
+        {
+            // Panic? IDK what might cause this.
+            throw RuntimeException(e)
+        }
+
+        return series
+    }
+
+    public fun fetchChapter(chapter: Chapter, behavior: FetchBehavior = FetchBehavior.LazyFetch): Chapter
+    {
+        try
+        {
+            if (behavior === FetcherSync.FetchBehavior.LazyFetch && chapter.fullyParsed)
+            {
+                Log.d("Fetch", "Already parsed. Ignoring")
+                return chapter
+            }
+            val doc = fetchUrl(chapter.url)
+            val elements = doc.select("#pageMenu option[value]")
+            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
+            var index = 0
+            for (e in elements)
+            {
+                index++
+                if (index % statusStride == 0 && listener != null)
+                {
+                    val progress = index / elements.size().toFloat()
+                    Log.d("Fetch", "Chapter fetch progress: " + progress)
+                    listener?.notifyChapterStatus(progress)
+                }
+
+                val url = e.absUrl("value")
+                if (pageExists(url))
+                {
+                    continue
+                }
+
+                val p = Page(chapter.id, url, java.lang.Float.parseFloat(e.text()))
+                context.getContentResolver().insert(Page.baseUri(), p.getContentValues())
+            }
+            chapter.fullyParsed = true
+            context.getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null)
+            Log.d("Fetch", "Iteration complete. Chapter fetched")
+        }
+        catch (e: IOException)
+        {
+            // Panic? IDK what might cause this.
+            throw RuntimeException(e)
+        }
+
+        return chapter
+    }
+
+    public fun fetchPage(page: Page, behavior: FetchBehavior = FetchBehavior.LazyFetch): Page
+    {
+        try
+        {
+            if (behavior === FetcherSync.FetchBehavior.LazyFetch && page.fullyParsed)
+            {
+                Log.d("FetchPage", "Already parsed. Ignoring")
+                return page
+            }
+            val doc = fetchUrl(page.url)
+            val element = doc.select("img[src]").first()
+            page.imageUrl = element.absUrl("src")
+            page.fullyParsed = true
+            savePageImage(page)
+            Log.d("FetchPage", "Done")
+        }
+        catch (e: IOException)
+        {
+            // Panic? IDK what might cause this.
+            throw RuntimeException(e)
+        }
+
+        return page
+    }
+
+    public fun fetchNew(provider: Provider): List<Uri>
+    {
+                Log.d("FetchStarter", "Starting")
+        val newChapters = ArrayList<Uri>()
+        try
+        {
+
+            val doc = fetchUrl(provider.newUrl)
+            val rows = doc.select(".c2")
+            for (row in rows)
+            {
+                val seriesElement = row.select(".chapter").first()
+                val seriesUrl = seriesElement.absUrl("href")
+
+                var series: Series
+                if (seriesExists(seriesUrl))
+                {
+                    series = Series(context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(seriesUrl), null))
+                }
+                else
+                {
+                    Log.d("Fetch", "Completely New Series!!")
+                    series = Series(provider.id, seriesUrl, seriesElement.text())
+                    val inserted = context.getContentResolver().insert(Series.baseUri(), series.getContentValues())
+                    series = Series(context.getContentResolver().query(inserted, null, null, null, null))
+                    fetchSeries(series)
+                    continue
+                }
+
+                var newChapter = false
+                val chapters = row.select(".chaptersrec")
+                for (chapterElement in chapters)
+                {
+                    val chapterUrl = chapterElement.absUrl("href")
+                    val chapter: Chapter
+                    if (!chapterExists(chapterUrl))
+                    {
+                        Log.d("Fetch", "Haven't seen this one.")
+                        val body = chapterElement.text()
+                        val number = java.lang.Float.parseFloat(body.replace(series.name, ""))
+                        chapter = Chapter(series.id, chapterUrl, number)
+
+                        context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
+                        newChapter = true
+                        if (series.favorite)
+                        {
+                            newChapters.add(chapter.uri())
+                        }
+                    }
+                }
+                if (newChapter)
+                {
+                    series.updated = true
+                }
+                context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+            }
+        }
+        catch (e: IOException)
+        {
+            // Panic? IDK what might cause this.
+            throw RuntimeException(e)
+        }
+
+        return newChapters
+    }
+
+
+    throws(IOException::class)
+    private fun fetchUrl(url: String): Document
+    {
+        val response = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0").referrer("http://www.google.com").method(Connection.Method.GET).execute()
+        return response.parse()
+    }
+
+
+    private fun providerExists(url: String): Boolean
     {
         val c = context.getContentResolver().query(Provider.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
@@ -72,7 +347,7 @@ public abstract class FetcherSync(protected var context: Context)
         return ret
     }
 
-    protected fun seriesExists(url: String): Boolean
+    private fun seriesExists(url: String): Boolean
     {
         val c = context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
@@ -80,7 +355,7 @@ public abstract class FetcherSync(protected var context: Context)
         return ret
     }
 
-    protected fun chapterExists(url: String): Boolean
+    private fun chapterExists(url: String): Boolean
     {
         val c = context.getContentResolver().query(Chapter.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
@@ -88,7 +363,7 @@ public abstract class FetcherSync(protected var context: Context)
         return ret
     }
 
-    protected fun pageExists(url: String): Boolean
+    private fun pageExists(url: String): Boolean
     {
         val c = context.getContentResolver().query(Page.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
@@ -96,7 +371,7 @@ public abstract class FetcherSync(protected var context: Context)
         return ret
     }
 
-    protected fun genreExists(name: String): Boolean
+    private fun genreExists(name: String): Boolean
     {
         val c = context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(name), null)
         val ret = c.getCount() > 0
@@ -181,7 +456,7 @@ public abstract class FetcherSync(protected var context: Context)
 
 
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
-    protected fun savePageImage(p: Page)
+    private fun savePageImage(p: Page)
     {
         val heritage = Heritage(context.getContentResolver().query(p.heritage(), null, null, null, null))
 
@@ -199,7 +474,7 @@ public abstract class FetcherSync(protected var context: Context)
         context.getContentResolver().update(p.uri(), p.getContentValues(), null, null) // Save the path off
     }
 
-    protected fun saveThumbnail(s: Series): String?
+    private fun saveThumbnail(s: Series): String?
     {
         val p = Provider(context.getContentResolver().query(Provider.uri(s.providerId), null, null, null, null))
 

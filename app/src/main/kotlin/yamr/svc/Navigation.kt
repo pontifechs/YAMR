@@ -12,7 +12,6 @@ import java.util.NoSuchElementException
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.svc.fetchers.MangaPandaFetcher
 
 public class Navigation : IntentService("Navigation"), FetcherSync.NotifyStatus
 {
@@ -54,7 +53,7 @@ public class Navigation : IntentService("Navigation"), FetcherSync.NotifyStatus
     {
         if (intent != null)
         {
-            fetcher = MangaPandaFetcher(getBaseContext())
+            fetcher = FetcherSync(getBaseContext())
             fetcher!!.register(this)
             val action = intent.getAction()
             when (action)
