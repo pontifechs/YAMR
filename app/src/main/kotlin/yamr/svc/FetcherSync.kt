@@ -1,27 +1,17 @@
 package ninja.dudley.yamr.svc
 
 import android.content.Context
-import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
+import ninja.dudley.yamr.db.DBHelper
+import ninja.dudley.yamr.model.*
+import yamr.model.Heritage
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-
-import ninja.dudley.yamr.db.DBHelper
-import ninja.dudley.yamr.model.Chapter
-import ninja.dudley.yamr.model.Genre
-import ninja.dudley.yamr.model.Page
-import ninja.dudley.yamr.model.Provider
-import ninja.dudley.yamr.model.Series
 
 /**
  * Created by mdudley on 5/19/15.
@@ -193,31 +183,20 @@ public abstract class FetcherSync(protected var context: Context)
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     protected fun savePageImage(p: Page)
     {
-        val heritage = context.getContentResolver().query(p.heritage(), null, null, null, null)
-        heritage.moveToFirst()
-
-        val providerNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME)
-        val seriesNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_NAME)
-        val chapterNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER)
-        val pageNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_NUMBER)
-
-        val providerName = heritage.getString(providerNameCol)
-        val seriesName = heritage.getString(seriesNameCol)
-        val chapterNumber = heritage.getFloat(chapterNumberCol)
-        val pageNumber = heritage.getFloat(pageNumberCol)
+        val heritage = Heritage(context.getContentResolver().query(p.heritage(), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val chapterPath = root.getAbsolutePath() + "/." + stripBadCharsForFile(providerName) + "/" + stripBadCharsForFile(seriesName) + "/" + formatFloat(chapterNumber)
+        val chapterPath = root.getAbsolutePath() + "/." + stripBadCharsForFile(heritage.providerName) + "/" +
+                stripBadCharsForFile(heritage.seriesName) + "/" + formatFloat(heritage.chapterNumber)
 
         val chapterDirectory = File(chapterPath)
         chapterDirectory.mkdirs()
-        val pagePath = "${chapterDirectory}/${formatFloat(pageNumber)}.png"
+        val pagePath = "${chapterDirectory}/${formatFloat(heritage.pageNumber)}.png"
 
         downloadImage(p.imageUrl!!, pagePath)
 
         p.imagePath = pagePath
         context.getContentResolver().update(p.uri(), p.getContentValues(), null, null) // Save the path off
-        heritage.close()
     }
 
     protected fun saveThumbnail(s: Series): String?

@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.preference.PreferenceManager
 import android.support.v4.content.LocalBroadcastManager
 import android.view.LayoutInflater
@@ -25,6 +24,7 @@ import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.Navigation
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
+import yamr.model.Heritage
 
 public class PageViewer(private val uri: Uri, private val type: MangaElement.UriType) : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
@@ -62,10 +62,9 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
             override fun onReceive(context: Context, intent: Intent)
             {
                 page = Page(getActivity().getContentResolver().query(intent.getData(), null, null, null, null))
-                if (series != null && series!!.progressPageId == -1)
-                {
-                    series = Series(getActivity().getContentResolver().query(series!!.uri(), null, null, null, null))
-                }
+                val heritage = Heritage(getActivity().getContentResolver().query(page!!.heritage(), null, null, null, null))
+                series = Series(getActivity().getContentResolver().query(Series.uri(heritage.seriesId), null, null, null, null))
+
                 val imageView = getActivity().findViewById(R.id.imageView) as TouchImageView
                 val d = Drawable.createFromPath(page!!.imagePath)
                 if (d == null)
@@ -77,17 +76,19 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
                 val loadingBar = getActivity().findViewById(R.id.page_loading) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
 
-                if (series != null)
+                if (series!!.favorite)
                 {
+                    if (series!!.progressPageId == -1)
+                    {
+                        series!!.progressPageId = page!!.id
+                        series!!.progressChapterId = heritage.chapterId
+                    }
+
                     if (progressTracker == null)
                     {
                         progressTracker = ProgressTracker(getActivity().getContentResolver(), series)
-                        progressTracker!!.handleNextPage(page!!)
                     }
-                    else
-                    {
-                        progressTracker!!.handleNextPage(page!!)
-                    }
+                    progressTracker!!.handleNextPage(page!!)
                 }
             }
         }
@@ -137,7 +138,6 @@ public class PageViewer(private val uri: Uri, private val type: MangaElement.Uri
                 fetchPage.setAction(Navigation.PAGE_FROM_SERIES)
                 fetchPage.setData(uri)
                 getActivity().startService(fetchPage)
-                series = Series(getActivity().getContentResolver().query(uri, null, null, null, null))
             }
             MangaElement.UriType.Chapter ->
             {

@@ -72,8 +72,11 @@ public class DBHelper extends SQLiteOpenHelper
     {
         public static final String TABLE_NAME="page_heritage";
 
+        public static final String COLUMN_PROVIDER_ID = "provider_id";
         public static final String COLUMN_PROVIDER_NAME = "provider_name";
+        public static final String COLUMN_SERIES_ID = "series_id";
         public static final String COLUMN_SERIES_NAME = "series_name";
+        public static final String COLUMN_CHAPTER_ID = "chapter_id";
         public static final String COLUMN_CHAPTER_NUMBER = "chapter_number";
         public static final String COLUMN_PAGE_NUMBER = "page_number";
         public static final String COLUMN_PAGE_ID = "page_id";
@@ -82,7 +85,8 @@ public class DBHelper extends SQLiteOpenHelper
 
         static
         {
-            projection = new String[]{COLUMN_PROVIDER_NAME, COLUMN_SERIES_NAME, COLUMN_CHAPTER_NUMBER, COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
+            projection = new String[]{COLUMN_PROVIDER_ID, COLUMN_PROVIDER_NAME, COLUMN_SERIES_ID,
+                    COLUMN_SERIES_NAME, COLUMN_CHAPTER_ID, COLUMN_CHAPTER_NUMBER, COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
         }
     }
 
@@ -245,10 +249,14 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(schema(Genre.class));
 
         String pageHeritageView = "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
-                "select " + joinedAliasedColumn(Page.tableName, ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
+                "select "
+                + joinedAliasedColumn(Provider.tableName, ID, PageHeritageViewEntry.COLUMN_PROVIDER_ID) + ", "
                 + joinedAliasedColumn(Provider.tableName, "name", PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", "
+                + joinedAliasedColumn(Series.tableName, ID, PageHeritageViewEntry.COLUMN_SERIES_ID) + ", "
                 + joinedAliasedColumn(Series.tableName, "name", PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", "
+                + joinedAliasedColumn(Chapter.tableName, ID, PageHeritageViewEntry.COLUMN_CHAPTER_ID) + ", "
                 + joinedAliasedColumn(Chapter.tableName, "number", PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", "
+                + joinedAliasedColumn(Page.tableName, ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
                 + joinedAliasedColumn(Page.tableName, "number", PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
                 " from " + Provider.tableName + joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID)
                 + joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID)

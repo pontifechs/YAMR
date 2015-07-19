@@ -18,7 +18,6 @@ import java.util.HashMap
 
 public class MainActivity : Activity()
 {
-
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -60,11 +59,13 @@ public class MainActivity : Activity()
                     0 ->
                     {
                         i = Intent(this@MainActivity, javaClass<Browse>())
+                        i.putExtra(Browse.flowKey, Browse.FlowType.ProviderAll.name())
                         startActivity(i)
                     }
                     1 ->
                     {
-                        i = Intent(this@MainActivity, javaClass<Favorites>())
+                        i = Intent(this@MainActivity, javaClass<Browse>())
+                        i.putExtra(Browse.flowKey, Browse.FlowType.Favorites.name())
                         startActivity(i)
                     }
                     2 ->

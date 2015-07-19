@@ -13,17 +13,39 @@ import ninja.dudley.yamr.ui.fragments.ProviderViewer
 import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import ninja.dudley.yamr.ui.util.OrientationAware
 
-public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter, ChapterViewer.LoadPage,  OrientationAware.I
+public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter,
+        ChapterViewer.LoadPage,  Favorites.LoadSeriesAndChapter, OrientationAware.I
 {
+
+    enum class FlowType
+    {
+        ProviderAll,
+        Favorites
+    }
+
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super<Activity>.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browse)
         if (savedInstanceState == null)
         {
+            val b: Bundle = getIntent().getExtras()
+            val flow: FlowType = FlowType.valueOf(b.get(flowKey) as String)
+
             val transaction = getFragmentManager().beginTransaction()
-            val providerViewer = ProviderViewer()
-            transaction.replace(R.id.reader, providerViewer)
+            when (flow)
+            {
+                FlowType.ProviderAll ->
+                {
+                    val providerViewer = ProviderViewer()
+                    transaction.replace(R.id.reader, providerViewer)
+                }
+                FlowType.Favorites ->
+                {
+                    val favorites = Favorites()
+                    transaction.replace(R.id.reader, favorites)
+                }
+            }
             transaction.commit()
         }
     }
@@ -64,6 +86,15 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         transaction.commit()
     }
 
+    override fun loadFirstPageOfSeries(series: Uri)
+    {
+        val transaction = getFragmentManager().beginTransaction()
+        val pageViewer = PageViewer(series, MangaElement.UriType.Series)
+        transaction.replace(R.id.reader, pageViewer)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration)
     {
         OrientationAware.handleOrientationAware(this, newConfig)
@@ -85,5 +116,10 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun onSaveInstanceState(outState: Bundle)
     {
         super<Activity>.onSaveInstanceState(outState)
+    }
+
+    companion object
+    {
+        public val flowKey: String = "flow"
     }
 }

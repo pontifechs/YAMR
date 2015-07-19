@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.activities
 
-import android.app.ListActivity
+import android.app.Activity
+import android.app.ListFragment
 import android.app.LoaderManager
 import android.content.Context
 import android.content.CursorLoader
@@ -13,23 +14,20 @@ import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
-import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.ui.fragments.ChapterViewer
-import ninja.dudley.yamr.ui.fragments.PageViewer
-import ninja.dudley.yamr.ui.fragments.SeriesViewer
+import ninja.dudley.yamr.ui.fragments.ProviderViewer
 
-public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
+public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
     private var adapter: ThumbSeriesAdapter? = null
-    public inner class ThumbSeriesAdapter : SimpleCursorAdapter(this@Favorites, 0, null, arrayOf<String>(), intArrayOf(), 0)
+    public inner class ThumbSeriesAdapter : SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater
 
         init
         {
-            inflater = LayoutInflater.from(this@Favorites)
+            inflater = LayoutInflater.from(getActivity())
         }
 
         override fun newView(context: Context?, cursor: Cursor?, parent: ViewGroup?): View
@@ -71,22 +69,37 @@ public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?)
+    public interface LoadSeriesAndChapter : ProviderViewer.LoadSeries
     {
-        super<ListActivity>.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_favorites)
+        public fun loadFirstPageOfSeries(series: Uri)
+    }
+
+    private var parent: LoadSeriesAndChapter? = null
+    override fun onAttach(activity: Activity?)
+    {
+        super<ListFragment>.onAttach(activity)
+        this.parent = activity as LoadSeriesAndChapter
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
+    {
+        setHasOptionsMenu(true)
+        val layout = inflater.inflate(R.layout.fragment_favorites, container, false) as RelativeLayout
+        val listView = layout.findViewById(android.R.id.list) as ListView
+        listView.setOnItemLongClickListener(this)
 
         adapter = ThumbSeriesAdapter()
         setListAdapter(adapter)
 
         getLoaderManager().initLoader(0, Bundle(), this)
+
+        return layout;
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
     {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_favorites, menu)
-        return true
+        inflater!!.inflate(R.menu.menu_favorites, menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
@@ -96,22 +109,23 @@ public class Favorites : ListActivity(), LoaderManager.LoaderCallbacks<Cursor>
             R.id.action_settings -> return true
         }
 
-        return super<ListActivity>.onOptionsItemSelected(item)
+        return super<ListFragment>.onOptionsItemSelected(item)
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
-        val seriesUri = Series.uri(id.toInt())
-        val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer(seriesUri, MangaElement.UriType.Series)
-        transaction.replace(R.id.favorites, pageViewer)
-        transaction.addToBackStack(null)
-        transaction.commit()
+        parent?.loadFirstPageOfSeries(Series.uri(id.toInt()))
+    }
+
+    override fun onItemLongClick(parentView: AdapterView<*>?, view: View?, position: Int, id: Long): Boolean
+    {
+        parent?.loadSeries(Series.uri(id.toInt()))
+        return true
     }
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        return CursorLoader(this, Series.favorites(), null, null, null, null)
+        return CursorLoader(getActivity(), Series.favorites(), null, null, null, null)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor)
