@@ -54,6 +54,8 @@ public class DBHelper extends SQLiteOpenHelper
     public static abstract class SeriesGenreEntry implements BaseColumns
     {
         public static final String TABLE_NAME = "series_genres";
+        public static final String SERIES_GENRES_VIEW = "series_genres_view";
+        public static final String GENRE_SERIES_VIEW = "genre_series_view";
 
         public static final String COLUMN_SERIES_ID = "series_id";
         public static final Column.Type COLUMN_SERIES_ID_TYPE = Column.Type.Integer;
@@ -273,14 +275,16 @@ public class DBHelper extends SQLiteOpenHelper
                 ")";
         db.execSQL(seriesGenreCreate);
 
-        String seriesGenreViewCreate = "CREATE VIEW series_genre_view AS " +
-                "select " + Series.tableName + ".* " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, ID);
+        // Genres in the given series
+        String seriesGenreViewCreate = "CREATE VIEW " + SeriesGenreEntry.SERIES_GENRES_VIEW + " AS " +
+                "select " + Genre.tableName + ".* , " + SeriesGenreEntry.TABLE_NAME + ".series_id as series_id " +
+                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, ID);
         db.execSQL(seriesGenreViewCreate);
 
-        String genreSeriesViewCreate = "CREATE VIEW genre_series_view AS " +
-                "select " + Genre.tableName+ ".* " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, ID);
+        // Series in the given genre
+        String genreSeriesViewCreate = "CREATE VIEW " + SeriesGenreEntry.GENRE_SERIES_VIEW + " AS " +
+                "select " + Series.tableName+ ".* , " + SeriesGenreEntry.TABLE_NAME + ".genre_id as genre_id " +
+                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
 
         db.execSQL("INSERT INTO provider (url, type, new_url, name) values (\"http://www.mangapanda.com/alphabetical\", \"Provider\", \"http://www.mangapanda.com/latest\", \"MangaPanda\")");

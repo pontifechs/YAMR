@@ -116,8 +116,14 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.SeriesByID -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.SeriesChapters -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Chapter.numberCol)
             DBProvider.MatchCode.SeriesFavorites -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), Series.favoriteCol + " > 0", null, null, null, sortOrder)
-            DBProvider.MatchCode.SeriesGenres -> return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME, DBHelper.SeriesGenreEntry.projection, DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
-            DBProvider.MatchCode.GenreSeries -> return db.query(DBHelper.SeriesGenreEntry.TABLE_NAME, DBHelper.SeriesGenreEntry.projection, DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+            DBProvider.MatchCode.SeriesGenres ->
+            {
+                return db.query(DBHelper.SeriesGenreEntry.SERIES_GENRES_VIEW, DBHelper.projections.get(Genre.tableName), DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+            }
+            DBProvider.MatchCode.GenreSeries ->
+            {
+                return db.query(DBHelper.SeriesGenreEntry.GENRE_SERIES_VIEW, DBHelper.projections.get(Series.tableName), DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+            }
             DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
             DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
@@ -300,7 +306,8 @@ public class DBProvider : ContentProvider()
             when (matchCode)
             {
                 DBProvider.MatchCode.ProviderByID, DBProvider.MatchCode.SeriesByID, DBProvider.MatchCode.ChapterByID, DBProvider.MatchCode.PageByID -> return Integer.parseInt(uri.getLastPathSegment())
-                DBProvider.MatchCode.ProviderSeries, DBProvider.MatchCode.SeriesChapters, DBProvider.MatchCode.ChapterPages, DBProvider.MatchCode.PageHeritage ->
+                DBProvider.MatchCode.ProviderSeries, DBProvider.MatchCode.SeriesChapters, DBProvider.MatchCode.ChapterPages, DBProvider.MatchCode.PageHeritage, DBProvider.MatchCode.SeriesGenres,
+                DBProvider.MatchCode.GenreSeries ->
                 {
                     segments = uri.getPathSegments()
                     idStr = segments.get(segments.size() - 2)

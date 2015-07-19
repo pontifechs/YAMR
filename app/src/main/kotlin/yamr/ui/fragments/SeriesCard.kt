@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.fragments
 
 import android.app.Fragment
+import android.database.Cursor
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
@@ -11,13 +12,11 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
-
-import org.jsoup.helper.StringUtil
-
-import java.util.ArrayList
-
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.Genre
 import ninja.dudley.yamr.model.Series
+import org.jsoup.helper.StringUtil
+import java.util.ArrayList
 
 public class SeriesCard : Fragment()
 {
@@ -69,6 +68,17 @@ public class SeriesCard : Fragment()
         seriesName!!.setText(series!!.name)
 
         val info = ArrayList<String>()
+
+        val c: Cursor = getActivity().getContentResolver().query(series!!.genres(), null, null, null, null)
+        val genres: Set<Genre> = Genre.genres(c)
+        if (genres.size() > 0)
+        {
+            var genreString = ""
+            genres.forEach {
+                genreString += ", ${it.name}"
+            }
+            info.add(genreString.substring(2))
+        }
         if (!StringUtil.isBlank(series!!.author))
         {
             info.add("<b>Author: </b>" + series!!.author!!)
