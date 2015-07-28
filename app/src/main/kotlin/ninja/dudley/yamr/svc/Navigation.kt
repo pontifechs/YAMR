@@ -327,7 +327,7 @@ public class Navigation : IntentService("Navigation"), FetcherSync.NotifyStatus
 
     companion object
     {
-        public val BASE: String = "ninja.dudley.yamr.fetch.Navigation"
+        public val BASE: String = "ninja.dudley.ninja.dudley.yamr.fetch.Navigation"
 
         public val NEXT_PAGE: String = BASE + ".NextPage"
         public val NEXT_PAGE_COMPLETE: String = NEXT_PAGE + ".Complete"

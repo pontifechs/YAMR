@@ -73,6 +73,6 @@ public class FetchStarter : BroadcastReceiver()
 
     companion object
     {
-        public val StartChecking: String = "ninja.dudley.yamr.FetchStarter"
+        public val StartChecking: String = "ninja.dudley.ninja.dudley.yamr.FetchStarter"
     }
 }

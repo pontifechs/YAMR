@@ -154,23 +154,23 @@ public class DBProvider : ContentProvider()
         when (matchCode)
         {
             DBProvider.MatchCode.ProviderMatch, DBProvider.MatchCode.ProviderByID ->
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Provider.tableName
+                return "vnd.android.cursor.item/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Provider.tableName
             DBProvider.MatchCode.ProviderSeries, DBProvider.MatchCode.SeriesFavorites, DBProvider.MatchCode.GenreSeries ->
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Series.tableName
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Series.tableName
             DBProvider.MatchCode.SeriesMatch, DBProvider.MatchCode.SeriesByID ->
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Series.tableName
+                return "vnd.android.cursor.item/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Series.tableName
             DBProvider.MatchCode.SeriesChapters ->
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Chapter.tableName
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Chapter.tableName
             DBProvider.MatchCode.ChapterMatch, DBProvider.MatchCode.ChapterByID ->
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Chapter.tableName
+                return "vnd.android.cursor.item/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Chapter.tableName
             DBProvider.MatchCode.ChapterPages ->
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Page.tableName
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Page.tableName
             DBProvider.MatchCode.PageMatch, DBProvider.MatchCode.PageByID ->
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Page.tableName
+                return "vnd.android.cursor.item/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Page.tableName
             DBProvider.MatchCode.GenreMatch ->
-                return "vnd.android.cursor.item/vnd.dudley.ninja.yamr.db.DBProvider." + Genre.tableName
+                return "vnd.android.cursor.item/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Genre.tableName
             DBProvider.MatchCode.SeriesGenres ->
-                return "vnd.android.cursor.dir/vnd.dudley.ninja.yamr.db.DBProvider." + Genre.tableName
+                return "vnd.android.cursor.dir/vnd.dudley.ninja.ninja.dudley.yamr.db.DBProvider." + Genre.tableName
             else -> throw IllegalArgumentException("Invalid uri: " + uri.toString())
         }
     }

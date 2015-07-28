@@ -2,7 +2,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="ninja.dudley.yamr.ninja.dudley.yamr.ui.activities.Browse"
+                tools:context="ninja.dudley.yamr.ui.activities.Browse"
                 android:id="@+id/reader"
                 android:background="@drawable/paper"
     >

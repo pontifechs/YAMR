@@ -18,6 +18,17 @@ public class Provider : MangaElement
     public var name: String
     Column(name = newUrlCol)
     public var newUrl: String
+//    Column(name = fetchProviderCol)
+//    public var fetchProvider: String
+//    Column(name = fetchSeriesCol)
+//    public var fetchSeries: String
+//    Column(name = fetchChapterCol)
+//    public var fetchChapter: String
+//    Column(name = fetchPageCol)
+//    public var fetchPage: String
+//    Column(name = fetchNewCol)
+//    public var fetchNew: String
+
 
     public fun uri(): Uri
     {
@@ -39,6 +50,11 @@ public class Provider : MangaElement
         }
         name = getString(c, nameCol)!!
         newUrl = getString(c, newUrlCol)!!
+//        fetchProvider = getString(c, fetchProviderCol)!!
+//        fetchSeries = getString(c, fetchSeriesCol)!!
+//        fetchChapter = getString(c, fetchChapterCol)!!
+//        fetchPage = getString(c, fetchPageCol)!!
+//        fetchNew = getString(c, fetchNewCol)!!
         c.close()
     }
 
@@ -55,6 +71,11 @@ public class Provider : MangaElement
         public val tableName: String = "provider"
         public val nameCol: String = "name"
         public val newUrlCol: String = "new_url"
+        public val fetchProviderCol: String = "fetch_provider"
+        public val fetchSeriesCol: String = "fetch_series"
+        public val fetchChapterCol: String = "fetch_chapter"
+        public val fetchPageCol: String = "fetch_page"
+        public val fetchNewCol: String = "fetch_new"
 
         // Uri Handling --------------------------------------------------------------------------------
         public fun baseUri(): Uri

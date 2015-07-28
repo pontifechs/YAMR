@@ -1,4 +1,4 @@
-package yamr.model.js;
+package ninja.dudley.yamr.model.js;
 
 import ninja.dudley.yamr.model.MangaElement;
 import ninja.dudley.yamr.model.Series
@@ -14,10 +14,7 @@ public class JsSeries : ScriptableObject
         return "JsSeries"
     }
 
-    private var id: Int = -1
     private var url: String
-    private var fullyParsed: Boolean = false
-    private var type: MangaElement.UriType? = null
 
     private var name: String
     private var description: String? = null
@@ -27,24 +24,10 @@ public class JsSeries : ScriptableObject
     private var artist: String? = null
     private var thumbnailUrl: String? = null
 
-    private constructor(url: String, name: String)
+    public constructor() : super()
     {
-        this.url = url
-        this.name = name
-    }
-
-    public fun jsConstructor(url: String, name: String): JsSeries
-    {
-        return JsSeries(url, name)
-    }
-
-    public fun jsGet_id(): Int
-    {
-        return id
-    }
-    public fun jsSet_id(id: Int)
-    {
-        this.id = id
+        this.url = ""
+        this.name = ""
     }
 
     public fun jsGet_url(): String?
@@ -56,29 +39,11 @@ public class JsSeries : ScriptableObject
         this.url = url;
     }
 
-    public fun jsGet_fullyParsed(): Boolean
-    {
-        return fullyParsed;
-    }
-    public fun jsSet_fullyParsed(fullyParsed: Boolean)
-    {
-        this.fullyParsed = fullyParsed
-    }
-
-    public fun jsGet_type(): MangaElement.UriType?
-    {
-        return type
-    }
-    public fun jsSet_type(type: MangaElement.UriType)
-    {
-        this.type = type
-    }
-
-    public fun jsGet_name(): String?
+    public fun jsGet_name(): String
     {
         return name
     }
-    public fun jsSet_name(name: String?)
+    public fun jsSet_name(name: String)
     {
         this.name = name
     }

@@ -26,7 +26,7 @@ import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.Navigation
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
-import yamr.model.Heritage
+import ninja.dudley.yamr.model.Heritage
 
 public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {

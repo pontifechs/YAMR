@@ -1,19 +1,19 @@
 package ninja.dudley.yamr.svc
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import ninja.dudley.yamr.model.*
+import ninja.dudley.yamr.model.js.JsPage
+import ninja.dudley.yamr.model.js.JsSeries
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mozilla.javascript.Scriptable
+import org.jsoup.select.Elements
+import org.mozilla.javascript.Context
 import org.mozilla.javascript.ScriptableObject
-import yamr.model.Heritage
-import yamr.model.js.JsProvider
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
@@ -23,7 +23,7 @@ import java.util.ArrayList
 /**
  * Created by mdudley on 5/19/15.
  */
-public class FetcherSync(protected var context: Context)
+public class FetcherSync(protected var context: android.content.Context)
 {
 
     public interface NotifyStatus
@@ -56,81 +56,63 @@ public class FetcherSync(protected var context: Context)
         }
     }
 
-    private fun thing()
-    {
-        var b: JsProvider;
-        try
-        {
-            val response: Connection.Response  = Jsoup.connect("http://www.mangapanda.com/one-piece/697/3")
-                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                    .referrer("http://www.google.com")
-                    .method(Connection.Method.GET)
-                    .execute();
-            val doc: Document = response.parse();
-
-            val cx: org.mozilla.javascript.Context = org.mozilla.javascript.Context.enter();
-            cx.setOptimizationLevel(-1);
-            val scope: Scriptable  = cx.initStandardObjects();
-
-            try
-            {
-                ScriptableObject.defineClass(scope, javaClass<JsProvider>())
-            }
-            catch (e: Exception)
-            {
-                // Gotta catch 'em all!
-            }
-
-            val script =
-            "function parse(doc) { " +
-                    "   var element = doc.select('img[src]').first();" +
-                    "   var nicebob = new NotJsProvider();" +
-                    "   nicebob.url = element.absUrl('src');" +
-                    "   return nicebob;" +
-                    "};";
-
-            try
-            {
-                val fct: org.mozilla.javascript.Function = cx.compileFunction(scope, script, "script", 1, null);
-                b =  org.mozilla.javascript.Context.jsToJava(fct.call(cx, scope, scope, arrayOf(doc)), javaClass<JsProvider>()) as JsProvider
-                Log.d("RHINO", b.jsGet_url());
-            }
-            finally
-            {
-                org.mozilla.javascript.Context.exit();
-            }
-        }
-        catch (e: IOException)
-        {
-            // Panic? IDK what might cause this.
-            throw  RuntimeException(e);
-        }
-    }
-
-    public fun fetchProvider(provider: Provider): Provider
-    {
-        return fetchProvider(provider, FetchBehavior.LazyFetch)
-    }
-
     public fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
     {
-        thing()
+        if (behavior === FetcherSync.FetchBehavior.LazyFetch && provider.fullyParsed)
+        {
+            Log.d("Fetch", "Already parsed. Ignoring")
+            return provider
+        }
+
+        val cx = Context.enter()
+        cx.setOptimizationLevel(-1)
+        val scope = cx.initStandardObjects()
+
+        try
+        {
+            ScriptableObject.defineClass(scope, javaClass<JsSeries>())
+        }
+        catch (e: Exception)
+        {
+            Log.e("RHINO", e.toString())
+            // Gotta catch 'em all!
+            throw RuntimeException(e)
+        }
+        val fillProvider =
+                "function fetchProvider(doc, provider) { " +
+                        "   return doc.select('.series_alpha li a[href]');" +
+                        "};"
+        val stubSeries =
+                "function stubSeries(element) {" +
+                        "   var url = element.absUrl('href');" +
+                        "   var name = element.ownText();" +
+                        "   var jsSeries = new JsSeries();" +
+                        "   jsSeries.url = url;" +
+                        "   jsSeries.name = name;" +
+                        "   return jsSeries" +
+                        "};"
+        cx.evaluateString(scope, fillProvider, "fetchProvider", 1, null);
+        cx.evaluateString(scope, stubSeries, "fetchProvider", 2, null);
 
         Log.d("Fetch", "Starting a Provider fetch")
         try
         {
-            if (behavior === FetcherSync.FetchBehavior.LazyFetch && provider.fullyParsed)
-            {
-                Log.d("Fetch", "Already parsed, skipping")
-                return provider
-            }
+
             val doc = fetchUrl(provider.url)
-            val elements = doc.select(".series_alpha li a[href]")
+            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+            ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
+            val result = cx.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 3, null);
+            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
+            Log.d("RHINO", "${elements.size()}")
+            provider.fullyParsed = true
+            context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null)
+            Log.d("Fetch", "Iteration complete. Provider Fetched.")
 
             val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
             var index = 0
             for (e in elements)
             {
+
                 index++
                 if (index % statusStride == 0 && listener != null)
                 {
@@ -138,18 +120,18 @@ public class FetcherSync(protected var context: Context)
                     Log.d("Fetch", "ProviderFetch progress: " + progress)
                     listener?.notifyProviderStatus(progress)
                 }
+                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+                val seriesResult = cx.evaluateString(scope, "stubSeries(element);", "fetchProvider", 4, null);
+                val jsSeries = Context.jsToJava(seriesResult, javaClass<JsSeries>()) as JsSeries
+                val s = jsSeries.unJS(provider.id)
 
-                val url = e.absUrl("href")
-                if (seriesExists(url))
+                if (seriesExists(s.url))
                 {
                     continue
                 }
-                val s = Series(provider.id, url, e.ownText())
                 context.getContentResolver().insert(Series.baseUri(), s.getContentValues())
             }
             provider.fullyParsed = true
-            context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null)
-            Log.d("Fetch", "Iteration complete. Provider Fetched.")
         }
         catch (e: IOException)
         {
@@ -304,8 +286,35 @@ public class FetcherSync(protected var context: Context)
                 return page
             }
             val doc = fetchUrl(page.url)
-            val element = doc.select("img[src]").first()
-            page.imageUrl = element.absUrl("src")
+
+            val cx = org.mozilla.javascript.Context.enter()
+            cx.setOptimizationLevel(-1)
+            val scope = cx.initStandardObjects()
+
+            try
+            {
+                ScriptableObject.defineClass(scope, javaClass<JsPage>())
+            }
+            catch (e: Exception)
+            {
+                Log.e("RHINO", e.toString());
+                // Gotta catch 'em all!
+            }
+
+            val script =
+            "function parse(doc, page) { " +
+                    "   var element = doc.select('img[src]').first();" +
+                    "   page.imageUrl = element.absUrl('src');" +
+                    "};";
+            try
+            {
+                val fct = cx.compileFunction(scope, script, "script", 1, null);
+                fct.call(cx, scope, scope, arrayOf(doc, page))
+            }
+            finally
+            {
+                org.mozilla.javascript.Context.exit();
+            }
             page.fullyParsed = true
             savePageImage(page)
             Log.d("FetchPage", "Done")
@@ -313,7 +322,7 @@ public class FetcherSync(protected var context: Context)
         catch (e: IOException)
         {
             // Panic? IDK what might cause this.
-            throw RuntimeException(e)
+            throw  RuntimeException(e);
         }
 
         return page
@@ -325,7 +334,6 @@ public class FetcherSync(protected var context: Context)
         val newChapters = ArrayList<Uri>()
         try
         {
-
             val doc = fetchUrl(provider.newUrl)
             val rows = doc.select(".c2")
             for (row in rows)

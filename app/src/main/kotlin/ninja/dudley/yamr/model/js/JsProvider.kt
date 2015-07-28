@@ -1,4 +1,4 @@
-package yamr.model.js
+package ninja.dudley.yamr.model.js
 
 import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Provider
@@ -7,14 +7,13 @@ import org.mozilla.javascript.ScriptableObject
 /**
  * Created by mdudley on 7/19/15.
  */
-public open class JsProvider : ScriptableObject()
+public open class JsProvider : ScriptableObject
 {
     override fun getClassName(): String?
     {
         return "JsProvider"
     }
 
-    private var id: Int = -1
     private var url: String? = null
     private var fullyParsed: Boolean = false
     private var type: MangaElement.UriType? = null
@@ -22,16 +21,7 @@ public open class JsProvider : ScriptableObject()
     private var name: String? = null
     private var newUrl: String? = null
 
-    public fun jsConstructor() {}
-
-    public fun jsGet_id(): Int
-    {
-        return id
-    }
-    public fun jsSet_id(id: Int)
-    {
-        this.id = id
-    }
+    public constructor() : super() {}
 
     public fun jsGet_url(): String?
     {

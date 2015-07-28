@@ -128,7 +128,7 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
 
     companion object
     {
-        public val BASE: String = "ninja.dudley.yamr.fetch.FetcherSync"
+        public val BASE: String = "ninja.dudley.ninja.dudley.yamr.fetch.FetcherSync"
 
         public val FETCH_BEHAVIOR: String = BASE + ".FetchBehavior"
 

@@ -1,4 +1,4 @@
-package yamr.model;
+package ninja.dudley.yamr.model;
 
 import android.database.Cursor
 import ninja.dudley.yamr.db.DBHelper
