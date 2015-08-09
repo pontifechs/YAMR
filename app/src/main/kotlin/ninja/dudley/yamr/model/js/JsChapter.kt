@@ -18,12 +18,12 @@ public class JsChapter : ScriptableObject
     private var url: String
 
     private var name: String? = null
-    private var number: Float
+    private var number: Double
 
     public constructor(): super()
     {
         url = ""
-        number = 0.0f
+        number = 0.0
     }
 
     public fun jsGet_url(): String?
@@ -44,18 +44,18 @@ public class JsChapter : ScriptableObject
         this.name = name
     }
 
-    public fun jsGet_number(): Float
+    public fun jsGet_number(): Double
     {
         return number
     }
-    public fun jsSet_number(number: Float)
+    public fun jsSet_number(number: Double)
     {
         this.number = number
     }
 
     public fun unJS(seriesId: Int): Chapter
     {
-        val ret = Chapter(seriesId, url, number)
+        val ret = Chapter(seriesId, url, number.toFloat())
         ret.name = name
         return ret
     }

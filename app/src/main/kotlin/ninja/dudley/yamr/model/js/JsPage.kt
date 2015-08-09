@@ -15,7 +15,7 @@ public class JsPage : ScriptableObject
     }
 
     private var url: String
-    private var number: Float
+    private var number: Double
 
     private var imageUrl: String? = null
 
@@ -23,7 +23,7 @@ public class JsPage : ScriptableObject
     {
         // Kinda hate you, Rhino.
         url = ""
-        number = 0.0f
+        number = 0.0
     }
 
     public fun jsGet_url(): String?
@@ -35,11 +35,11 @@ public class JsPage : ScriptableObject
         this.url = url;
     }
 
-    public fun jsGet_number(): Float
+    public fun jsGet_number(): Double
     {
         return number
     }
-    public fun jsSet_number(number: Float)
+    public fun jsSet_number(number: Double)
     {
         this.number = number
     }
@@ -55,7 +55,7 @@ public class JsPage : ScriptableObject
 
     public fun unJS(chapterId: Int): Page
     {
-        val ret = Page(chapterId, url, number)
+        val ret = Page(chapterId, url, number.toFloat())
         ret.imageUrl = imageUrl
         return ret
     }

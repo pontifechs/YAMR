@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import ninja.dudley.yamr.model.*
+import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
 import ninja.dudley.yamr.model.js.JsSeries
 import org.jsoup.Connection
@@ -13,6 +14,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.mozilla.javascript.Context
+import org.mozilla.javascript.NativeArray
 import org.mozilla.javascript.ScriptableObject
 import java.io.*
 import java.net.HttpURLConnection
@@ -25,6 +27,40 @@ import java.util.ArrayList
  */
 public class FetcherSync(protected var context: android.content.Context)
 {
+    private val cx: Context
+    private val scope: ScriptableObject
+    init
+    {
+        cx = Context.enter()
+        cx.setOptimizationLevel(-1)
+        scope = cx.initStandardObjects()
+
+        try
+        {
+            ScriptableObject.defineClass(scope, javaClass<JsSeries>())
+            ScriptableObject.defineClass(scope, javaClass<JsChapter>())
+            ScriptableObject.defineClass(scope, javaClass<JsPage>())
+        }
+        catch (e: Exception)
+        {
+            Log.e("RHINO", e.toString())
+            // Gotta catch 'em all!
+            throw RuntimeException(e)
+        }
+
+        // TODO:: Make generic, rather than just grab MangaPanda (id 1)
+        val provider = Provider(context.getContentResolver().query(Provider.uri(1), null, null, null, null));
+
+        cx.evaluateString(scope, provider.fetchProvider, "fetchProvider", 1, null);
+        cx.evaluateString(scope, provider.stubSeries, "stubSeries", 1, null);
+        cx.evaluateString(scope, provider.fetchSeries, "fetchSeries", 1, null);
+        cx.evaluateString(scope, provider.fetchSeriesGenres, "fetchSeriesGenres", 1, null);
+        cx.evaluateString(scope, provider.stubChapter, "stubChapter", 1, null);
+        cx.evaluateString(scope, provider.fetchChapter, "fetchChapter", 1, null);
+        cx.evaluateString(scope, provider.stubPage, "stubPage", 1, null);
+        cx.evaluateString(scope, provider.fetchPage, "fetchPage", 1, null);
+        cx.evaluateString(scope, provider.fetchNew, "fetchNew", 1, null);
+    }
 
     public interface NotifyStatus
     {
@@ -35,8 +71,6 @@ public class FetcherSync(protected var context: android.content.Context)
         public fun notifyChapterStatus(status: Float)
 
         public fun notifyPageStatus(status: Float)
-
-        public fun notifyNewStatus(status: Float)
     }
 
     protected var listener: NotifyStatus? = null
@@ -64,44 +98,13 @@ public class FetcherSync(protected var context: android.content.Context)
             return provider
         }
 
-        val cx = Context.enter()
-        cx.setOptimizationLevel(-1)
-        val scope = cx.initStandardObjects()
-
-        try
-        {
-            ScriptableObject.defineClass(scope, javaClass<JsSeries>())
-        }
-        catch (e: Exception)
-        {
-            Log.e("RHINO", e.toString())
-            // Gotta catch 'em all!
-            throw RuntimeException(e)
-        }
-        val fillProvider =
-                "function fetchProvider(doc, provider) { " +
-                        "   return doc.select('.series_alpha li a[href]');" +
-                        "};"
-        val stubSeries =
-                "function stubSeries(element) {" +
-                        "   var url = element.absUrl('href');" +
-                        "   var name = element.ownText();" +
-                        "   var jsSeries = new JsSeries();" +
-                        "   jsSeries.url = url;" +
-                        "   jsSeries.name = name;" +
-                        "   return jsSeries" +
-                        "};"
-        cx.evaluateString(scope, fillProvider, "fetchProvider", 1, null);
-        cx.evaluateString(scope, stubSeries, "fetchProvider", 2, null);
-
         Log.d("Fetch", "Starting a Provider fetch")
         try
         {
-
             val doc = fetchUrl(provider.url)
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
-            val result = cx.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 3, null);
+            val result = cx.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
             val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
             Log.d("RHINO", "${elements.size()}")
             provider.fullyParsed = true
@@ -117,11 +120,11 @@ public class FetcherSync(protected var context: android.content.Context)
                 if (index % statusStride == 0 && listener != null)
                 {
                     val progress = index / elements.size().toFloat()
-                    Log.d("Fetch", "ProviderFetch progress: " + progress)
+                    Log.d("Fetch", "ProviderFetch progress: ${progress}")
                     listener?.notifyProviderStatus(progress)
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-                val seriesResult = cx.evaluateString(scope, "stubSeries(element);", "fetchProvider", 4, null);
+                val seriesResult = cx.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
                 val jsSeries = Context.jsToJava(seriesResult, javaClass<JsSeries>()) as JsSeries
                 val s = jsSeries.unJS(provider.id)
 
@@ -144,81 +147,64 @@ public class FetcherSync(protected var context: android.content.Context)
 
     public fun fetchSeries(series: Series, behavior: FetchBehavior = FetchBehavior.LazyFetch): Series
     {
+        if (behavior === FetcherSync.FetchBehavior.LazyFetch && series.fullyParsed)
+        {
+            Log.d("Fetch", "Already parsed. Ignoring")
+            return series
+        }
+
         Log.d("Fetch", "Starting Series fetch")
         try
         {
-            if (behavior === FetcherSync.FetchBehavior.LazyFetch && series.fullyParsed)
-            {
-                Log.d("Fetch", "Already parsed. Ignoring")
-                return series
-            }
             val doc = fetchUrl(series.url)
-            // Parse series info
-            val propertyElements = doc.select(".propertytitle")
-            for (property in propertyElements)
+            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+            ScriptableObject.putProperty(scope, "series", Context.javaToJS(series, scope))
+
+            val genreResult = cx.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
+            val genres = Context.jsToJava(genreResult, javaClass<List<String>>()) as List<String>
+
+            for (genre in genres)
             {
-                val propTitle = property.text()
-                val sibling = property.parent().select("td:eq(1)").first()
-                when (propTitle)
+                if (!genreExists(genre))
                 {
-                    "Alternate Name:" -> series.alternateName = sibling.text()
-                    "Status:" -> series.complete = sibling.text() != "Ongoing"
-                    "Author" -> series.author = sibling.text()
-                    "Artist:" -> series.artist = sibling.text()
-                    "Genre:" ->
-                    {
-                        // Genre string
-                        val genreElements = sibling.select(".genretags")
-                        for (genre in genreElements)
-                        {
-                            val genreName = genre.text()
-                            if (!genreExists(genreName))
-                            {
-                                val g = Genre(genreName)
-                                context.getContentResolver().insert(Genre.baseUri(), g.getContentValues())
-                            }
-                            val g = Genre(context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(genreName), null))
-
-                            // Now that we have the genre for sure, add the relation.
-                            context.getContentResolver().insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
-                        }
-                    }
+                    val g = Genre(genre)
+                    context.getContentResolver().insert(Genre.baseUri(), g.getContentValues())
                 }
-            }
-            // Parse thumbnail
-            val thumb = doc.select("#mangaimg img[src]").first()
-            series.thumbnailUrl = thumb.absUrl("src")
-            series.thumbnailPath = saveThumbnail(series)
+                val g = Genre(context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(genre), null))
 
-            // Parse description
-            val summary = doc.select("#readmangasum p").first()
-            series.description = summary.text()
+                // Now that we have the genre for sure, add the relation.
+                context.getContentResolver().insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
+            }
+
+            val result = cx.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
+            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
 
             // Parse chapters
-            val chapterElements = doc.select("td .chico_manga ~ a[href]")
-            val statusStride = Math.ceil((chapterElements.size() / 100.0f).toDouble()).toInt()
+            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
             var index = 0
-            for (e in chapterElements)
+            for (e in elements)
             {
+
                 index++
                 if (index % statusStride == 0 && listener != null)
                 {
-                    val progress = index / chapterElements.size().toFloat()
-                    Log.d("Fetch", "ProviderFetch progress: " + progress)
+                    val progress = index / elements.size().toFloat()
+                    Log.d("Fetch", "SeriesFetch progress: ${progress}")
                     listener?.notifySeriesStatus(progress)
                 }
+                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+                val chapterResult = cx.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
+                val jsChapter = Context.jsToJava(chapterResult, javaClass<JsChapter>()) as JsChapter
+                val chapter = jsChapter.unJS(series.id)
 
-                val url = e.absUrl("href")
-                if (chapterExists(url))
+                if (chapterExists(chapter.url))
                 {
                     continue
                 }
-
-                val c = Chapter(series.id, url, java.lang.Float.parseFloat(e.text().replace(series.name, "")))
-                c.name = e.parent().ownText().replace(":", "")
-                context.getContentResolver().insert(Chapter.baseUri(), c.getContentValues())
+                context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
             }
             series.fullyParsed = true
+            series.thumbnailPath = saveThumbnail(series)
             context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
             Log.d("Fetch", "Iteration complete. Series Fetched.")
         }
@@ -233,15 +219,20 @@ public class FetcherSync(protected var context: android.content.Context)
 
     public fun fetchChapter(chapter: Chapter, behavior: FetchBehavior = FetchBehavior.LazyFetch): Chapter
     {
+        if (behavior === FetcherSync.FetchBehavior.LazyFetch && chapter.fullyParsed)
+        {
+            Log.d("Fetch", "Already parsed. Ignoring")
+            return chapter
+        }
+
         try
         {
-            if (behavior === FetcherSync.FetchBehavior.LazyFetch && chapter.fullyParsed)
-            {
-                Log.d("Fetch", "Already parsed. Ignoring")
-                return chapter
-            }
             val doc = fetchUrl(chapter.url)
-            val elements = doc.select("#pageMenu option[value]")
+            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+            ScriptableObject.putProperty(scope, "chapter", Context.javaToJS(chapter, scope))
+            val result = cx.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
+            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
+
             val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
             var index = 0
             for (e in elements)
@@ -250,18 +241,21 @@ public class FetcherSync(protected var context: android.content.Context)
                 if (index % statusStride == 0 && listener != null)
                 {
                     val progress = index / elements.size().toFloat()
-                    Log.d("Fetch", "Chapter fetch progress: " + progress)
+                    Log.d("Fetch", "Chapter fetch progress: ${progress}")
                     listener?.notifyChapterStatus(progress)
                 }
 
-                val url = e.absUrl("value")
-                if (pageExists(url))
+                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+                val pageResult = cx.evaluateString(scope, "stubPage(element);", "fetchProvider", 600, null);
+                val jsPage = Context.jsToJava(pageResult, javaClass<JsPage>()) as JsPage
+                val page = jsPage.unJS(chapter.id)
+
+                if (pageExists(page.url))
                 {
                     continue
                 }
 
-                val p = Page(chapter.id, url, java.lang.Float.parseFloat(e.text()))
-                context.getContentResolver().insert(Page.baseUri(), p.getContentValues())
+                context.getContentResolver().insert(Page.baseUri(), page.getContentValues())
             }
             chapter.fullyParsed = true
             context.getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null)
@@ -287,34 +281,12 @@ public class FetcherSync(protected var context: android.content.Context)
             }
             val doc = fetchUrl(page.url)
 
-            val cx = org.mozilla.javascript.Context.enter()
-            cx.setOptimizationLevel(-1)
-            val scope = cx.initStandardObjects()
+            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+            ScriptableObject.putProperty(scope, "page", Context.javaToJS(page, scope))
+            val result = cx.evaluateString(scope, "fetchPage(doc, page);", "fetchProvider", 700, null);
+            val p = Context.jsToJava(result, javaClass<String>()) as String
 
-            try
-            {
-                ScriptableObject.defineClass(scope, javaClass<JsPage>())
-            }
-            catch (e: Exception)
-            {
-                Log.e("RHINO", e.toString());
-                // Gotta catch 'em all!
-            }
-
-            val script =
-            "function parse(doc, page) { " +
-                    "   var element = doc.select('img[src]').first();" +
-                    "   page.imageUrl = element.absUrl('src');" +
-                    "};";
-            try
-            {
-                val fct = cx.compileFunction(scope, script, "script", 1, null);
-                fct.call(cx, scope, scope, arrayOf(doc, page))
-            }
-            finally
-            {
-                org.mozilla.javascript.Context.exit();
-            }
+            page.imageUrl = p;
             page.fullyParsed = true
             savePageImage(page)
             Log.d("FetchPage", "Done")
@@ -330,58 +302,48 @@ public class FetcherSync(protected var context: android.content.Context)
 
     public fun fetchNew(provider: Provider): List<Uri>
     {
+
+
         Log.d("FetchStarter", "Starting")
         val newChapters = ArrayList<Uri>()
         try
         {
             val doc = fetchUrl(provider.newUrl)
-            val rows = doc.select(".c2")
-            for (row in rows)
-            {
-                val seriesElement = row.select(".chapter").first()
-                val seriesUrl = seriesElement.absUrl("href")
+            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+            val result = cx.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
+            val seriesChapterPairs = Context.jsToJava(result, javaClass<List<List<Object>>>()) as List<List<Object>>
 
-                var series: Series
-                if (seriesExists(seriesUrl))
+            for (pair in seriesChapterPairs)
+            {
+                val jsSeries = pair.get(0) as JsSeries;
+                val jsChapter = pair.get(1) as JsChapter;
+
+                var series = jsSeries.unJS(provider.id);
+                if (seriesExists(series.url))
                 {
-                    series = Series(context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(seriesUrl), null))
+                    series = Series(context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(series.url), null))
                 }
                 else
                 {
                     Log.d("Fetch", "Completely New Series!!")
-                    series = Series(provider.id, seriesUrl, seriesElement.text())
                     val inserted = context.getContentResolver().insert(Series.baseUri(), series.getContentValues())
                     series = Series(context.getContentResolver().query(inserted, null, null, null, null))
                     fetchSeries(series)
                     continue
                 }
 
-                var newChapter = false
-                val chapters = row.select(".chaptersrec")
-                for (chapterElement in chapters)
+                val chapter = jsChapter.unJS(series.id);
+                if (!chapterExists(chapter.url))
                 {
-                    val chapterUrl = chapterElement.absUrl("href")
-                    val chapter: Chapter
-                    if (!chapterExists(chapterUrl))
+                    Log.d("Fetch", "Haven't seen this one.")
+                    context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
+                    if (series.favorite)
                     {
-                        Log.d("Fetch", "Haven't seen this one.")
-                        val body = chapterElement.text()
-                        val number = java.lang.Float.parseFloat(body.replace(series.name, ""))
-                        chapter = Chapter(series.id, chapterUrl, number)
-
-                        context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
-                        newChapter = true
-                        if (series.favorite)
-                        {
-                            newChapters.add(chapter.uri())
-                        }
+                        series.updated = true
+                        context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+                        newChapters.add(chapter.uri())
                     }
                 }
-                if (newChapter)
-                {
-                    series.updated = true
-                }
-                context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
             }
         }
         catch (e: IOException)
@@ -393,14 +355,12 @@ public class FetcherSync(protected var context: android.content.Context)
         return newChapters
     }
 
-
     throws(IOException::class)
     private fun fetchUrl(url: String): Document
     {
         val response = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0").referrer("http://www.google.com").method(Connection.Method.GET).execute()
         return response.parse()
     }
-
 
     private fun providerExists(url: String): Boolean
     {
@@ -513,10 +473,8 @@ public class FetcherSync(protected var context: android.content.Context)
                 //TODO:: better error handling/checking
                 throw RuntimeException(e)
             }
-
         }
     }
-
 
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     private fun savePageImage(p: Page)

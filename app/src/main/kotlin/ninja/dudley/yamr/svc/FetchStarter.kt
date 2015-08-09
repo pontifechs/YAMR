@@ -29,7 +29,7 @@ public class FetchStarter : BroadcastReceiver()
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(StartChecking)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5, pi)
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.INTERVAL_FIFTEEN_MINUTES /15, AlarmManager.INTERVAL_HALF_DAY / 2, pi)
         }
         else if (intent.getAction() == StartChecking)
         {
@@ -73,6 +73,6 @@ public class FetchStarter : BroadcastReceiver()
 
     companion object
     {
-        public val StartChecking: String = "ninja.dudley.ninja.dudley.yamr.FetchStarter"
+        public val StartChecking: String = "ninja.dudley.yamr.FetchStarter"
     }
 }

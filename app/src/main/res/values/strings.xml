@@ -27,6 +27,8 @@
         Dolor ut eu, minim tenderloin prosciutto shoulder consequat spare ribs picanha est pariatur. Ut do capicola labore ham enim. Ball tip pork belly cupim, venison in laborum swine chuck deserunt aliqua landjaeger enim sunt jerky exercitation. Beef pancetta tongue in fatback cillum pork loin, irure filet mignon culpa laborum beef ribs non boudin est.
     </string>
 
+    <string name="error_text">KABOOM!</string>
+
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

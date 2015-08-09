@@ -43,12 +43,6 @@ public class Navigation : IntentService("Navigation"), FetcherSync.NotifyStatus
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
     }
 
-
-    override fun notifyNewStatus(status: Float)
-    {
-        // Dun care
-    }
-
     override fun onHandleIntent(intent: Intent?)
     {
         if (intent != null)

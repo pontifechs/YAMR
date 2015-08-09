@@ -9,6 +9,7 @@ import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.db.util.Column
 import ninja.dudley.yamr.db.util.ForeignKey
 import ninja.dudley.yamr.db.util.Table
+import java.util.*
 
 /**
  * Created by mdudley on 5/19/15.
@@ -42,6 +43,8 @@ public class Series : MangaElement
     public var progressPageId: Int = -1
     Column(name = updatedCol, type = Column.Type.Integer)
     public var updated: Boolean = false
+
+    public var genres: List<String> = ArrayList<String>()
 
     public fun uri(): Uri
     {

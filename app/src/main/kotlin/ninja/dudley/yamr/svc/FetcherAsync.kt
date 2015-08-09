@@ -119,13 +119,6 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
     }
 
-    override fun notifyNewStatus(status: Float)
-    {
-        val i = Intent(FETCH_NEW_STATUS)
-        i.putExtra(FETCH_NEW_STATUS, status)
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
-    }
-
     companion object
     {
         public val BASE: String = "ninja.dudley.ninja.dudley.yamr.fetch.FetcherSync"
@@ -146,7 +139,6 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
         public val FETCH_CHAPTER_COMPLETE: String = FETCH_CHAPTER + ".Complete"
         public val FETCH_PAGE_STATUS: String = FETCH_PAGE + ".Status"
         public val FETCH_PAGE_COMPLETE: String = FETCH_PAGE + ".Complete"
-        public val FETCH_NEW_STATUS: String = FETCH_NEW + ".Status"
         public val FETCH_NEW_COMPLETE: String = FETCH_NEW + ".Complete"
     }
 }

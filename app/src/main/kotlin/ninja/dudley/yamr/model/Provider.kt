@@ -15,19 +15,28 @@ Table(Provider.tableName)
 public class Provider : MangaElement
 {
     Column(name = nameCol)
-    public var name: String
+    public val name: String
     Column(name = newUrlCol)
-    public var newUrl: String
-//    Column(name = fetchProviderCol)
-//    public var fetchProvider: String
-//    Column(name = fetchSeriesCol)
-//    public var fetchSeries: String
-//    Column(name = fetchChapterCol)
-//    public var fetchChapter: String
-//    Column(name = fetchPageCol)
-//    public var fetchPage: String
-//    Column(name = fetchNewCol)
-//    public var fetchNew: String
+    public val newUrl: String
+
+    Column(name = fetchProviderCol)
+    public val fetchProvider: String
+    Column(name = stubSeriesCol)
+    public val stubSeries: String
+    Column(name = fetchSeriesCol)
+    public val fetchSeries: String
+    Column(name = fetchSeriesGenresCol)
+    public val fetchSeriesGenres: String
+    Column(name = stubChapterCol)
+    public val stubChapter: String
+    Column(name = fetchChapterCol)
+    public val fetchChapter: String
+    Column(name = stubPageCol)
+    public val stubPage: String
+    Column(name = fetchPageCol)
+    public val fetchPage: String
+    Column(name = fetchNewCol)
+    public val fetchNew: String
 
 
     public fun uri(): Uri
@@ -50,11 +59,15 @@ public class Provider : MangaElement
         }
         name = getString(c, nameCol)!!
         newUrl = getString(c, newUrlCol)!!
-//        fetchProvider = getString(c, fetchProviderCol)!!
-//        fetchSeries = getString(c, fetchSeriesCol)!!
-//        fetchChapter = getString(c, fetchChapterCol)!!
-//        fetchPage = getString(c, fetchPageCol)!!
-//        fetchNew = getString(c, fetchNewCol)!!
+        fetchProvider = getString(c, fetchProviderCol)!!
+        stubSeries = getString(c, stubSeriesCol)!!
+        fetchSeries = getString(c, fetchSeriesCol)!!
+        fetchSeriesGenres = getString(c, fetchSeriesGenresCol)!!
+        stubChapter = getString(c, stubChapterCol)!!
+        fetchChapter = getString(c, fetchChapterCol)!!
+        stubPage = getString(c, stubPageCol)!!
+        fetchPage = getString(c, fetchPageCol)!!
+        fetchNew = getString(c, fetchNewCol)!!
         c.close()
     }
 
@@ -72,8 +85,12 @@ public class Provider : MangaElement
         public val nameCol: String = "name"
         public val newUrlCol: String = "new_url"
         public val fetchProviderCol: String = "fetch_provider"
+        public val stubSeriesCol: String = "stub_series"
         public val fetchSeriesCol: String = "fetch_series"
+        public val fetchSeriesGenresCol: String = "fetch_series_genres"
+        public val stubChapterCol: String = "stub_chapter_col"
         public val fetchChapterCol: String = "fetch_chapter"
+        public val stubPageCol: String = "stub_page"
         public val fetchPageCol: String = "fetch_page"
         public val fetchNewCol: String = "fetch_new"
 
