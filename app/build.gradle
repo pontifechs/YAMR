@@ -1,9 +1,10 @@
 buildscript {
+    ext.kotlin_version = '0.12.1230'
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.12.613'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -50,10 +51,13 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-v4:22.2.0'
-    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.12.613'
+    compile 'com.android.support:support-v4:22.2.1'
     compile 'org.jsoup:jsoup:1.7.2'
     compile 'org.mozilla:rhino:1.7.7'
     compile 'commons-io:commons-io:2.4'
     compile 'ch.acra:acra:4.6.2'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }

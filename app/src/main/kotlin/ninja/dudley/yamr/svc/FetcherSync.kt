@@ -358,7 +358,11 @@ public class FetcherSync(protected var context: android.content.Context)
     throws(IOException::class)
     private fun fetchUrl(url: String): Document
     {
-        val response = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0").referrer("http://www.google.com").method(Connection.Method.GET).execute()
+        val response = Jsoup.connect(url)
+                            .timeout(10000)
+                            .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                            .referrer("http://www.google.com").method(Connection.Method.GET)
+                            .execute()
         return response.parse()
     }
 
