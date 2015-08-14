@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.MangaElement
@@ -116,6 +117,14 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     override fun onSaveInstanceState(outState: Bundle)
     {
         super<Activity>.onSaveInstanceState(outState)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super<Activity>.onWindowFocusChanged(hasFocus)
+        if (hasFocus)
+        {
+
+        }
     }
 
     companion object

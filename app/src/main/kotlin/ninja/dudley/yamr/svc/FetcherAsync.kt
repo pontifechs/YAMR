@@ -133,12 +133,17 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
 
         public val FETCH_PROVIDER_STATUS: String = FETCH_PROVIDER + ".Status"
         public val FETCH_PROVIDER_COMPLETE: String = FETCH_PROVIDER + ".Complete"
+        public val FETCH_PROVIDER_FAILED: String = FETCH_PROVIDER + ".Failed"
         public val FETCH_SERIES_STATUS: String = FETCH_SERIES + ".Status"
         public val FETCH_SERIES_COMPLETE: String = FETCH_SERIES + ".Complete"
+        public val FETCH_SERIES_FAILED: String = FETCH_SERIES + ".Failed"
         public val FETCH_CHAPTER_STATUS: String = FETCH_CHAPTER + ".Status"
         public val FETCH_CHAPTER_COMPLETE: String = FETCH_CHAPTER + ".Complete"
+        public val FETCH_CHAPTER_FAILED: String = FETCH_CHAPTER + ".Failed"
         public val FETCH_PAGE_STATUS: String = FETCH_PAGE + ".Status"
         public val FETCH_PAGE_COMPLETE: String = FETCH_PAGE + ".Complete"
+        public val FETCH_PAGE_FAILED: String = FETCH_PAGE + ".Failed"
         public val FETCH_NEW_COMPLETE: String = FETCH_NEW + ".Complete"
+        public val FETCH_NEW_FAILED: String = FETCH_NEW + ".Failed"
     }
 }

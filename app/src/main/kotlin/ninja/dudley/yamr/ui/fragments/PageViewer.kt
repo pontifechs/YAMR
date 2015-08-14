@@ -15,10 +15,12 @@ import android.support.v4.content.LocalBroadcastManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.Heritage
 import ninja.dudley.yamr.model.MangaElement
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
@@ -26,7 +28,6 @@ import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.Navigation
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
-import ninja.dudley.yamr.model.Heritage
 
 public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
@@ -42,6 +43,8 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
     private var prevPageFailedReceiver: BroadcastReceiver? = null
     private var nextPageFailedReceiver: BroadcastReceiver? = null
     private var pageLoadStatusReceiver: BroadcastReceiver? = null
+
+    private var oldSystemUiVisibility: Int = 0;
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -68,11 +71,6 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
-        // Go full-screen
-        //        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-        //        getActivity().getActionBar().setBackgroundDrawable(new ColorDrawable(R.color.black_overlay));
-        getActivity().getActionBar()!!.hide()
 
         val layout = inflater.inflate(R.layout.fragment_page_viewer, container, false) as RelativeLayout
 
@@ -138,8 +136,11 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
             {
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
-                // TODO:: Make sure series is available for this
-                AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of ${series!!.name}. Check back later for new chapters.").setNegativeButton("K.", null).show()
+                val dialog = AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of ${series!!.name}. Check back later for new chapters.").setNegativeButton("K.", null).create()
+                // Wow, android. Just wow. Why the hell are you fucking with my shit?
+                // See http://stackoverflow.com/questions/22794049/how-to-maintain-the-immersive-mode-in-dialogs
+                dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                dialog.show()
             }
         }
 
@@ -149,8 +150,9 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
             {
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
-                // TODO:: Make sure series is available for this
-                AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of ${series!!.name}. This is as ancient as it gets.").setNegativeButton("K.", null).show()
+                val dialog = AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of ${series!!.name}. This is as ancient as it gets.").setNegativeButton("K.", null).create()
+                dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                dialog.show()
             }
         }
 
@@ -198,7 +200,17 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
 
     override fun onResume()
     {
-        super<Fragment>.onPause()
+        super<Fragment>.onResume()
+
+        oldSystemUiVisibility = getActivity().getWindow().getDecorView().getSystemUiVisibility()
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+
         val pageCompleteFilter = IntentFilter()
         pageCompleteFilter.addAction(Navigation.FIRST_PAGE_FROM_CHAPTER_COMPLETE)
         pageCompleteFilter.addAction(Navigation.NEXT_PAGE_COMPLETE)
@@ -229,12 +241,16 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
 
     override fun onPause()
     {
-        super<Fragment>.onResume()
+        super<Fragment>.onPause()
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(loadPageCompleteReceiver)
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(prevPageFailedReceiver)
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(nextPageFailedReceiver)
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(pageLoadStatusReceiver)
-        getActivity().getActionBar()!!.show()
+    }
+
+    override fun onDetach() {
+        super<Fragment>.onDetach()
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(oldSystemUiVisibility)
     }
 
     private fun nextPage()

@@ -2,9 +2,11 @@ package ninja.dudley.yamr.ui.util
 
 import android.content.Context
 import android.graphics.Matrix
+import android.graphics.Point
 import android.graphics.PointF
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -117,7 +119,18 @@ public class TouchImageView : ImageView
 
     private fun screenHeight(): Int
     {
-        return getResources().getDisplayMetrics().heightPixels
+        val pt = Point()
+        try {
+            getDisplay().getRealSize(pt)
+        }
+        catch (e: NullPointerException)
+        {
+            // This happens when we try to get the height without a the display being done initializing.
+            // I need to go back through this mess. This isn't the only place I have to deal with something like this
+            // as I recall.
+            return getResources().getDisplayMetrics().heightPixels
+        }
+        return pt.y
     }
 
     private fun horizontalSlop(): Int
