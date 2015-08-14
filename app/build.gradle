@@ -43,6 +43,16 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.config
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    output.outputFile = new File(
+                            output.outputFile.parent,
+                            output.outputFile.name.replace("app", "YAMR")
+                                    .replace("-release", "")
+                                    .replace(".apk", "-${variant.versionName}.apk"))
+
+                }
+            }
         }
         debug {
             signingConfig signingConfigs.config
@@ -56,16 +66,7 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.outputFile = new File(
-                    output.outputFile.parent,
-                    output.outputFile.name.replace("app", "YAMR")
-                                          .replace("-release", "")
-                                          .replace(".apk", "-${variant.versionName}.apk"))
 
-        }
-    }
 }
 
 dependencies {

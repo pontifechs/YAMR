@@ -10,9 +10,11 @@ import org.acra.sender.HttpSender
  * Created by mdudley on 8/6/15.
  */
 ReportsCrashes(
-        httpMethod = HttpSender.Method.PUT,
-        reportType = HttpSender.Type.JSON,
         formUri = "http://dudley.ninja:5984/acra-storage/_design/acra-storage/_update/report",
+        mode = ReportingInteractionMode.TOAST,
+        resToastText = R.string.error_text,
+        reportType = HttpSender.Type.JSON,
+        httpMethod = HttpSender.Method.PUT,
         formUriBasicAuthLogin = "reporter",
         formUriBasicAuthPassword = "WelcomeToTheNHK"
 )
