@@ -53,5 +53,6 @@ public class Settings : Activity()
     companion object
     {
         public val RTL_ENABLED_KEY: String = "rtl_enabled"
+        public val PRE_FETCH_BUFFER_KEY: String = "pre_fetch_buffer"
     }
 }

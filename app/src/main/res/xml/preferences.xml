@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:custom="http://schemas.android.com/apk/res/ninja.dudley.yamr"
+    >
     <PreferenceCategory
         android:key="reading_settings"
         android:title="@string/reading_settings"
@@ -9,6 +11,14 @@
             android:key="rtl_enabled"
             android:summary="@string/rtl_enabled_sum"
             android:title="@string/rtl_enabled"
+            />
+        <ninja.dudley.yamr.ui.util.SeekBarPreference
+            android:key="pre_fetch_buffer"
+            android:summary="@string/pre_fetch_buffer_sum"
+            android:title="@string/pre_fetch_buffer"
+            custom:defaultValue="5"
+            custom:min="0"
+            custom:max="10"
             />
     </PreferenceCategory>
 </PreferenceScreen>
