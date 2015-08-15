@@ -44,7 +44,13 @@ public class MainActivity : Activity()
         settingsMap.put(descriptionKey, "Twiddle the knobs; Push the buttons")
         maps.add(settingsMap)
 
-        val adapter = SimpleAdapter(this, maps, R.layout.activity_item, arrayOf(iconKey, nameKey, descriptionKey), intArrayOf(R.id.activity_icon, R.id.activity_name, R.id.activity_description))
+        val adapter = SimpleAdapter(this,
+                                    maps,
+                                    R.layout.activity_item,
+                                    arrayOf(iconKey, nameKey, descriptionKey),
+                                    intArrayOf(R.id.activity_icon,
+                                               R.id.activity_name,
+                                               R.id.activity_description))
         val listView = findViewById(R.id.listView) as ListView
 
         listView.setAdapter(adapter)

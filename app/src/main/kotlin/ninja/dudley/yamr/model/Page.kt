@@ -24,18 +24,9 @@ public class Page : MangaElement
     Column(name = imagePathCol)
     public var imagePath: String? = null
 
-    public fun uri(): Uri
-    {
-        return uri(id)
-    }
-
-    public fun heritage(): Uri
-    {
-        return heritage(id)
-    }
-
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(chapterId: Int, url: String, number: Float) : super(url, MangaElement.UriType.Page)
+    public constructor(chapterId: Int, url: String, number: Float) :
+        super(url, MangaElement.UriType.Page)
     {
         this.chapterId = chapterId
         this.number = number
@@ -67,6 +58,17 @@ public class Page : MangaElement
         return values
     }
 
+    // Uri Handling --------------------------------------------------------------------------------
+    public fun uri(): Uri
+    {
+        return uri(id)
+    }
+
+    public fun heritage(): Uri
+    {
+        return heritage(id)
+    }
+
     companion object
     {
         public val tableName: String = "page"
@@ -76,7 +78,7 @@ public class Page : MangaElement
         public val imagePathCol: String = "image_path"
 
 
-        // Uri Handling --------------------------------------------------------------------------------
+        // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/page")

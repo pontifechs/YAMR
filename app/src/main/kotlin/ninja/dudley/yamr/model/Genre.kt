@@ -22,16 +22,6 @@ public class Genre
     Column(name = nameCol)
     public var name: String
 
-    public fun uri(): Uri
-    {
-        return uri(this.id)
-    }
-
-    public fun series(): Uri
-    {
-        return series(id)
-    }
-
     // Construction / Persistence ------------------------------------------------------------------
     private constructor(_id: Int, name: String)
     {
@@ -65,9 +55,42 @@ public class Genre
         return values
     }
 
+    // Uri Handling --------------------------------------------------------------------------------
+    public fun uri(): Uri
+    {
+        return uri(this.id)
+    }
+
+    public fun series(): Uri
+    {
+        return series(id)
+    }
+
     companion object
     {
         public val tableName: String = "genre"
+        public val nameCol: String = "name"
+
+        // Uri Handling ----------------------------------------------------------------------------
+        public fun baseUri(): Uri
+        {
+            return Uri.parse("content://" + DBHelper.AUTHORITY + "/genre")
+        }
+
+        public fun uri(id: Int): Uri
+        {
+            return baseUri().buildUpon().appendPath(Integer.toString(id)).build()
+        }
+
+        public fun relator(): Uri
+        {
+            return baseUri().buildUpon().appendPath("relator").build()
+        }
+
+        public fun series(id: Int): Uri
+        {
+            return uri(id).buildUpon().appendPath("series").build()
+        }
 
         public fun genres(c: Cursor): Set<Genre>
         {
@@ -88,30 +111,6 @@ public class Genre
             values.put(DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID, seriesId)
             values.put(DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID, genreId)
             return values
-        }
-
-        public val nameCol: String = "name"
-
-
-        // Uri Handling --------------------------------------------------------------------------------
-        public fun baseUri(): Uri
-        {
-            return Uri.parse("content://" + DBHelper.AUTHORITY + "/genre")
-        }
-
-        public fun uri(id: Int): Uri
-        {
-            return baseUri().buildUpon().appendPath(Integer.toString(id)).build()
-        }
-
-        public fun relator(): Uri
-        {
-            return baseUri().buildUpon().appendPath("relator").build()
-        }
-
-        public fun series(id: Int): Uri
-        {
-            return uri(id).buildUpon().appendPath("series").build()
         }
     }
 }

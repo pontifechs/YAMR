@@ -23,13 +23,6 @@ public class SeriesCard : Fragment()
 
     private var series: Series? = null
 
-    private var thumbnail: ImageView? = null
-    private var seriesName: TextView? = null
-    private var firstSlot: TextView? = null
-    private var secondSlot: TextView? = null
-    private var thirdSlot: TextView? = null
-    private var fourthSlot: TextView? = null
-
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -43,12 +36,12 @@ public class SeriesCard : Fragment()
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
         val layout = inflater.inflate(R.layout.fragment_series_card, container, false) as RelativeLayout
-        thumbnail = layout.findViewById(R.id.seriesThumbnail) as ImageView
-        seriesName = layout.findViewById(R.id.seriesName) as TextView
-        firstSlot = layout.findViewById(R.id.firstSlot) as TextView
-        secondSlot = layout.findViewById(R.id.secondSlot) as TextView
-        thirdSlot = layout.findViewById(R.id.thirdSlot) as TextView
-        fourthSlot = layout.findViewById(R.id.fourthSlot) as TextView
+        val thumbnail = layout.findViewById(R.id.seriesThumbnail) as ImageView
+        val seriesName = layout.findViewById(R.id.seriesName) as TextView
+        val firstSlot = layout.findViewById(R.id.firstSlot) as TextView
+        val secondSlot = layout.findViewById(R.id.secondSlot) as TextView
+        val thirdSlot = layout.findViewById(R.id.thirdSlot) as TextView
+        val fourthSlot = layout.findViewById(R.id.fourthSlot) as TextView
 
         val d: Drawable?
         if (series!!.thumbnailPath != null)
@@ -62,10 +55,10 @@ public class SeriesCard : Fragment()
 
         if (d != null)
         {
-            thumbnail!!.setImageDrawable(d)
+            thumbnail.setImageDrawable(d)
         }
 
-        seriesName!!.setText(series!!.name)
+        seriesName.setText(series!!.name)
 
         val info = ArrayList<String>()
 
@@ -95,22 +88,20 @@ public class SeriesCard : Fragment()
 
         if (info.size() >= 1)
         {
-            firstSlot!!.setText(Html.fromHtml(info.get(0)))
+            firstSlot.setText(Html.fromHtml(info.get(0)))
         }
         if (info.size() >= 2)
         {
-            secondSlot!!.setText(Html.fromHtml(info.get(1)))
+            secondSlot.setText(Html.fromHtml(info.get(1)))
         }
         if (info.size() >= 3)
         {
-            thirdSlot!!.setText(Html.fromHtml(info.get(2)))
+            thirdSlot.setText(Html.fromHtml(info.get(2)))
         }
         if (info.size() >= 4)
         {
-            fourthSlot!!.setText(Html.fromHtml(info.get(3)))
+            fourthSlot.setText(Html.fromHtml(info.get(3)))
         }
-
-        // Inflate the layout for this fragment
         return layout
     }
 
@@ -127,5 +118,4 @@ public class SeriesCard : Fragment()
             return fragment
         }
     }
-
 }

@@ -7,7 +7,6 @@ import org.mozilla.javascript.ScriptableObject
 /**
  * Created by mdudley on 7/19/15.
  */
-
 public class JsChapter : ScriptableObject
 {
     override fun getClassName(): String?

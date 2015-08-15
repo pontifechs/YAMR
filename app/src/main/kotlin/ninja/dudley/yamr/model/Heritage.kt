@@ -17,28 +17,28 @@ public class Heritage
     public val pageId: Int
     public val pageNumber: Float
 
-    constructor(heritage: Cursor)
+    constructor(c: Cursor)
     {
-        heritage.moveToFirst()
+        c.moveToFirst()
 
-        val providerIdCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_ID)
-        val providerNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME)
-        val seriesIdCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_ID)
-        val seriesNameCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_NAME)
-        val chapterIdCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_ID)
-        val chapterNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER)
-        val pageIdCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID)
-        val pageNumberCol = heritage.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_NUMBER)
+        val providerIdCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_ID)
+        val providerNameCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PROVIDER_NAME)
+        val seriesIdCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_ID)
+        val seriesNameCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_SERIES_NAME)
+        val chapterIdCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_ID)
+        val chapterNumberCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER)
+        val pageIdCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID)
+        val pageNumberCol = c.getColumnIndex(DBHelper.PageHeritageViewEntry.COLUMN_PAGE_NUMBER)
 
-        providerId = heritage.getInt(providerIdCol)
-        providerName = heritage.getString(providerNameCol)
-        seriesId = heritage.getInt(seriesIdCol)
-        seriesName = heritage.getString(seriesNameCol)
-        chapterId = heritage.getInt(chapterIdCol)
-        chapterNumber = heritage.getFloat(chapterNumberCol)
-        pageId = heritage.getInt(pageIdCol)
-        pageNumber = heritage.getFloat(pageNumberCol)
+        providerId = c.getInt(providerIdCol)
+        providerName = c.getString(providerNameCol)
+        seriesId = c.getInt(seriesIdCol)
+        seriesName = c.getString(seriesNameCol)
+        chapterId = c.getInt(chapterIdCol)
+        chapterNumber = c.getFloat(chapterNumberCol)
+        pageId = c.getInt(pageIdCol)
+        pageNumber = c.getFloat(pageNumberCol)
 
-        heritage.close()
+        c.close()
     }
 }

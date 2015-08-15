@@ -268,9 +268,6 @@ public class DBProvider : ContentProvider()
         // Android you're almost as bad! I don't give a flying fuck what the number I put in here is. All I care is that it's unique.
         protected var lastCode: Int = 0
 
-
-        // Matcher codes ------------------------------------------------------
-
         init
         {
             matcher = UriMatcher(UriMatcher.NO_MATCH)

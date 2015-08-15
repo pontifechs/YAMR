@@ -29,7 +29,8 @@ import ninja.dudley.yamr.svc.Navigation
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.ProgressTracker
 
-public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
+public class PageViewer :
+        Fragment(), TouchImageView.SwipeListener, View.OnClickListener, View.OnLongClickListener
 {
 
     private var uri: Uri? = null
@@ -136,10 +137,14 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
             {
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
-                val dialog = AlertDialog.Builder(getActivity()).setTitle("E.N.D.").setMessage("You've reached the end of ${series!!.name}. Check back later for new chapters.").setNegativeButton("K.", null).create()
+                val dialog = AlertDialog.Builder(getActivity())
+                        .setTitle("E.N.D.")
+                        .setMessage("You've reached the end of ${series!!.name}. Check back later for new chapters.")
+                        .setNegativeButton("K.", null).create()
                 // Wow, android. Just wow. Why the hell are you fucking with my shit?
                 // See http://stackoverflow.com/questions/22794049/how-to-maintain-the-immersive-mode-in-dialogs
-                dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                 dialog.show()
             }
         }
@@ -150,7 +155,10 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener, View.OnClick
             {
                 val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
                 loadingBar.setVisibility(View.INVISIBLE)
-                val dialog = AlertDialog.Builder(getActivity()).setTitle("Genesis").setMessage("You've reached the beginning of ${series!!.name}. This is as ancient as it gets.").setNegativeButton("K.", null).create()
+                val dialog = AlertDialog.Builder(getActivity())
+                        .setTitle("Genesis")
+                        .setMessage("You've reached the beginning of ${series!!.name}. This is as ancient as it gets.")
+                        .setNegativeButton("K.", null).create()
                 dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                 dialog.show()
             }

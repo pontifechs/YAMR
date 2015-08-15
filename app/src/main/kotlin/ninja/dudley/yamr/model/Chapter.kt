@@ -22,27 +22,6 @@ public class Chapter : MangaElement
     Column(name = numberCol, type = Column.Type.Real)
     public val number: Float
 
-    public fun uri(): Uri
-    {
-        return uri(id)
-    }
-
-    public fun pages(): Uri
-    {
-        return pages(id)
-    }
-
-    public fun prevPage(num: Float): Uri
-    {
-        return prevPage(id, num)
-    }
-
-    public fun nextPage(num: Float): Uri
-    {
-        return nextPage(id, num)
-    }
-
-
     // Construction / Persistence ------------------------------------------------------------------
     public constructor(seriesId: Int, url: String, number: Float) : super(url, MangaElement.UriType.Chapter)
     {
@@ -71,6 +50,27 @@ public class Chapter : MangaElement
         return values
     }
 
+    // Uri Handling --------------------------------------------------------------------------------
+    public fun uri(): Uri
+    {
+        return uri(id)
+    }
+
+    public fun pages(): Uri
+    {
+        return pages(id)
+    }
+
+    public fun prevPage(num: Float): Uri
+    {
+        return prevPage(id, num)
+    }
+
+    public fun nextPage(num: Float): Uri
+    {
+        return nextPage(id, num)
+    }
+
     companion object
     {
         public val tableName: String = "chapter"
@@ -78,8 +78,7 @@ public class Chapter : MangaElement
         public val nameCol: String = "name"
         public val numberCol: String = "number"
 
-
-        // Uri Handling --------------------------------------------------------------------------------
+        // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/chapter")
@@ -97,12 +96,16 @@ public class Chapter : MangaElement
 
         public fun prevPage(id: Int, num: Float): Uri
         {
-            return pages(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("prev").build()
+            return pages(id).buildUpon()
+                    .appendPath(java.lang.Float.toString(num))
+                    .appendPath("prev").build()
         }
 
         public fun nextPage(id: Int, num: Float): Uri
         {
-            return pages(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("next").build()
+            return pages(id).buildUpon()
+                    .appendPath(java.lang.Float.toString(num))
+                    .appendPath("next").build()
         }
     }
 }

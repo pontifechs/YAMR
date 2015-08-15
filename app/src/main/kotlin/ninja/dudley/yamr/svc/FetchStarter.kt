@@ -29,7 +29,9 @@ public class FetchStarter : BroadcastReceiver()
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(StartChecking)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.INTERVAL_FIFTEEN_MINUTES /15, AlarmManager.INTERVAL_HALF_DAY / 2, pi)
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                             AlarmManager.INTERVAL_FIFTEEN_MINUTES /15,
+                                             AlarmManager.INTERVAL_HALF_DAY / 2, pi)
         }
         else if (intent.getAction() == StartChecking)
         {
@@ -54,7 +56,11 @@ public class FetchStarter : BroadcastReceiver()
                     }
 
                     // Notify
-                    val builder = Notification.Builder(context).setSmallIcon(R.drawable.yamr_notif_icon).setContentTitle("YARR").setContentText("" + newUris.size() + " New Chapters").setAutoCancel(true)
+                    val builder = Notification.Builder(context)
+                            .setSmallIcon(R.drawable.yamr_notif_icon)
+                            .setContentTitle("YARR")
+                            .setContentText("" + newUris.size() + " New Chapters")
+                            .setAutoCancel(true)
 
                     val startFavorites = Intent(context, javaClass<Favorites>())
 
@@ -67,7 +73,9 @@ public class FetchStarter : BroadcastReceiver()
                     manager.notify(0, builder.build())
                 }
             }
-            context.getApplicationContext().registerReceiver(onFetchNewComplete, IntentFilter(FetcherAsync.FETCH_NEW_COMPLETE))
+            context.getApplicationContext()
+                    .registerReceiver(onFetchNewComplete,
+                                      IntentFilter(FetcherAsync.FETCH_NEW_COMPLETE))
         }
     }
 

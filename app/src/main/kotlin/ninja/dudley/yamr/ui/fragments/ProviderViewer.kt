@@ -22,7 +22,8 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
-public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
+public class ProviderViewer :
+        ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
 {
     private var adapter: SimpleCursorAdapter? = null
 
@@ -74,7 +75,11 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         i.setData(Provider.uri(1))   // Hard-code to the first (mangapanda) for now.
         getActivity().startService(i)
 
-        adapter = SimpleCursorAdapter(getActivity(), R.layout.simple_series_item, null, arrayOf(Series.nameCol), intArrayOf(R.id.series_name), 0)
+        adapter = SimpleCursorAdapter(getActivity(),
+                                     R.layout.simple_series_item,
+                                     null,
+                                     arrayOf(Series.nameCol),
+                                     intArrayOf(R.id.series_name), 0)
         setListAdapter(adapter)
 
         getLoaderManager().initLoader(0, Bundle(), this)
@@ -99,8 +104,10 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
             throw AssertionError(e)
         }
 
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchCompleteReceiver, completeFilter)
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_PROVIDER_STATUS))
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchCompleteReceiver, completeFilter)
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_PROVIDER_STATUS))
     }
 
     override fun onPause()
@@ -147,7 +154,7 @@ public class ProviderViewer : ListFragment(), LoaderManager.LoaderCallbacks<Curs
         }
         else
         {
-            return CursorLoader(getActivity(), mangaPandaSeries, null, Series.nameCol + " like ?", arrayOf<String>("%${filter}%"), null)
+            return CursorLoader(getActivity(), mangaPandaSeries, null, Series.nameCol + " like ?", arrayOf("%${filter}%"), null)
         }
     }
 

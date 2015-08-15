@@ -6,8 +6,6 @@ Code Smells
 -----------
 
 #### General
-* I want to run some of this through some static analysis. Maybe there's one that's android specific as well that can help with lifecycle BS?]
-* I kinda want to try Kotlin. Some of the battles I had been losing against android/Java I could probably solve with lambdas.
 
 #### DBProvider.java
 * The implicit synchronization problem between the URI format the model creates and the UriMatcher matching
@@ -15,11 +13,6 @@ Code Smells
 
 #### Series.java
 * is `progressChapterId` really necessary? I think in all places I use the page, I get the chapter from querying the page. And it's a potential synchronization pitfall
-
-#### MangaPandaFetcher.java
-* I think this file will eventually go the way of the dodo. The Rhino stuff should replace it entirely.
-* None of the fetches handle failures gracefully at all. The `catch //shrug? ` needs to be communicated to back to the user.
-* fetchNew doesn't quite have the behavior I'd really like it to have.
 
 #### FetcherAsync.java
 * Not a huge fan of all this intent boilerplate and synchronization here and in the fragments.
@@ -45,7 +38,6 @@ Code Smells
 
 #### PageViewer.java
 * Again, this is similar across all the fragments. Rather than string argument keys, make a method that either creates and fills in this bullshit or creates the bundle at least.
-* Really need to figure out full-screen and hiding/showing the action bar. This ties into Reader.java quite a bit as well, I think.
 * Maybe collapse all these BroadcastReceivers down onto the class itself? Then dispatch similar to how the IntentServices dispatch.
 * Decent amount of duplication in the next/prev failed receivers. Also the strings need to find their way into `strings.xml`
 * Probably should do a dispatch type thing on the `bundle.getParcelable` arguments. If those stay in the bundle anyway. (Not sure if that has implications on the save/restore lifecycle)
@@ -56,7 +48,3 @@ Code Smells
 
 #### SeriesCard.java
 * Have half a mind to pop this out into more of a generic view. Shouldn't be too hard.
-* IntelliJ is right about all the TextViews. They can easily be locals.
-
-#### TouchImageView.java
-* Still need to center the image vertically. Shouldn't be too hard.

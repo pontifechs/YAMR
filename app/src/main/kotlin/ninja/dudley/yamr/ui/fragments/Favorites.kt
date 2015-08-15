@@ -11,11 +11,11 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
+import ninja.dudley.yamr.model.Heritage
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.fragments.ProviderViewer
@@ -23,7 +23,8 @@ import ninja.dudley.yamr.ui.fragments.ProviderViewer
 public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
     private var adapter: ThumbSeriesAdapter? = null
-    public inner class ThumbSeriesAdapter : SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
+    public inner class ThumbSeriesAdapter :
+            SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater
 
@@ -64,10 +65,9 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
             if (series.progressPageId != -1)
             {
-                val p = Page(context!!.getContentResolver().query(Page.uri(series.progressPageId), null, null, null, null))
-                val c = Chapter(context.getContentResolver().query(Chapter.uri(p.chapterId), null, null, null, null))
-
-                progress.setText("Chapter: " + c.number + ", Page: " + p.number)
+                val heritage = Heritage(context!!.getContentResolver()
+                        .query(Page.heritage(series.progressPageId), null, null, null, null))
+                progress.setText("Chapter: " + heritage.chapterNumber + ", Page: " + heritage.pageNumber)
             }
             else
             {

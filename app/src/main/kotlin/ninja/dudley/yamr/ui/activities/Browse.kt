@@ -71,26 +71,23 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
 
     override fun loadFirstPageOfChapter(chapter: Uri)
     {
-        val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer.newInstance(chapter, MangaElement.UriType.Chapter)
-        transaction.replace(R.id.reader, pageViewer)
-        transaction.addToBackStack(null)
-        transaction.commit()
+        loadPageViewer(chapter,MangaElement.UriType.Chapter)
     }
 
     override fun loadPage(page: Uri)
     {
-        val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer.newInstance(page, MangaElement.UriType.Page)
-        transaction.replace(R.id.reader, pageViewer)
-        transaction.addToBackStack(null)
-        transaction.commit()
+        loadPageViewer(page, MangaElement.UriType.Page)
     }
 
     override fun loadFirstPageOfSeries(series: Uri)
     {
+        loadPageViewer(series, MangaElement.UriType.Series)
+    }
+
+    fun loadPageViewer(uri: Uri, type: MangaElement.UriType)
+    {
         val transaction = getFragmentManager().beginTransaction()
-        val pageViewer = PageViewer.newInstance(series, MangaElement.UriType.Series)
+        val pageViewer = PageViewer.newInstance(uri, type)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -112,19 +109,6 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
     {
         val layout = findViewById(R.id.reader) as RelativeLayout
         layout.removeAllViews()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle)
-    {
-        super<Activity>.onSaveInstanceState(outState)
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super<Activity>.onWindowFocusChanged(hasFocus)
-        if (hasFocus)
-        {
-
-        }
     }
 
     companion object

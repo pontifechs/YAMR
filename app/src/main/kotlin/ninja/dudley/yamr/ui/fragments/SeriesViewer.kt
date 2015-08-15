@@ -17,7 +17,8 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
-public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
+public class SeriesViewer :
+        ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
     private var seriesUri: Uri? = null
     private var series: Series? = null
@@ -100,7 +101,12 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
         fetchSeries.setData(series!!.uri())
         getActivity().startService(fetchSeries)
 
-        adapter = SimpleCursorAdapter(getActivity(), R.layout.chapter_item, null, arrayOf(Chapter.nameCol, Chapter.numberCol), intArrayOf(R.id.chapter_name, R.id.chapter_number), 0)
+        adapter = SimpleCursorAdapter(getActivity(),
+                                      R.layout.chapter_item,
+                                      null,
+                                      arrayOf(Chapter.nameCol, Chapter.numberCol),
+                                      intArrayOf(R.id.chapter_name, R.id.chapter_number),
+                                      0)
         setListAdapter(adapter)
 
         getLoaderManager().initLoader(0, Bundle(), this)
@@ -118,7 +124,8 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
     override fun onResume()
     {
         super<ListFragment>.onResume()
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_SERIES_STATUS))
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_SERIES_STATUS))
         val completeFilter = IntentFilter(FetcherAsync.FETCH_SERIES_COMPLETE)
         try
         {
@@ -129,7 +136,8 @@ public class SeriesViewer : ListFragment(), LoaderManager.LoaderCallbacks<Cursor
             throw AssertionError(e)
         }
 
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchCompleteReceiver, completeFilter)
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchCompleteReceiver, completeFilter)
     }
 
     override fun onPause()

@@ -54,101 +54,99 @@ public class DBHelper extends SQLiteOpenHelper
 
     public static final String fetchProvider =
             "function fetchProvider(doc, provider) { \n" +
-                    "   return doc.select('.series_alpha li a[href]');\n" +
-                    "};";
+            "   return doc.select('.series_alpha li a[href]');\n" +
+            "};";
     public static final String stubSeries =
             "function stubSeries(element) {\n" +
-                    "   var jsSeries = new JsSeries();\n" +
-                    "   jsSeries.url = element.absUrl('href');\n" +
-                    "   jsSeries.name = element.ownText();\n" +
-                    "   return jsSeries;\n" +
-                    "};";
+            "   var jsSeries = new JsSeries();\n" +
+            "   jsSeries.url = element.absUrl('href');\n" +
+            "   jsSeries.name = element.ownText();\n" +
+            "   return jsSeries;\n" +
+            "};";
     public static final String fetchSeries =
             "function fetchSeries(doc, series) {\n" +
-                    "   var thumb = doc.select('#mangaimg img[src]').first();\n" +
-                    "   series.thumbnailUrl = thumb.absUrl('src');\n" +
-                    "\n" +
-                    "   var summary = doc.select('#readmangasum p').first();\n" +
-                    "   series.description = summary.text();\n" +
-                    "\n" +
-                    "   var properties = doc.select('.propertytitle');\n" +
-                    "   for each(var property in properties.toArray()) {\n" +
-                    "       var propTitle = property.text();\n" +
-                    "       var sibling = property.parent().select('td:eq(1)').first();\n" +
-                    "       switch (propTitle) {\n" +
-                    "           case 'Alternate Name:':\n" +
-                    "               series.alternateName = sibling.text();\n" +
-                    "               break;\n" +
-                    "           case 'Status:':\n" +
-                    "               series.complete = sibling.text() !== 'Ongoing';\n" +
-                    "               break;\n" +
-                    "           case 'Author:':\n" +
-                    "               series.author= sibling.text();\n" +
-                    "               break;\n" +
-                    "           case 'Artist:':\n" +
-                    "               series.artist= sibling.text();\n" +
-                    "               break;\n" +
-                    "           case 'Genre:':\n" +
-
-                    "               break;\n" +
-                    "       }\n" +
-                    "   }\n" +
-                    "   return doc.select('td .chico_manga ~ a[href]');\n" +
-                    "};";
+            "   var thumb = doc.select('#mangaimg img[src]').first();\n" +
+            "   series.thumbnailUrl = thumb.absUrl('src');\n" +
+            "\n" +
+            "   var summary = doc.select('#readmangasum p').first();\n" +
+            "   series.description = summary.text();\n" +
+            "\n" +
+            "   var properties = doc.select('.propertytitle');\n" +
+            "   for each(var property in properties.toArray()) {\n" +
+            "       var propTitle = property.text();\n" +
+            "       var sibling = property.parent().select('td:eq(1)').first();\n" +
+            "       switch (propTitle) {\n" +
+            "           case 'Alternate Name:':\n" +
+            "               series.alternateName = sibling.text();\n" +
+            "               break;\n" +
+            "           case 'Status:':\n" +
+            "               series.complete = sibling.text() !== 'Ongoing';\n" +
+            "               break;\n" +
+            "           case 'Author:':\n" +
+            "               series.author= sibling.text();\n" +
+            "               break;\n" +
+            "           case 'Artist:':\n" +
+            "               series.artist= sibling.text();\n" +
+            "               break;\n" +
+            "           case 'Genre:':\n" +
+            "               break;\n" +
+            "       }\n" +
+            "   }\n" +
+            "   return doc.select('td .chico_manga ~ a[href]');\n" +
+            "};";
     public static final String fetchSeriesGenres =
             "function fetchSeriesGenres(doc, series) {\n" +
-                    "   var genreElements = doc.select('.genretags');\n" +
-                    "   var genres = [];\n" +
-                    "   for each (var genre in genreElements.toArray()) {\n" +
-                    "       genres.push(genre.text());\n" +
-                    "   }\n" +
-                    "   return genres;\n" +
-                    "};";
+            "   var genreElements = doc.select('.genretags');\n" +
+            "   var genres = [];\n" +
+            "   for each (var genre in genreElements.toArray()) {\n" +
+            "       genres.push(genre.text());\n" +
+            "   }\n" +
+            "   return genres;\n" +
+            "};";
     public static final String stubChapter =
             "function stubChapter(element) {\n" +
-                    "   var jsChapter = new JsChapter();\n" +
-                    "   jsChapter.url = element.absUrl('href');\n" +
-                    "   jsChapter.name = element.parent().ownText().replace(':', '');\n" +
-                    "   var number = element.text();\n" +
-                    "   jsChapter.number = parseFloat(number.substring(number.lastIndexOf(' ')));\n" +
-                    "   return jsChapter;\n" +
-                    "};";
+            "   var jsChapter = new JsChapter();\n" +
+            "   jsChapter.url = element.absUrl('href');\n" +
+            "   jsChapter.name = element.parent().ownText().replace(':', '');\n" +
+            "   var number = element.text();\n" +
+            "   jsChapter.number = parseFloat(number.substring(number.lastIndexOf(' ')));\n" +
+            "   return jsChapter;\n" +
+            "};";
     public static final String fetchChapter =
             "function fetchChapter(doc, chapter) {\n" +
-                    "   return doc.select('#pageMenu option[value]');\n" +
-                    "};";
+            "   return doc.select('#pageMenu option[value]');\n" +
+            "};";
     public static final String stubPage =
             "function stubPage(element) {\n" +
-                    "   var page = new JsPage();\n" +
-                    "   page.url = element.absUrl('value');\n" +
-                    "   page.number = parseFloat(element.text());\n" +
-                    "   return page;\n" +
-                    "};";
+            "   var page = new JsPage();\n" +
+            "   page.url = element.absUrl('value');\n" +
+            "   page.number = parseFloat(element.text());\n" +
+            "   return page;\n" +
+            "};";
     public static final String fetchPage =
             "function fetchPage(doc, page) {\n" +
-                    "   return doc.select('img[src]').first().absUrl('src');\n" +
-                    "};";
+            "   return doc.select('img[src]').first().absUrl('src');\n" +
+            "};";
     public static final String fetchNew =
             "function fetchNew(doc) {\n" +
-                    "   var ret = [];\n" +
-                    "   var rows = doc.select('.c2');\n" +
-                    "   for each (var row in rows.toArray()) {\n" +
-                    "       var seriesElement = row.select('.chapter').first();\n" +
-                    "       var series = new JsSeries();\n" +
-                    "       series.name = seriesElement.text();\n" +
-                    "       series.url = seriesElement.absUrl('href');\n" +
-                    "       \n" +
-                    "       var chapters = row.select('.chaptersrec');\n" +
-                    "       for each (var chapterElement in chapters.toArray()) {\n" +
-                    "           var chapter = new JsChapter();\n" +
-                    "           chapter.number= chapterElement.text().replace(series.name, '');\n" +
-                    "           chapter.url = chapterElement.absUrl('href');\n" +
-                    "           ret.push([series, chapter]);\n" +
-                    "       }\n" +
-                    "   }\n" +
-                    "   return ret;\n" +
-                    "};";
-
+            "   var ret = [];\n" +
+            "   var rows = doc.select('.c2');\n" +
+            "   for each (var row in rows.toArray()) {\n" +
+            "       var seriesElement = row.select('.chapter').first();\n" +
+            "       var series = new JsSeries();\n" +
+            "       series.name = seriesElement.text();\n" +
+            "       series.url = seriesElement.absUrl('href');\n" +
+            "       \n" +
+            "       var chapters = row.select('.chaptersrec');\n" +
+            "       for each (var chapterElement in chapters.toArray()) {\n" +
+            "           var chapter = new JsChapter();\n" +
+            "           chapter.number= chapterElement.text().replace(series.name, '');\n" +
+            "           chapter.url = chapterElement.absUrl('href');\n" +
+            "           ret.push([series, chapter]);\n" +
+            "       }\n" +
+            "   }\n" +
+            "   return ret;\n" +
+            "};";
 
     public static abstract class SeriesGenreEntry implements BaseColumns
     {
@@ -187,7 +185,8 @@ public class DBHelper extends SQLiteOpenHelper
         static
         {
             projection = new String[]{COLUMN_PROVIDER_ID, COLUMN_PROVIDER_NAME, COLUMN_SERIES_ID,
-                    COLUMN_SERIES_NAME, COLUMN_CHAPTER_ID, COLUMN_CHAPTER_NUMBER, COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
+                    COLUMN_SERIES_NAME, COLUMN_CHAPTER_ID, COLUMN_CHAPTER_NUMBER,
+                    COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
         }
     }
 
@@ -198,7 +197,8 @@ public class DBHelper extends SQLiteOpenHelper
 
     private static String makeForeignKey(String keyColumn, String refTable, String refColumn)
     {
-        return "FOREIGN KEY(" + keyColumn + ") REFERENCES " + refTable + "(" + refColumn + ") ON DELETE CASCADE";
+        return "FOREIGN KEY(" + keyColumn + ") REFERENCES " + refTable + "(" + refColumn + ") " +
+               "ON DELETE CASCADE";
     }
 
     private static String uniqueColumns(List<String> column)
@@ -222,9 +222,11 @@ public class DBHelper extends SQLiteOpenHelper
         return tableName + "." + fieldName + " as " + alias;
     }
 
-    private static String joinStatement(String lhsTable, String lhsField, String rhsTable, String rhsField)
+    private static String joinStatement(String lhsTable, String lhsField,
+                                        String rhsTable, String rhsField)
     {
-        return " join " + rhsTable + " ON " + lhsTable + "." + lhsField + " = " + rhsTable + "." + rhsField;
+        return " join " + rhsTable + " ON " + lhsTable + "." + lhsField + " = " +
+                                              rhsTable + "." + rhsField;
     }
 
     public static String schema(Class<?> klass)
@@ -349,55 +351,96 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(schema(Page.class));
         db.execSQL(schema(Genre.class));
 
-        String pageHeritageView = "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
-                "select "
-                + joinedAliasedColumn(Provider.tableName, ID, PageHeritageViewEntry.COLUMN_PROVIDER_ID) + ", "
-                + joinedAliasedColumn(Provider.tableName, "name", PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", "
-                + joinedAliasedColumn(Series.tableName, ID, PageHeritageViewEntry.COLUMN_SERIES_ID) + ", "
-                + joinedAliasedColumn(Series.tableName, "name", PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", "
-                + joinedAliasedColumn(Chapter.tableName, ID, PageHeritageViewEntry.COLUMN_CHAPTER_ID) + ", "
-                + joinedAliasedColumn(Chapter.tableName, "number", PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", "
-                + joinedAliasedColumn(Page.tableName, ID, PageHeritageViewEntry.COLUMN_PAGE_ID) + ", "
-                + joinedAliasedColumn(Page.tableName, "number", PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
-                " from " + Provider.tableName + joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID)
-                + joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID)
-                + joinStatement(Chapter.tableName, ID, Page.tableName, Chapter.tableName + ID);
+        String pageHeritageView =
+                "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
+                "select " +
+                joinedAliasedColumn(Provider.tableName, ID,
+                                    PageHeritageViewEntry.COLUMN_PROVIDER_ID) + ", " +
+                joinedAliasedColumn(Provider.tableName, "name",
+                                    PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", " +
+                joinedAliasedColumn(Series.tableName, ID,
+                                    PageHeritageViewEntry.COLUMN_SERIES_ID) + ", " +
+                joinedAliasedColumn(Series.tableName, "name",
+                                    PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", " +
+                joinedAliasedColumn(Chapter.tableName, ID,
+                                    PageHeritageViewEntry.COLUMN_CHAPTER_ID) + ", " +
+                joinedAliasedColumn(Chapter.tableName, "number",
+                                    PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", " +
+                joinedAliasedColumn(Page.tableName, ID,
+                                    PageHeritageViewEntry.COLUMN_PAGE_ID) + ", " +
+                joinedAliasedColumn(Page.tableName, "number",
+                                    PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
+                " from " + Provider.tableName +
+                joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID) +
+                joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID) +
+                joinStatement(Chapter.tableName, ID, Page.tableName, Chapter.tableName + ID);
         db.execSQL(pageHeritageView);
 
-        String seriesGenreCreate = "CREATE TABLE " + SeriesGenreEntry.TABLE_NAME + " (" +
+        String seriesGenreCreate =
+                "CREATE TABLE " + SeriesGenreEntry.TABLE_NAME + " " +
+                "(" +
                 SeriesGenreEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID, SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) + ", " +
-                makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID, SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) + ", " +
-                makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, DBHelper.ID) + ", " +
-                makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, DBHelper.ID) +
+                makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID,
+                          SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) + ", " +
+                makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID,
+                           SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) + ", " +
+                makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID,
+                               Series.tableName, DBHelper.ID) + ", " +
+                makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID,
+                               Genre.tableName, DBHelper.ID) +
                 ")";
         db.execSQL(seriesGenreCreate);
 
         // Genres in the given series
-        String seriesGenreViewCreate = "CREATE VIEW " + SeriesGenreEntry.SERIES_GENRES_VIEW + " AS " +
-                "select " + Genre.tableName + ".* , " + SeriesGenreEntry.TABLE_NAME + ".series_id as series_id " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID, Genre.tableName, ID);
+        String seriesGenreViewCreate =
+                "CREATE VIEW " + SeriesGenreEntry.SERIES_GENRES_VIEW + " AS " +
+                "select " + Genre.tableName + ".* , " +
+                            SeriesGenreEntry.TABLE_NAME +
+                            ".series_id as series_id " +
+                "from " + SeriesGenreEntry.TABLE_NAME +
+                joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID,
+                              Genre.tableName, ID);
         db.execSQL(seriesGenreViewCreate);
 
         // Series in the given genre
-        String genreSeriesViewCreate = "CREATE VIEW " + SeriesGenreEntry.GENRE_SERIES_VIEW + " AS " +
-                "select " + Series.tableName + ".* , " + SeriesGenreEntry.TABLE_NAME + ".genre_id as genre_id " +
-                "from " + SeriesGenreEntry.TABLE_NAME + joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID, Series.tableName, ID);
+        String genreSeriesViewCreate =
+                "CREATE VIEW " + SeriesGenreEntry.GENRE_SERIES_VIEW + " AS " +
+                "select " + Series.tableName + ".* , " +
+                            SeriesGenreEntry.TABLE_NAME +
+                            ".genre_id as genre_id " +
+                "from " + SeriesGenreEntry.TABLE_NAME +
+                joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
+                              Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
 
-        // TODO:: Package this up in JSON or something, it's getting unwieldy. Maybe have something delivered from a server?
-        db.execSQL("INSERT INTO provider (url, type, new_url, name) values (\"http://www.mangapanda.com/alphabetical\", \"Provider\", \"http://www.mangapanda.com/latest\", \"MangaPanda\")");
+        // TODO:: Package this up in JSON or something, it's getting unwieldy.
+        db.execSQL("INSERT INTO provider (url, type, new_url, name) values " +
+                "(" +
+                "\"http://www.mangapanda.com/alphabetical\", " +
+                "\"Provider\", " +
+                "\"http://www.mangapanda.com/latest\", " +
+                "\"MangaPanda\"" +
+                ")");
         try
         {
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchProviderCol + " = \"" + fetchProvider + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.stubSeriesCol + " = \"" + stubSeries + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchSeriesCol + " = \"" + fetchSeries + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchSeriesGenresCol + " = \"" + fetchSeriesGenres + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.stubChapterCol + " = \"" + stubChapter + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchChapterCol + " = \"" + fetchChapter + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.stubPageCol + " = \"" + stubPage + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchPageCol + " = \"" + fetchPage + "\";");
-            db.execSQL("UPDATE " + Provider.tableName + " set " + Provider.fetchNewCol + " = \"" + fetchNew + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchProviderCol + " = \"" + fetchProvider + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.stubSeriesCol + " = \"" + stubSeries + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchSeriesCol + " = \"" + fetchSeries + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchSeriesGenresCol + " = \"" + fetchSeriesGenres + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.stubChapterCol + " = \"" + stubChapter + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchChapterCol + " = \"" + fetchChapter + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.stubPageCol + " = \"" + stubPage + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchPageCol + " = \"" + fetchPage + "\";");
+            db.execSQL("UPDATE " + Provider.tableName +
+                       " set " + Provider.fetchNewCol + " = \"" + fetchNew + "\";");
         }
         catch (Exception e)
         {

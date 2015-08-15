@@ -39,7 +39,6 @@ public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
             behavior = FetcherSync.FetchBehavior.LazyFetch
         }
 
-
         when (intent.getAction())
         {
             FETCH_PROVIDER ->

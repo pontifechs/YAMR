@@ -38,19 +38,7 @@ public class Provider : MangaElement
     Column(name = fetchNewCol)
     public val fetchNew: String
 
-
-    public fun uri(): Uri
-    {
-        return uri(id)
-    }
-
-    public fun series(): Uri
-    {
-        return series(id)
-    }
-
     // Construction / Persistence ------------------------------------------------------------------
-
     public constructor(c: Cursor) : super(c)
     {
         if (type != MangaElement.UriType.Provider)
@@ -79,6 +67,17 @@ public class Provider : MangaElement
         return values
     }
 
+    // Uri Handling --------------------------------------------------------------------------------
+    public fun uri(): Uri
+    {
+        return uri(id)
+    }
+
+    public fun series(): Uri
+    {
+        return series(id)
+    }
+
     companion object
     {
         public val tableName: String = "provider"
@@ -94,7 +93,7 @@ public class Provider : MangaElement
         public val fetchPageCol: String = "fetch_page"
         public val fetchNewCol: String = "fetch_new"
 
-        // Uri Handling --------------------------------------------------------------------------------
+        // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/provider")

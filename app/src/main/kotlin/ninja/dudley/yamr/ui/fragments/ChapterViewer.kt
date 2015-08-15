@@ -22,7 +22,8 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.svc.FetcherAsync
 
-public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
+public class ChapterViewer :
+        Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
 {
     private var chapterUri: Uri? = null
     private var chapter: Chapter? = null
@@ -38,7 +39,8 @@ public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, 
     }
 
     private var adapter: PageThumbAdapter? = null
-    public inner class PageThumbAdapter : SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
+    public inner class PageThumbAdapter :
+            SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater
 
@@ -64,7 +66,8 @@ public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             val number = view.findViewById(R.id.page_number) as TextView
             if (page.imagePath != null)
             {
-                val d = BitmapDrawable(getResources(), ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(page.imagePath), 192, 192))
+                val bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(page.imagePath), 192, 192)
+                val d = BitmapDrawable(getResources(), bitmap)
                 thumb.setImageDrawable(d)
             }
             else
@@ -92,7 +95,6 @@ public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_chapter_viewer, container, false) as LinearLayout
 
         fetchStatusReceiver = object : BroadcastReceiver()
@@ -148,8 +150,10 @@ public class ChapterViewer : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             throw AssertionError(e)
         }
 
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchCompleteReceiver, completeFilter)
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_CHAPTER_STATUS))
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchCompleteReceiver, completeFilter)
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_CHAPTER_STATUS))
     }
 
     override fun onPause()

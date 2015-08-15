@@ -44,32 +44,7 @@ public class Series : MangaElement
     Column(name = updatedCol, type = Column.Type.Integer)
     public var updated: Boolean = false
 
-    public var genres: List<String> = ArrayList<String>()
 
-    public fun uri(): Uri
-    {
-        return uri(id)
-    }
-
-    public fun chapters(): Uri
-    {
-        return chapters(id)
-    }
-
-    public fun prevChapter(num: Float): Uri
-    {
-        return prevChapter(id, num)
-    }
-
-    public fun nextChapter(num: Float): Uri
-    {
-        return nextChapter(id, num)
-    }
-
-    public fun genres(): Uri
-    {
-        return genres(id)
-    }
 
     // Construction / Persistence ------------------------------------------------------------------
     public constructor(providerId: Int, url: String, name: String) : super(url, MangaElement.UriType.Series)
@@ -129,6 +104,32 @@ public class Series : MangaElement
         return values
     }
 
+    // Uri Handling --------------------------------------------------------------------------------
+    public fun uri(): Uri
+    {
+        return uri(id)
+    }
+
+    public fun chapters(): Uri
+    {
+        return chapters(id)
+    }
+
+    public fun prevChapter(num: Float): Uri
+    {
+        return prevChapter(id, num)
+    }
+
+    public fun nextChapter(num: Float): Uri
+    {
+        return nextChapter(id, num)
+    }
+
+    public fun genres(): Uri
+    {
+        return genres(id)
+    }
+
     companion object
     {
         public val tableName: String = "series"
@@ -146,7 +147,7 @@ public class Series : MangaElement
         public val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
         public val updatedCol: String = "updated"
 
-        // Uri Handling --------------------------------------------------------------------------------
+        // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/series")
@@ -169,12 +170,16 @@ public class Series : MangaElement
 
         public fun prevChapter(id: Int, num: Float): Uri
         {
-            return chapters(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("prev").build()
+            return chapters(id).buildUpon()
+                    .appendPath(java.lang.Float.toString(num))
+                    .appendPath("prev").build()
         }
 
         public fun nextChapter(id: Int, num: Float): Uri
         {
-            return chapters(id).buildUpon().appendPath(java.lang.Float.toString(num)).appendPath("next").build()
+            return chapters(id).buildUpon()
+                    .appendPath(java.lang.Float.toString(num))
+                    .appendPath("next").build()
         }
 
         public fun genres(id: Int): Uri
