@@ -4,14 +4,10 @@ import android.app.Activity
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.MangaElement
-import ninja.dudley.yamr.ui.fragments.ChapterViewer
-import ninja.dudley.yamr.ui.fragments.PageViewer
-import ninja.dudley.yamr.ui.fragments.ProviderViewer
-import ninja.dudley.yamr.ui.fragments.SeriesViewer
+import ninja.dudley.yamr.ui.fragments.*
 import ninja.dudley.yamr.ui.util.OrientationAware
 
 public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter,

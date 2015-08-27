@@ -1,4 +1,4 @@
-package ninja.dudley.yamr.ui.activities
+package ninja.dudley.yamr.ui.fragments
 
 import android.app.Activity
 import android.app.ListFragment
@@ -49,6 +49,10 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             if (series.updated)
             {
                 view.setBackgroundColor(Color.argb(127, 102, 153, 255))
+            }
+            else
+            {
+                view.setBackgroundColor(Color.TRANSPARENT)
             }
 
             if (series.thumbnailPath != null)

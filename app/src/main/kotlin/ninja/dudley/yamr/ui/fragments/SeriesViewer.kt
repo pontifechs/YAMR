@@ -113,7 +113,7 @@ public class SeriesViewer :
 
         loading = ProgressDialog(getActivity())
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-        loading!!.setTitle("Loading Chapters for " + series!!.name!!)
+        loading!!.setTitle("Loading Chapters for " + series!!.name)
         if (!series!!.fullyParsed)
         {
             loading!!.show()

@@ -13,7 +13,7 @@ import android.util.Log
 
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Provider
-import ninja.dudley.yamr.ui.activities.Favorites
+import ninja.dudley.yamr.ui.fragments.Favorites
 
 /**
  * Created by mdudley on 6/23/15.

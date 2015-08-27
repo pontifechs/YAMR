@@ -311,7 +311,7 @@ public class FetcherSync(protected var context: android.content.Context)
             val doc = fetchUrl(provider.newUrl)
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             val result = cx.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
-            val seriesChapterPairs = Context.jsToJava(result, javaClass<List<List<Object>>>()) as List<List<Object>>
+            val seriesChapterPairs = Context.jsToJava(result, javaClass<List<List<Any>>>()) as List<List<Any>>
 
             for (pair in seriesChapterPairs)
             {
@@ -427,7 +427,7 @@ public class FetcherSync(protected var context: android.content.Context)
     {
         val inStream: InputStream
         var out: ByteArrayOutputStream? = null
-        var count: Int = 0
+        var count: Int
         try
         {
             val url = URL(imageUrl)
@@ -504,7 +504,7 @@ public class FetcherSync(protected var context: android.content.Context)
         val p = Provider(context.getContentResolver().query(Provider.uri(s.providerId), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val seriesPath = root.getAbsolutePath() + "/" + stripBadCharsForFile(p.name!!) + "/" + stripBadCharsForFile(s.name!!)
+        val seriesPath = root.getAbsolutePath() + "/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
         val thumbPath = "${chapterDirectory}/thumb.png"
