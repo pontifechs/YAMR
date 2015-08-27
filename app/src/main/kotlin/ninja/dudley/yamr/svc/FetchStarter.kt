@@ -13,7 +13,7 @@ import android.util.Log
 
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Provider
-import ninja.dudley.yamr.ui.fragments.Favorites
+import ninja.dudley.yamr.ui.activities.Browse
 
 /**
  * Created by mdudley on 6/23/15.
@@ -51,7 +51,7 @@ public class FetchStarter : BroadcastReceiver()
                     // None! Nada!
                     if (newUris.size() == 0)
                     {
-                        Log.d("FetchStarter", "No URIs")
+                        Log.d("FetchStarter", "No URIs, BITCH")
                         return
                     }
 
@@ -62,10 +62,10 @@ public class FetchStarter : BroadcastReceiver()
                             .setContentText("" + newUris.size() + " New Chapters")
                             .setAutoCancel(true)
 
-                    val startFavorites = Intent(context, javaClass<Favorites>())
-
+                    val startFavorites = Intent(context, javaClass<Browse>())
+                    startFavorites.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.toString())
                     val stackBuilder = TaskStackBuilder.create(context)
-                    stackBuilder.addParentStack(javaClass<Favorites>())
+                    stackBuilder.addParentStack(javaClass<Browse>())
                     stackBuilder.addNextIntent(startFavorites)
                     val pi = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
                     builder.setContentIntent(pi)

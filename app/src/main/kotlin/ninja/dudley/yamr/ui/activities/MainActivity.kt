@@ -65,13 +65,13 @@ public class MainActivity : Activity()
                     0 ->
                     {
                         i = Intent(this@MainActivity, javaClass<Browse>())
-                        i.putExtra(Browse.flowKey, Browse.FlowType.ProviderAll.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderAll.name())
                         startActivity(i)
                     }
                     1 ->
                     {
                         i = Intent(this@MainActivity, javaClass<Browse>())
-                        i.putExtra(Browse.flowKey, Browse.FlowType.Favorites.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name())
                         startActivity(i)
                     }
                     2 ->

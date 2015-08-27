@@ -27,7 +27,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         if (savedInstanceState == null)
         {
             val b: Bundle = getIntent().getExtras()
-            val flow: FlowType = FlowType.valueOf(b.get(flowKey) as String)
+            val flow: FlowType = FlowType.valueOf(b.get(FlowKey) as String)
 
             val transaction = getFragmentManager().beginTransaction()
             when (flow)
@@ -109,6 +109,6 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
 
     companion object
     {
-        public val flowKey: String = "flow"
+        public val FlowKey: String = "flow"
     }
 }
