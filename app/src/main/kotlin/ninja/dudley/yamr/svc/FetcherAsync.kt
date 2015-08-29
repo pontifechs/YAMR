@@ -1,148 +1,219 @@
 package ninja.dudley.yamr.svc
 
 import android.app.IntentService
+import android.content.ContentResolver
 import android.content.Intent
-import android.net.Uri
 import android.support.v4.content.LocalBroadcastManager
-
-import java.util.ArrayList
-
+import android.util.Log
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
+import ninja.dudley.yamr.svc.util.LambdaAsyncTask
+import java.util.ArrayList
 
 /**
  * Created by mdudley on 6/11/15.
  */
-public class FetcherAsync : IntentService("Fetcher"), FetcherSync.NotifyStatus
+
+public class FetcherAsync
 {
-
-    override fun onHandleIntent(intent: Intent)
-    {
-        val fetcher = FetcherSync(getBaseContext())
-        fetcher.register(this)
-        val argument = intent.getData()
-
-        val behavior: FetcherSync.FetchBehavior
-        try
-        {
-            val behaviorString: String? = intent.getStringExtra(FETCH_BEHAVIOR)
-            behavior = FetcherSync.FetchBehavior.valueOf(behaviorString!!)
-        }
-        catch (e: IllegalArgumentException)
-        {
-            behavior = FetcherSync.FetchBehavior.LazyFetch
-        }
-        catch (e: NullPointerException)
-        {
-            behavior = FetcherSync.FetchBehavior.LazyFetch
-        }
-
-        when (intent.getAction())
-        {
-            FETCH_PROVIDER ->
-            {
-                val p = Provider(getContentResolver().query(argument, null, null, null, null))
-                fetcher.fetchProvider(p, behavior)
-                val complete = Intent(FETCH_PROVIDER_COMPLETE)
-                complete.setData(p.uri())
-                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete)
-            }
-            FETCH_SERIES ->
-            {
-                val s = Series(getContentResolver().query(argument, null, null, null, null))
-                fetcher.fetchSeries(s, behavior)
-                val complete = Intent(FETCH_SERIES_COMPLETE)
-                complete.setData(s.uri())
-                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete)
-            }
-            FETCH_CHAPTER ->
-            {
-                val c = Chapter(getContentResolver().query(argument, null, null, null, null))
-                fetcher.fetchChapter(c, behavior)
-                val complete = Intent(FETCH_CHAPTER_COMPLETE)
-                complete.setData(c.uri())
-                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete)
-            }
-            FETCH_PAGE ->
-            {
-                val page = Page(getContentResolver().query(argument, null, null, null, null))
-                fetcher.fetchPage(page, behavior)
-                val complete = Intent(FETCH_PAGE_COMPLETE)
-                complete.setData(page.uri())
-                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(complete)
-            }
-
-            FETCH_NEW ->
-            {
-                val p = Provider(getContentResolver().query(argument, null, null, null, null))
-                val newChapters = fetcher.fetchNew(p)
-                val complete = Intent(FETCH_NEW_COMPLETE)
-                val uriStrings = ArrayList<String>()
-                for (u in newChapters)
-                {
-                    uriStrings.add(u.toString())
-                }
-                complete.putStringArrayListExtra(FETCH_NEW_COMPLETE, uriStrings)
-                sendBroadcast(complete)
-            }
-        }
-    }
-
-    override fun notifyProviderStatus(status: Float)
-    {
-        val i = Intent(FETCH_PROVIDER_STATUS)
-        i.putExtra(FETCH_PROVIDER_STATUS, status)
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
-    }
-
-    override fun notifySeriesStatus(status: Float)
-    {
-        val i = Intent(FETCH_SERIES_STATUS)
-        i.putExtra(FETCH_SERIES_STATUS, status)
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
-    }
-
-    override fun notifyChapterStatus(status: Float)
-    {
-        val i = Intent(FETCH_CHAPTER_STATUS)
-        i.putExtra(FETCH_CHAPTER_STATUS, status)
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
-    }
-
-    override fun notifyPageStatus(status: Float)
-    {
-        val i = Intent(FETCH_PAGE_STATUS)
-        i.putExtra(FETCH_PAGE_STATUS, status)
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(i)
-    }
-
     companion object
     {
-        public val BASE: String = "ninja.dudley.ninja.dudley.yamr.fetch.FetcherSync"
 
-        public val FETCH_BEHAVIOR: String = BASE + ".FetchBehavior"
+        public fun fetchProvider(resolver: ContentResolver,
+                                 caller: Any,
+                                 complete: (thiS: Any, provider: Provider) -> Unit,
+                                 progress: (thiS: Any, progress: Float) -> Unit,
+                                 behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
+                : LambdaAsyncTask<Provider, Float, Provider>
+        {
+            return object : LambdaAsyncTask<Provider, Float, Provider>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Provider): Provider
+                {
+                    val fetcher = FetcherSync(resolver);
+                    fetcher.register(this)
+                    fetcher.fetchProvider(params[0], behavior)
+                    return params[0];
+                }
 
-        public val FETCH_PROVIDER: String = BASE + ".FetchProvider"
-        public val FETCH_SERIES: String = BASE + ".FetchSeries"
-        public val FETCH_CHAPTER: String = BASE + ".FetchChapter"
-        public val FETCH_PAGE: String = BASE + ".FetchPage"
-        public val FETCH_NEW: String = BASE + ".FetchStarter"
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
 
-        public val FETCH_PROVIDER_STATUS: String = FETCH_PROVIDER + ".Status"
-        public val FETCH_PROVIDER_COMPLETE: String = FETCH_PROVIDER + ".Complete"
-        public val FETCH_PROVIDER_FAILED: String = FETCH_PROVIDER + ".Failed"
-        public val FETCH_SERIES_STATUS: String = FETCH_SERIES + ".Status"
-        public val FETCH_SERIES_COMPLETE: String = FETCH_SERIES + ".Complete"
-        public val FETCH_SERIES_FAILED: String = FETCH_SERIES + ".Failed"
-        public val FETCH_CHAPTER_STATUS: String = FETCH_CHAPTER + ".Status"
-        public val FETCH_CHAPTER_COMPLETE: String = FETCH_CHAPTER + ".Complete"
-        public val FETCH_CHAPTER_FAILED: String = FETCH_CHAPTER + ".Failed"
-        public val FETCH_PAGE_STATUS: String = FETCH_PAGE + ".Status"
-        public val FETCH_PAGE_COMPLETE: String = FETCH_PAGE + ".Complete"
-        public val FETCH_PAGE_FAILED: String = FETCH_PAGE + ".Failed"
-        public val FETCH_NEW_COMPLETE: String = FETCH_NEW + ".Complete"
-        public val FETCH_NEW_FAILED: String = FETCH_NEW + ".Failed"
+        public fun fetchSeries(resolver: ContentResolver,
+                               caller: Any,
+                               complete: (thiS: Any, provider: Series) -> Unit,
+                               progress: (thiS: Any, progress: Float) -> Unit,
+                               behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
+                : LambdaAsyncTask<Series, Float, Series>
+        {
+            return object : LambdaAsyncTask<Series, Float, Series>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Series): Series
+                {
+                    val fetcher = FetcherSync(resolver);
+                    fetcher.register(this)
+                    fetcher.fetchSeries(params[0], behavior)
+                    return params[0];
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchChapter(resolver: ContentResolver,
+                                caller: Any,
+                                complete: (thiS: Any, provider: Chapter) -> Unit,
+                                progress: (thiS: Any, progress: Float) -> Unit,
+                                behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
+                : LambdaAsyncTask<Chapter, Float, Chapter>
+        {
+            return object : LambdaAsyncTask<Chapter, Float, Chapter>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Chapter): Chapter
+                {
+                    val fetcher = FetcherSync(resolver);
+                    fetcher.register(this)
+                    fetcher.fetchChapter(params[0], behavior)
+                    return params[0];
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchPage(resolver: ContentResolver,
+                             caller: Any,
+                             complete: (thiS: Any, provider: Page) -> Unit,
+                             progress: (thiS: Any, progress: Float) -> Unit,
+                             behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
+                : LambdaAsyncTask<Page, Float, Page>
+        {
+            return object : LambdaAsyncTask<Page, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Page): Page
+                {
+                    val fetcher = FetcherSync(resolver);
+                    fetcher.register(this)
+                    fetcher.fetchPage(params[0], behavior)
+                    return params[0];
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchNextPage(resolver: ContentResolver,
+                                 caller: Any,
+                                 complete: (thiS: Any, provider: Page) -> Unit,
+                                 progress: (thiS: Any, progress: Float) -> Unit,
+                                 failure: (thiS: Any) -> Unit)
+                : LambdaAsyncTask<Page, Float, Page>
+        {
+            return object: LambdaAsyncTask<Page, Float, Page>(caller, complete, progress, failure), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Page): Page?
+                {
+                    val fetcher = Navigation(resolver)
+                    fetcher.register(this)
+                    val next = fetcher.nextPage(params[0])
+                    if (next == null)
+                    {
+                        fail()
+                    }
+                    return next
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchPrevPage(resolver: ContentResolver,
+                                 caller: Any,
+                                 complete: (thiS: Any, provider: Page) -> Unit,
+                                 progress: (thiS: Any, progress: Float) -> Unit,
+                                 failure: (thiS: Any) -> Unit)
+                : LambdaAsyncTask<Page, Float, Page>
+        {
+            return object: LambdaAsyncTask<Page, Float, Page>(caller, complete, progress, failure), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Page): Page?
+                {
+                    val fetcher = Navigation(resolver)
+                    fetcher.register(this)
+                    val prev= fetcher.prevPage(params[0])
+                    if (prev == null)
+                    {
+                        fail()
+                    }
+                    return prev
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchFirstPageFromChapter(resolver: ContentResolver,
+                                 caller: Any,
+                                 complete: (thiS: Any, provider: Page) -> Unit,
+                                 progress: (thiS: Any, progress: Float) -> Unit)
+                : LambdaAsyncTask<Chapter, Float, Page>
+        {
+            return object: LambdaAsyncTask<Chapter, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Chapter): Page
+                {
+                    val fetcher = Navigation(resolver)
+                    fetcher.register(this)
+                    return fetcher.firstPageFromChapter(params[0])
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
+        public fun fetchFirstPageFromSeries(resolver: ContentResolver,
+                                 caller: Any,
+                                 complete: (thiS: Any, provider: Page) -> Unit,
+                                 progress: (thiS: Any, progress: Float) -> Unit)
+                : LambdaAsyncTask<Series, Float, Page>
+        {
+            return object : LambdaAsyncTask<Series, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Series): Page
+                {
+                    val fetcher = Navigation(resolver)
+                    fetcher.register(this)
+                    return fetcher.firstPageFromSeries(params[0])
+                }
+
+                override fun notify(status: Float)
+                {
+                    publishProgress(status)
+                }
+            }
+        }
     }
 }

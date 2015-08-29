@@ -37,7 +37,7 @@ public class FetchStarter : BroadcastReceiver()
         {
             // Check
             val i = Intent(context, javaClass<FetcherAsync>())
-            i.setAction(FetcherAsync.FETCH_NEW)
+            i.setAction(FetchNew)
             i.setData(Provider.uri(1))   // Hard-code to the first (mangapanda) for now.
             Log.d("FetchStarter", "Kicking it off")
             context.startService(i)
@@ -46,7 +46,7 @@ public class FetchStarter : BroadcastReceiver()
             {
                 override fun onReceive(context: Context, intent: Intent)
                 {
-                    val newUris = intent.getStringArrayListExtra(FetcherAsync.FETCH_NEW_COMPLETE)
+                    val newUris = intent.getStringArrayListExtra(FetchNewComplete)
 
                     // None! Nada!
                     if (newUris.size() == 0)
@@ -75,12 +75,16 @@ public class FetchStarter : BroadcastReceiver()
             }
             context.getApplicationContext()
                     .registerReceiver(onFetchNewComplete,
-                                      IntentFilter(FetcherAsync.FETCH_NEW_COMPLETE))
+                                      IntentFilter(FetchNewComplete))
         }
     }
 
     companion object
     {
-        public val StartChecking: String = "ninja.dudley.yamr.FetchStarter"
+        private val Base: String = "ninja.dudley.yamr.FetchStarter"
+        public val StartChecking: String = Base + ".StartChecking"
+        public val FetchNew: String = Base + ".FetchNew"
+        public val FetchNewStatus: String = FetchNew + ".Status"
+        public val FetchNewComplete: String = FetchNew + ".Complete"
     }
 }

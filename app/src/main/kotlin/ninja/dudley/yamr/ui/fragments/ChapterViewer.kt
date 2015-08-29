@@ -22,14 +22,21 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.svc.FetcherAsync
 
+public fun chapterViewerStatus(thiS: Any, status: Float)
+{
+    (thiS as ChapterViewer).status(status)
+}
+
+public fun chapterViewerComplete(thiS: Any, chapter: Chapter)
+{
+    (thiS as ChapterViewer).complete(chapter)
+}
+
 public class ChapterViewer :
         Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
 {
     private var chapterUri: Uri? = null
     private var chapter: Chapter? = null
-
-    private var fetchStatusReceiver: BroadcastReceiver? = null
-    private var fetchCompleteReceiver: BroadcastReceiver? = null
 
     private var loading: ProgressDialog? = null
 
@@ -93,36 +100,28 @@ public class ChapterViewer :
         chapter = Chapter(getActivity().getContentResolver().query(chapterUri, null, null, null, null))
     }
 
+    fun status(status: Float)
+    {
+        val percent = 100 * status
+        loading!!.setProgress(percent.toInt())
+    }
+
+    fun complete(chapter: Chapter)
+    {
+        getLoaderManager().restartLoader(0, Bundle(), this@ChapterViewer)
+        adapter!!.notifyDataSetChanged()
+        loading!!.dismiss()
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
         val view = inflater.inflate(R.layout.fragment_chapter_viewer, container, false) as LinearLayout
 
-        fetchStatusReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                val percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_CHAPTER_STATUS, 0.0f)
-                loading!!.setProgress(percent.toInt())
-            }
-        }
-
-        fetchCompleteReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                getLoaderManager().restartLoader(0, Bundle(), this@ChapterViewer)
-                adapter!!.notifyDataSetChanged()
-                loading!!.dismiss()
-            }
-        }
-
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.setText("Chapter ${chapter!!.number}: ${chapter!!.name}")
 
-        val fetchChapter = Intent(getActivity(), javaClass<FetcherAsync>())
-        fetchChapter.setAction(FetcherAsync.FETCH_CHAPTER)
-        fetchChapter.setData(chapter!!.uri())
-        getActivity().startService(fetchChapter)
+        val fetcher = FetcherAsync.fetchChapter(getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
+        fetcher.execute(chapter!!)
 
         adapter = PageThumbAdapter()
         val grid = view.findViewById(R.id.grid) as GridView
@@ -135,32 +134,6 @@ public class ChapterViewer :
         loading!!.setTitle("Loading Chapters for " + chapter!!.name!!)
         loading!!.show()
         return view
-    }
-
-    override fun onResume()
-    {
-        super<Fragment>.onResume()
-        val completeFilter = IntentFilter(FetcherAsync.FETCH_CHAPTER_COMPLETE)
-        try
-        {
-            completeFilter.addDataType(getActivity().getContentResolver().getType(Chapter.baseUri()))
-        }
-        catch (e: IntentFilter.MalformedMimeTypeException)
-        {
-            throw AssertionError(e)
-        }
-
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchCompleteReceiver, completeFilter)
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_CHAPTER_STATUS))
-    }
-
-    override fun onPause()
-    {
-        super<Fragment>.onPause()
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchStatusReceiver)
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchCompleteReceiver)
     }
 
     override fun onItemClick(viewParent: AdapterView<*>, view: View, position: Int, id: Long)

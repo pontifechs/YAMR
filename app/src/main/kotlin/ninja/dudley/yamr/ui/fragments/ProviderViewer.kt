@@ -22,13 +22,21 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
+// Method reference functions
+public fun providerViewerStatus(providerViewer: Any, status: Float)
+{
+    (providerViewer as ProviderViewer).status(status)
+}
+
+public fun providerViewerComplete(providerViewer: Any, provider: Provider)
+{
+    (providerViewer as ProviderViewer).complete(provider)
+}
+
 public class ProviderViewer :
         ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
 {
     private var adapter: SimpleCursorAdapter? = null
-
-    private var fetchStatusReceiver: BroadcastReceiver? = null
-    private var fetchCompleteReceiver: BroadcastReceiver? = null
 
     private var loading: ProgressDialog? = null
     private var filter: String? = null
@@ -45,35 +53,28 @@ public class ProviderViewer :
         this.parent = activity as LoadSeries?
     }
 
+    fun status(status: Float)
+    {
+        val percent = 100 * status
+        loading!!.setProgress(percent.toInt())
+    }
+
+    fun complete(provider: Provider)
+    {
+        getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
+        adapter!!.notifyDataSetChanged()
+        loading!!.dismiss()
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
         setHasOptionsMenu(true)
 
         val layout = inflater.inflate(R.layout.fragment_provider_viewer, container, false) as LinearLayout
 
-        fetchStatusReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                val percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_PROVIDER_STATUS, 0.0f)
-                loading!!.setProgress(percent.toInt())
-            }
-        }
-
-        fetchCompleteReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
-                adapter!!.notifyDataSetChanged()
-                loading!!.dismiss()
-            }
-        }
-
-        val i = Intent(getActivity(), javaClass<FetcherAsync>())
-        i.setAction(FetcherAsync.FETCH_PROVIDER)
-        i.setData(Provider.uri(1))   // Hard-code to the first (mangapanda) for now.
-        getActivity().startService(i)
+        val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus)
+        val provider = Provider(getActivity().getContentResolver().query(Provider.uri(1), null, null, null, null))
+        fetcher.execute(provider)
 
         adapter = SimpleCursorAdapter(getActivity(),
                                      R.layout.simple_series_item,
@@ -88,33 +89,6 @@ public class ProviderViewer :
         loading!!.setTitle("Loading Series")
         loading!!.show()
         return layout
-    }
-
-    override fun onResume()
-    {
-        super<ListFragment>.onResume()
-        val completeFilter = IntentFilter(FetcherAsync.FETCH_PROVIDER_COMPLETE)
-        try
-        {
-            completeFilter.addDataType(getActivity().getContentResolver().getType(Provider.baseUri()))
-        }
-        catch (e: IntentFilter.MalformedMimeTypeException)
-        {
-            // I'm a little more OK with this, as Provider.baseUri() is static.
-            throw AssertionError(e)
-        }
-
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchCompleteReceiver, completeFilter)
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_PROVIDER_STATUS))
-    }
-
-    override fun onPause()
-    {
-        super<ListFragment>.onPause()
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchStatusReceiver)
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchCompleteReceiver)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
@@ -132,11 +106,10 @@ public class ProviderViewer :
             R.id.search -> return true
             R.id.refresh ->
             {
-                val i = Intent(getActivity(), javaClass<FetcherAsync>())
-                i.setAction(FetcherAsync.FETCH_PROVIDER)
-                i.setData(Provider.uri(1))   // Hard-code to the first (mangapanda) for now.
-                i.putExtra(FetcherAsync.FETCH_BEHAVIOR, FetcherSync.FetchBehavior.ForceRefresh.toString())
-                getActivity().startService(i)
+                val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus, FetcherSync.Behavior.ForceRefresh)
+                val provider = Provider(getActivity().getContentResolver().query(Provider.uri(1), null, null, null, null))
+                fetcher.execute(provider)
+
                 loading!!.setProgress(0)
                 loading!!.show()
                 return true
@@ -186,5 +159,10 @@ public class ProviderViewer :
         filter = if (!TextUtils.isEmpty(newText)) newText else null
         getLoaderManager().restartLoader(0, Bundle(), this)
         return true
+    }
+
+    companion object
+    {
+
     }
 }

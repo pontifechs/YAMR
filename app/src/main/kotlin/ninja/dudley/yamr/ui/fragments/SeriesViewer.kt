@@ -17,6 +17,17 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 
+public fun seriesViewerStatus(thiS: Any, status: Float)
+{
+    (thiS as SeriesViewer).status(status)
+}
+
+public fun seriesViewerComplete(thiS: Any, series: Series)
+{
+    (thiS as SeriesViewer).complete(series)
+}
+
+
 public class SeriesViewer :
         ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
@@ -24,9 +35,6 @@ public class SeriesViewer :
     private var series: Series? = null
 
     private var adapter: SimpleCursorAdapter? = null
-
-    private var fetchStatusReceiver: BroadcastReceiver? = null
-    private var fetchCompleteReceiver: BroadcastReceiver? = null
 
     private var loading: ProgressDialog? = null
 
@@ -50,6 +58,28 @@ public class SeriesViewer :
         seriesUri = Uri.parse(getArguments().getString(uriArgKey))
     }
 
+    fun status(status: Float)
+    {
+        val percent = 100 * status
+        loading!!.setProgress(percent.toInt())
+    }
+
+    fun complete(series: Series)
+    {
+        getLoaderManager().restartLoader(0, Bundle(), this@SeriesViewer)
+        adapter!!.notifyDataSetChanged()
+        loading?.dismiss()
+        getActivity().invalidateOptionsMenu()
+
+        val card = SeriesCard.newInstance(series)
+        val transaction = getFragmentManager().beginTransaction()
+        transaction.replace(R.id.list_header_container, card)
+        transaction.commit()
+
+        this.series = series;
+    }
+
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
         setHasOptionsMenu(true)
@@ -60,35 +90,6 @@ public class SeriesViewer :
         list.addHeaderView(headerContainer)
         list.setOnItemLongClickListener(this);
 
-        fetchStatusReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                val percent = 100 * intent.getFloatExtra(FetcherAsync.FETCH_SERIES_STATUS, 0.0f)
-                loading!!.setProgress(percent.toInt())
-            }
-        }
-
-        fetchCompleteReceiver = object : BroadcastReceiver()
-        {
-            override fun onReceive(context: Context, intent: Intent)
-            {
-                getLoaderManager().restartLoader(0, Bundle(), this@SeriesViewer)
-                adapter!!.notifyDataSetChanged()
-                if (loading != null)
-                {
-                    loading!!.dismiss()
-                }
-                getActivity().invalidateOptionsMenu()
-                series = Series(getActivity().getContentResolver().query(intent.getData(), null, null, null, null))
-
-                val card = SeriesCard.newInstance(series!!)
-                val transaction = getFragmentManager().beginTransaction()
-                transaction.replace(R.id.list_header_container, card)
-                transaction.commit()
-            }
-        }
-
         series = Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null))
 
         val seriesCard = SeriesCard.newInstance(series!!)
@@ -96,10 +97,8 @@ public class SeriesViewer :
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        val fetchSeries = Intent(getActivity(), javaClass<FetcherAsync>())
-        fetchSeries.setAction(FetcherAsync.FETCH_SERIES)
-        fetchSeries.setData(series!!.uri())
-        getActivity().startService(fetchSeries)
+        val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
+        fetcher.execute(series)
 
         adapter = SimpleCursorAdapter(getActivity(),
                                       R.layout.chapter_item,
@@ -119,32 +118,6 @@ public class SeriesViewer :
             loading!!.show()
         }
         return layout
-    }
-
-    override fun onResume()
-    {
-        super<ListFragment>.onResume()
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchStatusReceiver, IntentFilter(FetcherAsync.FETCH_SERIES_STATUS))
-        val completeFilter = IntentFilter(FetcherAsync.FETCH_SERIES_COMPLETE)
-        try
-        {
-            completeFilter.addDataType(getActivity().getContentResolver().getType(Series.baseUri()))
-        }
-        catch (e: IntentFilter.MalformedMimeTypeException)
-        {
-            throw AssertionError(e)
-        }
-
-        LocalBroadcastManager.getInstance(getActivity())
-                .registerReceiver(fetchCompleteReceiver, completeFilter)
-    }
-
-    override fun onPause()
-    {
-        super<ListFragment>.onPause()
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchStatusReceiver)
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(fetchCompleteReceiver)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
@@ -176,11 +149,10 @@ public class SeriesViewer :
             }
             R.id.refresh ->
             {
-                val i = Intent(getActivity(), javaClass<FetcherAsync>())
-                i.setAction(FetcherAsync.FETCH_SERIES)
-                i.setData(series!!.uri())
-                i.putExtra(FetcherAsync.FETCH_BEHAVIOR, FetcherSync.FetchBehavior.ForceRefresh.toString())
-                getActivity().startService(i)
+                val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this,
+                        ::seriesViewerComplete, ::seriesViewerStatus,  FetcherSync.Behavior.ForceRefresh)
+                fetcher.execute(series)
+
                 loading!!.setProgress(0)
                 loading!!.show()
                 return true

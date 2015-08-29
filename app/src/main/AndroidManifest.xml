@@ -12,13 +12,11 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:name=".YAMR">
-        <service android:name=".svc.FetcherAsync" />
-        <service android:name=".svc.Navigation" />
 
         <receiver android:name=".svc.FetchStarter" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="ninja.dudley.yamr.FetchStarter" />
+                <action android:name="ninja.dudley.yamr.FetchStarter.StartChecking" />
             </intent-filter>
         </receiver>
 

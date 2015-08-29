@@ -1,5 +1,6 @@
 package ninja.dudley.yamr.svc
 
+import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -9,12 +10,12 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
 import ninja.dudley.yamr.model.js.JsSeries
+import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.mozilla.javascript.Context
-import org.mozilla.javascript.NativeArray
 import org.mozilla.javascript.ScriptableObject
 import java.io.*
 import java.net.HttpURLConnection
@@ -25,7 +26,7 @@ import java.util.ArrayList
 /**
  * Created by mdudley on 5/19/15.
  */
-public class FetcherSync(protected var context: android.content.Context)
+public open class FetcherSync(protected var resolver: ContentResolver)
 {
     private val cx: Context
     private val scope: ScriptableObject
@@ -49,7 +50,7 @@ public class FetcherSync(protected var context: android.content.Context)
         }
 
         // TODO:: Make generic, rather than just grab MangaPanda (id 1)
-        val provider = Provider(context.getContentResolver().query(Provider.uri(1), null, null, null, null));
+        val provider = Provider(resolver.query(Provider.uri(1), null, null, null, null));
 
         cx.evaluateString(scope, provider.fetchProvider, "fetchProvider", 1, null);
         cx.evaluateString(scope, provider.stubSeries, "stubSeries", 1, null);
@@ -64,13 +65,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     public interface NotifyStatus
     {
-        public fun notifyProviderStatus(status: Float)
-
-        public fun notifySeriesStatus(status: Float)
-
-        public fun notifyChapterStatus(status: Float)
-
-        public fun notifyPageStatus(status: Float)
+        public fun notify(status: Float)
     }
 
     protected var listener: NotifyStatus? = null
@@ -79,20 +74,15 @@ public class FetcherSync(protected var context: android.content.Context)
         this.listener = listener
     }
 
-    public enum class FetchBehavior(private val value: String)
+    public enum class Behavior
     {
-        LazyFetch("LazyFetch"),
-        ForceRefresh("ForceRefresh");
-
-        override fun toString(): String
-        {
-            return value
-        }
+        LazyFetch,
+        ForceRefresh;
     }
 
-    public fun fetchProvider(provider: Provider, behavior: FetchBehavior = FetchBehavior.LazyFetch): Provider
+    public fun fetchProvider(provider: Provider, behavior: Behavior = Behavior.LazyFetch): Provider
     {
-        if (behavior === FetcherSync.FetchBehavior.LazyFetch && provider.fullyParsed)
+        if (behavior === FetcherSync.Behavior.LazyFetch && provider.fullyParsed)
         {
             Log.d("Fetch", "Already parsed. Ignoring")
             return provider
@@ -108,7 +98,7 @@ public class FetcherSync(protected var context: android.content.Context)
             val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
             Log.d("RHINO", "${elements.size()}")
             provider.fullyParsed = true
-            context.getContentResolver().update(provider.uri(), provider.getContentValues(), null, null)
+            resolver.update(provider.uri(), provider.getContentValues(), null, null)
             Log.d("Fetch", "Iteration complete. Provider Fetched.")
 
             val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
@@ -121,7 +111,7 @@ public class FetcherSync(protected var context: android.content.Context)
                 {
                     val progress = index / elements.size().toFloat()
                     Log.d("Fetch", "ProviderFetch progress: ${progress}")
-                    listener?.notifyProviderStatus(progress)
+                    listener?.notify(progress)
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
                 val seriesResult = cx.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
@@ -132,7 +122,7 @@ public class FetcherSync(protected var context: android.content.Context)
                 {
                     continue
                 }
-                context.getContentResolver().insert(Series.baseUri(), s.getContentValues())
+                resolver.insert(Series.baseUri(), s.getContentValues())
             }
             provider.fullyParsed = true
         }
@@ -145,9 +135,9 @@ public class FetcherSync(protected var context: android.content.Context)
         return provider
     }
 
-    public fun fetchSeries(series: Series, behavior: FetchBehavior = FetchBehavior.LazyFetch): Series
+    public fun fetchSeries(series: Series, behavior: Behavior = Behavior.LazyFetch): Series
     {
-        if (behavior === FetcherSync.FetchBehavior.LazyFetch && series.fullyParsed)
+        if (behavior === FetcherSync.Behavior.LazyFetch && series.fullyParsed)
         {
             Log.d("Fetch", "Already parsed. Ignoring")
             return series
@@ -168,12 +158,12 @@ public class FetcherSync(protected var context: android.content.Context)
                 if (!genreExists(genre))
                 {
                     val g = Genre(genre)
-                    context.getContentResolver().insert(Genre.baseUri(), g.getContentValues())
+                    resolver.insert(Genre.baseUri(), g.getContentValues())
                 }
-                val g = Genre(context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(genre), null))
+                val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre), null))
 
                 // Now that we have the genre for sure, add the relation.
-                context.getContentResolver().insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
+                resolver.insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
             }
 
             val result = cx.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
@@ -190,7 +180,7 @@ public class FetcherSync(protected var context: android.content.Context)
                 {
                     val progress = index / elements.size().toFloat()
                     Log.d("Fetch", "SeriesFetch progress: ${progress}")
-                    listener?.notifySeriesStatus(progress)
+                    listener?.notify(progress)
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
                 val chapterResult = cx.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
@@ -201,11 +191,11 @@ public class FetcherSync(protected var context: android.content.Context)
                 {
                     continue
                 }
-                context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
+                resolver.insert(Chapter.baseUri(), chapter.getContentValues())
             }
             series.fullyParsed = true
             series.thumbnailPath = saveThumbnail(series)
-            context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+            resolver.update(series.uri(), series.getContentValues(), null, null)
             Log.d("Fetch", "Iteration complete. Series Fetched.")
         }
         catch (e: IOException)
@@ -217,9 +207,9 @@ public class FetcherSync(protected var context: android.content.Context)
         return series
     }
 
-    public fun fetchChapter(chapter: Chapter, behavior: FetchBehavior = FetchBehavior.LazyFetch): Chapter
+    public fun fetchChapter(chapter: Chapter, behavior: Behavior = Behavior.LazyFetch): Chapter
     {
-        if (behavior === FetcherSync.FetchBehavior.LazyFetch && chapter.fullyParsed)
+        if (behavior === FetcherSync.Behavior.LazyFetch && chapter.fullyParsed)
         {
             Log.d("Fetch", "Already parsed. Ignoring")
             return chapter
@@ -242,7 +232,7 @@ public class FetcherSync(protected var context: android.content.Context)
                 {
                     val progress = index / elements.size().toFloat()
                     Log.d("Fetch", "Chapter fetch progress: ${progress}")
-                    listener?.notifyChapterStatus(progress)
+                    listener?.notify(progress)
                 }
 
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
@@ -255,10 +245,10 @@ public class FetcherSync(protected var context: android.content.Context)
                     continue
                 }
 
-                context.getContentResolver().insert(Page.baseUri(), page.getContentValues())
+                resolver.insert(Page.baseUri(), page.getContentValues())
             }
             chapter.fullyParsed = true
-            context.getContentResolver().update(chapter.uri(), chapter.getContentValues(), null, null)
+            resolver.update(chapter.uri(), chapter.getContentValues(), null, null)
             Log.d("Fetch", "Iteration complete. Chapter fetched")
         }
         catch (e: IOException)
@@ -270,11 +260,11 @@ public class FetcherSync(protected var context: android.content.Context)
         return chapter
     }
 
-    public fun fetchPage(page: Page, behavior: FetchBehavior = FetchBehavior.LazyFetch): Page
+    public fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
     {
         try
         {
-            if (behavior === FetcherSync.FetchBehavior.LazyFetch && page.fullyParsed)
+            if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed)
             {
                 Log.d("FetchPage", "Already parsed. Ignoring")
                 return page
@@ -321,13 +311,13 @@ public class FetcherSync(protected var context: android.content.Context)
                 var series = jsSeries.unJS(provider.id);
                 if (seriesExists(series.url))
                 {
-                    series = Series(context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(series.url), null))
+                    series = Series(resolver.query(Series.baseUri(), null, null, arrayOf(series.url), null))
                 }
                 else
                 {
                     Log.d("Fetch", "Completely New Series!!")
-                    val inserted = context.getContentResolver().insert(Series.baseUri(), series.getContentValues())
-                    series = Series(context.getContentResolver().query(inserted, null, null, null, null))
+                    val inserted = resolver.insert(Series.baseUri(), series.getContentValues())
+                    series = Series(resolver.query(inserted, null, null, null, null))
                     fetchSeries(series)
                     continue
                 }
@@ -336,11 +326,11 @@ public class FetcherSync(protected var context: android.content.Context)
                 if (!chapterExists(chapter.url))
                 {
                     Log.d("Fetch", "Haven't seen this one.")
-                    context.getContentResolver().insert(Chapter.baseUri(), chapter.getContentValues())
+                    resolver.insert(Chapter.baseUri(), chapter.getContentValues())
                     if (series.favorite)
                     {
                         series.updated = true
-                        context.getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+                        resolver.update(series.uri(), series.getContentValues(), null, null)
                         newChapters.add(chapter.uri())
                     }
                 }
@@ -368,7 +358,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     private fun providerExists(url: String): Boolean
     {
-        val c = context.getContentResolver().query(Provider.baseUri(), null, null, arrayOf(url), null)
+        val c = resolver.query(Provider.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
         c.close()
         return ret
@@ -376,7 +366,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     private fun seriesExists(url: String): Boolean
     {
-        val c = context.getContentResolver().query(Series.baseUri(), null, null, arrayOf(url), null)
+        val c = resolver.query(Series.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
         c.close()
         return ret
@@ -384,7 +374,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     private fun chapterExists(url: String): Boolean
     {
-        val c = context.getContentResolver().query(Chapter.baseUri(), null, null, arrayOf(url), null)
+        val c = resolver.query(Chapter.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
         c.close()
         return ret
@@ -392,7 +382,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     private fun pageExists(url: String): Boolean
     {
-        val c = context.getContentResolver().query(Page.baseUri(), null, null, arrayOf(url), null)
+        val c = resolver.query(Page.baseUri(), null, null, arrayOf(url), null)
         val ret = c.getCount() > 0
         c.close()
         return ret
@@ -400,7 +390,7 @@ public class FetcherSync(protected var context: android.content.Context)
 
     private fun genreExists(name: String): Boolean
     {
-        val c = context.getContentResolver().query(Genre.baseUri(), null, null, arrayOf(name), null)
+        val c = resolver.query(Genre.baseUri(), null, null, arrayOf(name), null)
         val ret = c.getCount() > 0
         c.close()
         return ret
@@ -445,7 +435,7 @@ public class FetcherSync(protected var context: android.content.Context)
                 count = inStream.read(data)
                 done += count
 
-                listener?.notifyPageStatus(done / length.toFloat())
+                listener?.notify(done / length.toFloat())
                 out.write(data, 0, count)
             }
 
@@ -483,7 +473,7 @@ public class FetcherSync(protected var context: android.content.Context)
     // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
     private fun savePageImage(p: Page)
     {
-        val heritage = Heritage(context.getContentResolver().query(p.heritage(), null, null, null, null))
+        val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
         val chapterPath = root.getAbsolutePath() + "/." + stripBadCharsForFile(heritage.providerName) + "/" +
@@ -496,12 +486,12 @@ public class FetcherSync(protected var context: android.content.Context)
         downloadImage(p.imageUrl!!, pagePath)
 
         p.imagePath = pagePath
-        context.getContentResolver().update(p.uri(), p.getContentValues(), null, null) // Save the path off
+        resolver.update(p.uri(), p.getContentValues(), null, null) // Save the path off
     }
 
     private fun saveThumbnail(s: Series): String?
     {
-        val p = Provider(context.getContentResolver().query(Provider.uri(s.providerId), null, null, null, null))
+        val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
         val seriesPath = root.getAbsolutePath() + "/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
