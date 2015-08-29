@@ -75,7 +75,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         loadPageViewer(page, MangaElement.UriType.Page)
     }
 
-    override fun loadFirstPageOfSeries(series: Uri)
+    override fun loadBookmarkFromSeries(series: Uri)
     {
         loadPageViewer(series, MangaElement.UriType.Series)
     }

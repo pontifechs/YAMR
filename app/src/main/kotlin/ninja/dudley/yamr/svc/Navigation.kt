@@ -170,7 +170,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
         return firstPageFromChapter(c)
     }
 
-    private fun bookmarkFirstPage(series: Series): Series
+    public fun bookmarkFirstPage(series: Series): Series
     {
         val firstChapter = firstChapterFromSeries(series)
         val firstPage = firstPageFromSeries(series)
@@ -180,7 +180,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
         return series
     }
 
-    private fun pageFromBookmark(series: Series): Page
+    public fun pageFromBookmark(series: Series): Page
     {
         val pageUri = Page.uri(series.progressPageId)
         val page = page(pageUri)

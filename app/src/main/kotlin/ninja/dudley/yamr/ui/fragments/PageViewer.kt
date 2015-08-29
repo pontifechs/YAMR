@@ -174,7 +174,7 @@ public class PageViewer :
         {
             MangaElement.UriType.Series ->
             {
-                val fetcher = FetcherAsync.fetchFirstPageFromSeries(getActivity().getContentResolver(), this, ::pageViewerComplete, ::pageViewerStatus)
+                val fetcher = FetcherAsync.fetchPageFromSeries(getActivity().getContentResolver(), this, ::pageViewerComplete, ::pageViewerStatus)
                 fetcher.execute(Series(getActivity().getContentResolver().query(uri, null, null, null, null)))
             }
             MangaElement.UriType.Chapter ->

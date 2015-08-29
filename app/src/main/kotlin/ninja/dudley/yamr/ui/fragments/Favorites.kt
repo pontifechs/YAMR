@@ -82,7 +82,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     public interface LoadSeriesAndChapter : ProviderViewer.LoadSeries
     {
-        public fun loadFirstPageOfSeries(series: Uri)
+        public fun loadBookmarkFromSeries(series: Uri)
     }
 
     private var parent: LoadSeriesAndChapter? = null
@@ -125,7 +125,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
-        parent?.loadFirstPageOfSeries(Series.uri(id.toInt()))
+        parent?.loadBookmarkFromSeries(Series.uri(id.toInt()))
     }
 
     override fun onItemLongClick(parentView: AdapterView<*>?, view: View?, position: Int, id: Long): Boolean

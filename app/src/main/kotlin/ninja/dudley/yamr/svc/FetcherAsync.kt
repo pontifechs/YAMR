@@ -194,7 +194,7 @@ public class FetcherAsync
                 }
             }
         }
-        public fun fetchFirstPageFromSeries(resolver: ContentResolver,
+        public fun fetchPageFromSeries(resolver: ContentResolver,
                                  caller: Any,
                                  complete: (thiS: Any, provider: Page) -> Unit,
                                  progress: (thiS: Any, progress: Float) -> Unit)
@@ -206,7 +206,12 @@ public class FetcherAsync
                 {
                     val fetcher = Navigation(resolver)
                     fetcher.register(this)
-                    return fetcher.firstPageFromSeries(params[0])
+                    var arg = params[0]
+                    if (arg.progressPageId == -1)
+                    {
+                        arg = fetcher.bookmarkFirstPage(arg)
+                    }
+                    return fetcher.pageFromBookmark(arg)
                 }
 
                 override fun notify(status: Float)
