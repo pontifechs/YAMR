@@ -11,15 +11,16 @@ public abstract class LambdaAsyncTask<Params, Progress, Result> : AsyncTask<Para
 
     private val caller: Any
 
-    private val complete: (thiS: Any, complete: Result) -> Unit
-    private val progress: (thiS: Any, progress: Progress) -> Unit
-    private var failure: ((thiS: Any) -> Unit)? = null
+    public var complete: ((thiS: Any, complete: Result) -> Unit)?
+    public var progress: ((thiS: Any, progress: Progress)-> Unit)?
+    public var failure: ((thiS: Any) -> Unit)?
 
     private var failed: Boolean = false
+    public var finished: Boolean = false
 
     constructor (callee: Any,
-                 complete: (thiS: Any, complete: Result) -> Unit,
-                 progress: (thiS: Any, progress: Progress) -> Unit,
+                 complete: ((thiS: Any, complete: Result) -> Unit)? = null,
+                 progress: ((thiS: Any, progress: Progress) -> Unit)? = null,
                  failure: ((thiS: Any) -> Unit)? = null
                  )
     {
@@ -32,18 +33,26 @@ public abstract class LambdaAsyncTask<Params, Progress, Result> : AsyncTask<Para
     override fun onProgressUpdate(vararg values: Progress)
     {
         super.onProgressUpdate(*values)
+        if (progress == null)
+        {
+            return
+        }
         for (value in values)
         {
-            progress(caller, value)
+            progress!!(caller, value)
         }
     }
 
     override fun onPostExecute(result: Result)
     {
         super.onPostExecute(result)
+        finished = true
         if (!failed)
         {
-            complete(caller, result)
+            if (complete != null)
+            {
+                complete!!(caller, result)
+            }
         }
         else if (failure != null)
         {

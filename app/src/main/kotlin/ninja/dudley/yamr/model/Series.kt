@@ -38,9 +38,9 @@ public class Series : MangaElement
     Column(name = thumbnailPathCol)
     public var thumbnailPath: String? = null
     ForeignKey(value = Chapter::class, name = progressChapterIdCol)
-    public var progressChapterId: Int = -1
+    public var progressChapterId: Int? = -1
     ForeignKey(value = Page::class, name = progressPageIdCol)
-    public var progressPageId: Int = -1
+    public var progressPageId: Int? = -1
     Column(name = updatedCol, type = Column.Type.Integer)
     public var updated: Boolean = false
 
@@ -96,9 +96,17 @@ public class Series : MangaElement
         {
             values.put(progressChapterIdCol, progressChapterId)
         }
+        else
+        {
+            values.putNull(progressChapterIdCol)
+        }
         if (progressPageId != -1)
         {
             values.put(progressPageIdCol, progressPageId)
+        }
+        else
+        {
+            values.putNull(progressPageIdCol)
         }
         values.put(updatedCol, updated)
         return values

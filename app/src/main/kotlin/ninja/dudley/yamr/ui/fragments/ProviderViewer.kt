@@ -160,9 +160,4 @@ public class ProviderViewer :
         getLoaderManager().restartLoader(0, Bundle(), this)
         return true
     }
-
-    companion object
-    {
-
-    }
 }

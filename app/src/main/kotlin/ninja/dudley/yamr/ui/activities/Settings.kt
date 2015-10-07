@@ -1,8 +1,10 @@
 package ninja.dudley.yamr.ui.fragments
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceFragment
+import android.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 
@@ -52,7 +54,24 @@ public class Settings : Activity()
 
     companion object
     {
-        public val RTL_ENABLED_KEY: String = "rtl_enabled"
-        public val PRE_FETCH_BUFFER_KEY: String = "pre_fetch_buffer"
+        private val RTL_ENABLED_KEY: String = "rtl_enabled"
+        private val PRE_FETCH_BUFFER_KEY: String = "pre_fetch_buffer"
+
+        public fun rtlEnabled(context: Context): Boolean
+        {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getBoolean(RTL_ENABLED_KEY, true)
+        }
+
+        public fun preFetchEnabled(context: Context): Boolean
+        {
+            return preFetchSize(context) > 0
+        }
+
+        public fun preFetchSize(context: Context): Int
+        {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getInt(PRE_FETCH_BUFFER_KEY, -1)
+        }
     }
 }

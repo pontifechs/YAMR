@@ -1,16 +1,14 @@
 package ninja.dudley.yamr.svc
 
-import android.app.IntentService
 import android.content.ContentResolver
-import android.content.Intent
-import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.util.LambdaAsyncTask
-import java.util.ArrayList
+import ninja.dudley.yamr.util.Direction
+import java.util.*
 
 /**
  * Created by mdudley on 6/11/15.
@@ -194,6 +192,7 @@ public class FetcherAsync
                 }
             }
         }
+
         public fun fetchPageFromSeries(resolver: ContentResolver,
                                  caller: Any,
                                  complete: (thiS: Any, provider: Page) -> Unit,
@@ -202,7 +201,7 @@ public class FetcherAsync
         {
             return object : LambdaAsyncTask<Series, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
             {
-                override fun doInBackground(vararg params: Series): Page
+                override fun doInBackground(vararg params: Series): Page?
                 {
                     val fetcher = Navigation(resolver)
                     fetcher.register(this)
@@ -216,6 +215,48 @@ public class FetcherAsync
 
                 override fun notify(status: Float)
                 {
+                    publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchOffsetFromPage(offset: Int,
+                                       direction: Direction,
+                                       resolver: ContentResolver,
+                                       caller: Any,
+                                       complete: ((thiS: Any, provider: Page) -> Unit)? = null,
+                                       progress:((thiS: Any, progress: Float) -> Unit)? = null)
+            : LambdaAsyncTask<Page, Float, Page>
+        {
+            return object : LambdaAsyncTask<Page, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
+            {
+                override fun doInBackground(vararg params: Page): Page?
+                {
+                    try
+                    {
+
+                        Log.d("PreFetch", "Executing Prefetch #${params[0].number} ${direction} ${offset}")
+                        val fetcher = Navigation(resolver)
+                        fetcher.register(this)
+                        val page = fetcher.fetchPageOffset(params[0], offset, direction)
+                        if (page == null)
+                        {
+                            fail()
+                        }
+                        Log.d("PreFetch", "Finished Prefetch #${params[0].number} ${direction} ${offset}")
+                        return page
+
+                    }
+                    catch (e: NoSuchElementException)
+                    {
+                        fail()
+                        return null
+                    }
+                }
+
+                override fun notify(status: Float)
+                {
+                    Log.d("PreFetch", "PreFetch Status: ${status}")
                     publishProgress(status)
                 }
             }

@@ -22,13 +22,13 @@ public class ProgressTracker(private val resolver: ContentResolver, private val 
             throw IllegalArgumentException("Must have a series to track progress")
         }
 
-        val pageCursor = resolver.query(Page.uri(series.progressPageId), null, null, null, null)
+        val pageCursor = resolver.query(Page.uri(series.progressPageId!!), null, null, null, null)
         progressPage = Page(pageCursor)
         val chapterCursor = resolver.query(Chapter.uri(progressPage!!.chapterId), null, null, null, null)
         progressChapter = Chapter(chapterCursor)
     }
 
-    public fun handleNextPage(p: Page)
+    public fun handleNewPage(p: Page)
     {
         // Check if we're still on the same chapter.
         if (progressChapter!!.id == p.chapterId)

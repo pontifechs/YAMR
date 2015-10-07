@@ -2,6 +2,8 @@ package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -10,6 +12,8 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.SimpleAdapter
+import android.widget.TextView
+import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.svc.FetchStarter
 import ninja.dudley.yamr.ui.fragments.Settings
@@ -22,6 +26,13 @@ public class MainActivity : Activity()
     {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        if (BuildConfig.DEBUG)
+        {
+            // Show version
+            val versionView = findViewById(R.id.ver_name) as TextView
+            versionView.setText(BuildConfig.VERSION_NAME)
+        }
 
         val maps = ArrayList<Map<String, *>>()
 

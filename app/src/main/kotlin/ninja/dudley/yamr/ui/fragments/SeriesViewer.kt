@@ -150,11 +150,19 @@ public class SeriesViewer :
             R.id.refresh ->
             {
                 val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this,
-                        ::seriesViewerComplete, ::seriesViewerStatus,  FetcherSync.Behavior.ForceRefresh)
+                        ::seriesViewerComplete, ::seriesViewerStatus, FetcherSync.Behavior.ForceRefresh)
                 fetcher.execute(series)
 
                 loading!!.setProgress(0)
                 loading!!.show()
+                return true
+            }
+            R.id.reset_progress ->
+            {
+                series!!.progressChapterId = -1;
+                series!!.progressPageId = -1;
+                getActivity().getContentResolver().update(series!!.uri(), series!!.getContentValues(), null, null)
+                getActivity().invalidateOptionsMenu()
                 return true
             }
             else -> return super<ListFragment>.onOptionsItemSelected(item)

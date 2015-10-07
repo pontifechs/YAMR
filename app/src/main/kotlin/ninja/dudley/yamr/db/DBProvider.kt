@@ -33,8 +33,8 @@ public class DBProvider : ContentProvider()
         ChapterPages(lastCode++),
         PageMatch(lastCode++),
         PageByID(lastCode++),
-        PrevPageInChapter(lastCode++),
-        NextPageInChapter(lastCode++),
+        PrevPagesInChapter(lastCode++),
+        NextPagesInChapter(lastCode++),
         PageHeritage(lastCode++),
         GenreMatch(lastCode++),
         GenreSeries(lastCode++),
@@ -127,17 +127,18 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
             DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
-            DBProvider.MatchCode.PrevPageInChapter ->
+            DBProvider.MatchCode.PrevPagesInChapter ->
             {
                 val pageNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
                 val pageNumberForPrev = java.lang.Float.parseFloat(pageNumberStringForPrev)
-                return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberForPrev)), null, null, Page.numberCol + " desc", "1")
+                return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberForPrev)), null, null, Page.numberCol + " desc")
             }
-            DBProvider.MatchCode.NextPageInChapter ->
+            DBProvider.MatchCode.NextPagesInChapter ->
             {
                 val pageNumberStringNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
                 val pageNumberNext = java.lang.Float.parseFloat(pageNumberStringNext)
-                return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberNext)), null, null, Page.numberCol + " asc", "1")
+                val cursor = db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberNext)), null, null, Page.numberCol + " asc")
+                return cursor
             }
             DBProvider.MatchCode.PageMatch -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
             DBProvider.MatchCode.PageByID -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
@@ -285,8 +286,8 @@ public class DBProvider : ContentProvider()
             matcher.addURI(DBHelper.AUTHORITY, "/chapter", MatchCode.ChapterMatch.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", MatchCode.ChapterByID.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", MatchCode.ChapterPages.value())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", MatchCode.PrevPageInChapter.value())
-            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", MatchCode.NextPageInChapter.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", MatchCode.PrevPagesInChapter.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", MatchCode.NextPagesInChapter.value())
             matcher.addURI(DBHelper.AUTHORITY, "/page", MatchCode.PageMatch.value())
             matcher.addURI(DBHelper.AUTHORITY, "/page/#", MatchCode.PageByID.value())
             matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", MatchCode.PageHeritage.value())
@@ -310,7 +311,7 @@ public class DBProvider : ContentProvider()
                     idStr = segments.get(segments.size() - 2)
                     return Integer.parseInt(idStr)
                 }
-                DBProvider.MatchCode.PrevChapterInSeries, DBProvider.MatchCode.NextChapterInSeries, DBProvider.MatchCode.PrevPageInChapter, DBProvider.MatchCode.NextPageInChapter ->
+                DBProvider.MatchCode.PrevChapterInSeries, DBProvider.MatchCode.NextChapterInSeries, DBProvider.MatchCode.PrevPagesInChapter, DBProvider.MatchCode.NextPagesInChapter ->
                 {
                     segments = uri.getPathSegments()
                     idStr = segments.get(segments.size() - 4)

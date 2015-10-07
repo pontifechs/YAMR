@@ -1,9 +1,9 @@
-package ninja.dudley.yamr.util;
+package ninja.dudley.yamr.util
 
 /**
  * Created by mdudley on 8/29/15.
  */
-public enum Direction
+public enum class Direction
 {
     Next,
     Prev

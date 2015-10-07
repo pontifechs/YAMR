@@ -1,15 +1,11 @@
 package ninja.dudley.yamr.svc
 
-import android.app.IntentService
 import android.content.ContentResolver
-import android.content.Intent
 import android.net.Uri
-import android.support.v4.content.LocalBroadcastManager
-import android.util.Log
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.svc.util.LambdaAsyncTask
+import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException
 
 public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
@@ -41,17 +37,11 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
         return Series(resolver.query(series, null, null, null, null))
     }
 
-    private enum class Direction
-    {
-        Previous,
-        Next;
-    }
-
     // Returns a fetched page neighboring the page specified by the given uri.
     private fun neighboringPage(currentPage: Page, direction: Direction): Page
     {
         val chapter = chapterFromPage(currentPage)
-        val getNextPageUri = if (direction === Direction.Previous)
+        val getNextPageUri = if (direction == Direction.Prev)
         {
             chapter.prevPage(currentPage.number)
         }
@@ -70,7 +60,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
     private fun neighboringChapter(currentChapter: Chapter, direction: Direction): Chapter
     {
         val series = seriesFromChapter(currentChapter)
-        val getNextChapterUri = if (direction === Direction.Previous)
+        val getNextChapterUri = if (direction == Direction.Prev)
             series.prevChapter(currentChapter.number)
         else
             series.nextChapter(currentChapter.number)
@@ -94,6 +84,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
             {
                 val rightChapter = nextChapter(wrongChapter)!!
                 nextPage = firstPageFromChapter(rightChapter)
+                fetchPage(page)
             }
             catch (noChapter: NoSuchElementException)
             {
@@ -108,7 +99,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
         val prevPage: Page
         try
         {
-            prevPage = neighboringPage(page, Direction.Previous)
+            prevPage = neighboringPage(page, Direction.Prev)
         }
         catch (noPage: NoSuchElementException)
         {
@@ -117,6 +108,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
             {
                 val rightChapter = prevChapter(wrongChapter)!!
                 prevPage = lastPageFromChapter(rightChapter)
+                fetchPage(page)
             }
             catch (noChapter: NoSuchElementException)
             {
@@ -134,33 +126,27 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
 
     private fun prevChapter(chapter: Chapter): Chapter?
     {
-        return neighboringChapter(chapter, Direction.Previous)
+        return neighboringChapter(chapter, Direction.Prev)
     }
 
     public fun firstPageFromChapter(chapter: Chapter): Page
     {
         fetchChapter(chapter)
         val pages = resolver.query(chapter.pages(), null, null, null, Page.numberCol + " asc")
-        val firstPage = Page(pages)
-        fetchPage(firstPage)
-        return firstPage
+        return Page(pages)
     }
 
     private fun lastPageFromChapter(chapter: Chapter): Page
     {
         fetchChapter(chapter)
         val pages = resolver.query(chapter.pages(), null, null, null, Page.numberCol + " desc")
-        val lastPage = Page(pages)
-        fetchPage(lastPage)
-        return lastPage
+        return Page(pages)
     }
 
     private fun firstChapterFromSeries(series: Series): Chapter
     {
         val chapters = resolver.query(series.chapters(), null, null, null, Chapter.numberCol + " asc")
-        val firstChapter = Chapter(chapters)
-        fetchChapter(firstChapter)
-        return firstChapter
+        return Chapter(chapters)
     }
 
     public fun firstPageFromSeries(series: Series): Page
@@ -182,9 +168,48 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
 
     public fun pageFromBookmark(series: Series): Page
     {
-        val pageUri = Page.uri(series.progressPageId)
-        val page = page(pageUri)
-        fetchPage(page)
-        return page
+        val pageUri = Page.uri(series.progressPageId!!)
+        return page(pageUri)
+    }
+
+    public fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page?
+    {
+        var currentChapter = chapterFromPage(page)
+        var neighboringPagesUri =
+                if (direction == Direction.Next)
+                    currentChapter.nextPage(page.number)
+                else
+                    currentChapter.prevPage(page.number)
+
+        var neighboringPages = resolver.query(neighboringPagesUri, null, null, null, null)
+
+        var skipped = 0
+        // Until we've gone far enough, keep going
+        while (skipped < offset)
+        {
+            if (neighboringPages.moveToNext())
+            {
+                ++skipped;
+            }
+            // Ran out of rows, try the next chapter
+            else
+            {
+                val neighboringChapter =  if (direction == Direction.Next)
+                    nextChapter(currentChapter) ?: return null
+                else
+                    prevChapter(currentChapter) ?: return null
+                fetchChapter(neighboringChapter)
+                currentChapter = neighboringChapter
+                neighboringPagesUri =
+                        if (direction == Direction.Next)
+                            currentChapter.nextPage(page.number)
+                        else
+                            currentChapter.prevPage(page.number)
+                neighboringPages = resolver.query(neighboringPagesUri, null, null, null, null)
+            }
+        }
+        val retPage = Page(neighboringPages)
+        fetchPage(retPage)
+        return retPage
     }
 }

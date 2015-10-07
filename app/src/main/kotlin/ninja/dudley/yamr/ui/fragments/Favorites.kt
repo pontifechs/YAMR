@@ -70,7 +70,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             if (series.progressPageId != -1)
             {
                 val heritage = Heritage(context!!.getContentResolver()
-                        .query(Page.heritage(series.progressPageId), null, null, null, null))
+                        .query(Page.heritage(series.progressPageId!!), null, null, null, null))
                 progress.setText("Chapter: " + heritage.chapterNumber + ", Page: " + heritage.pageNumber)
             }
             else

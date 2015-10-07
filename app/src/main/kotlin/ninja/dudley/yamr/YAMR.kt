@@ -23,6 +23,9 @@ class YAMR : Application()
     override fun onCreate()
     {
         super.onCreate()
-        ACRA.init(this);
+        if (!BuildConfig.DEBUG)
+        {
+            ACRA.init(this);
+        }
     }
 }
