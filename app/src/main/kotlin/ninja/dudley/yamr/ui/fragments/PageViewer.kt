@@ -7,12 +7,14 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
+import android.widget.TextView
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.svc.FetcherAsync
@@ -115,7 +117,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     public fun pageAcquired(page: Page)
     {
         this.page = page;
-        initProgressTracker(page!!)
+        initProgressTracker(page)
         fetchPage()
     }
 
@@ -127,6 +129,9 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         val d = Drawable.createFromPath(page.imagePath)
         touchImageView.setImageDrawable(d)
         progressTracker?.handleNewPage(page)
+
+        val chapter = Chapter(getActivity().getContentResolver().query(Chapter.uri(page.chapterId), null, null, null, null))
+        showLoadingText("Chapter ${chapter.number}, Page ${page.number}")
     }
 
     public fun failure()
@@ -169,6 +174,22 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     {
         val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
         loadingBar.setVisibility(View.VISIBLE)
+    }
+
+    private fun hideLoadingText()
+    {
+        val loadingText = getActivity().findViewById(R.id.page_loading_text) as TextView
+        loadingText.setVisibility(View.INVISIBLE)
+    }
+
+    private fun showLoadingText(text: String)
+    {
+        val loadingText = getActivity().findViewById(R.id.page_loading_text) as TextView
+        loadingText.setText(text)
+        loadingText.setVisibility(View.VISIBLE)
+
+        val handler = Handler()
+        handler.postDelayed({this.hideLoadingText()}, 3000)
     }
 
     private var oldSystemUiVisibility: Int = -1

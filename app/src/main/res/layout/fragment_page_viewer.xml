@@ -20,6 +20,7 @@
         android:id="@+id/page_loading_text"
         android:visibility="invisible"
         android:textColor="@color/white"
+        style="@style/ShadowedText"
         />
 
     <ProgressBar
