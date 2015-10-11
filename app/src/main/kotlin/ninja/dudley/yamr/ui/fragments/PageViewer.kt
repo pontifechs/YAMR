@@ -321,12 +321,26 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     override fun onSwipeLeft()
     {
-        changePage(Direction.Prev)
+        if (Settings.rtlEnabled(getActivity()))
+        {
+            changePage(Direction.Prev)
+        }
+        else
+        {
+            changePage(Direction.Next)
+        }
     }
 
     override fun onSwipeRight()
     {
-        changePage(Direction.Next)
+        if (Settings.rtlEnabled(getActivity()))
+        {
+            changePage(Direction.Next)
+        }
+        else
+        {
+            changePage(Direction.Prev)
+        }
     }
 
     companion object

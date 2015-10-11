@@ -72,7 +72,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
 
     public fun nextPage(page: Page): Page?
     {
-        val nextPage: Page
+        var nextPage: Page
         try
         {
             nextPage = neighboringPage(page, Direction.Next)
@@ -84,7 +84,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
             {
                 val rightChapter = nextChapter(wrongChapter)!!
                 nextPage = firstPageFromChapter(rightChapter)
-                fetchPage(page)
+                nextPage = fetchPage(nextPage)
             }
             catch (noChapter: NoSuchElementException)
             {
@@ -96,7 +96,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
 
     public fun prevPage(page: Page): Page?
     {
-        val prevPage: Page
+        var prevPage: Page
         try
         {
             prevPage = neighboringPage(page, Direction.Prev)
@@ -108,7 +108,7 @@ public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
             {
                 val rightChapter = prevChapter(wrongChapter)!!
                 prevPage = lastPageFromChapter(rightChapter)
-                fetchPage(page)
+                prevPage = fetchPage(prevPage)
             }
             catch (noChapter: NoSuchElementException)
             {

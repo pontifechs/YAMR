@@ -292,8 +292,6 @@ public open class FetcherSync(protected var resolver: ContentResolver)
 
     public fun fetchNew(provider: Provider): List<Uri>
     {
-
-
         Log.d("FetchStarter", "Starting")
         val newChapters = ArrayList<Uri>()
         try

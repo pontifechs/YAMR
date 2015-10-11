@@ -183,18 +183,24 @@ public class TouchImageView : ImageView
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean
         {
+            Log.d("TouchImageView", "x: $velocityX y: $velocityY")
             translate!!
             // Detect swipe left
-            if (parent != null && translate.x.toInt() == 0 && velocityX > 0 && Math.abs(velocityX) > Math.abs(velocityY))
+            val onRightEdge = translate.x.toInt() == -horizontalSlop()
+            val onLeftEdge = translate.x.toInt() == 0
+            val movingRight = velocityX > 0 && Math.abs(velocityX) > 3 * Math.abs(velocityY)
+            val movingLeft= velocityX < 0 && Math.abs(velocityX) > 3 * Math.abs(velocityY)
+            val fastEnough = Math.abs(velocityX) > 1000
+            if (parent != null && onLeftEdge && movingRight && fastEnough)
             {
-                parent!!.onSwipeLeft()
+                parent!!.onSwipeRight()
                 return true
             }
 
             // Detect swipe right
-            if (parent != null && translate.x.toInt() == -horizontalSlop() && velocityX < 0 && Math.abs(velocityX) > Math.abs(velocityY))
+            if (parent != null &&  onRightEdge && movingLeft && fastEnough)
             {
-                parent!!.onSwipeRight()
+                parent!!.onSwipeLeft()
                 return true
             }
 
