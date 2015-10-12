@@ -9,16 +9,14 @@ import android.content.Loader
 import android.database.Cursor
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Bundle
 import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
-import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Heritage
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.ui.fragments.ProviderViewer
+import ninja.dudley.yamr.ui.activities.Browse
 
 public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
@@ -80,16 +78,11 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
         }
     }
 
-    public interface LoadSeriesAndChapter : ProviderViewer.LoadSeries
-    {
-        public fun loadBookmarkFromSeries(series: Uri)
-    }
-
-    private var parent: LoadSeriesAndChapter? = null
+    private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
         super<ListFragment>.onAttach(activity)
-        this.parent = activity as LoadSeriesAndChapter
+        this.parent = activity as Browse
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?

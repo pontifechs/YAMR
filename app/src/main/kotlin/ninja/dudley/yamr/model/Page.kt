@@ -93,10 +93,5 @@ public class Page : MangaElement
         {
             return uri(id).buildUpon().appendPath("heritage").build()
         }
-
-        public fun jsConstructor(chapterId: Int, url: String, number: Float): Page
-        {
-            return Page(chapterId, url, number)
-        }
     }
 }

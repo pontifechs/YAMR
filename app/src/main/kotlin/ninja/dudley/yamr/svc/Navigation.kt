@@ -4,12 +4,23 @@ import android.content.ContentResolver
 import android.net.Uri
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
+import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException
 
-public class Navigation(resolver: ContentResolver) : FetcherSync(resolver)
+public class Navigation : FetcherSync
 {
+    private val provider: Provider
+    private val resolver: ContentResolver
+
+    public constructor(provider: Provider, resolver: ContentResolver)
+    : super(provider, resolver)
+    {
+        this.provider = provider
+        this.resolver = resolver
+    }
+
     private fun page(uri: Uri): Page
     {
         return Page(resolver.query(uri, null, null, null, null))

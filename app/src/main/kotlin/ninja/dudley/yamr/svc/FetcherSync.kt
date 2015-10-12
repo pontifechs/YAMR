@@ -26,12 +26,18 @@ import java.util.ArrayList
 /**
  * Created by mdudley on 5/19/15.
  */
-public open class FetcherSync(protected var resolver: ContentResolver)
+public open class FetcherSync
 {
     private val cx: Context
     private val scope: ScriptableObject
-    init
+    private val resolver: ContentResolver
+    private val provider: Provider
+
+    public constructor(provider: Provider, resolver: ContentResolver)
     {
+        this.resolver = resolver
+        this.provider = provider
+
         cx = Context.enter()
         cx.setOptimizationLevel(-1)
         scope = cx.initStandardObjects()
@@ -48,9 +54,6 @@ public open class FetcherSync(protected var resolver: ContentResolver)
             // Gotta catch 'em all!
             throw RuntimeException(e)
         }
-
-        // TODO:: Make generic, rather than just grab MangaPanda (id 1)
-        val provider = Provider(resolver.query(Provider.uri(1), null, null, null, null));
 
         cx.evaluateString(scope, provider.fetchProvider, "fetchProvider", 1, null);
         cx.evaluateString(scope, provider.stubSeries, "stubSeries", 1, null);
@@ -80,7 +83,7 @@ public open class FetcherSync(protected var resolver: ContentResolver)
         ForceRefresh;
     }
 
-    public fun fetchProvider(provider: Provider, behavior: Behavior = Behavior.LazyFetch): Provider
+    public fun fetchProvider(behavior: Behavior = Behavior.LazyFetch): Provider
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && provider.fullyParsed)
         {

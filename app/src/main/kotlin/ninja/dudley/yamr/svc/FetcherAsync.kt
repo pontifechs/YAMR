@@ -30,9 +30,9 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Provider): Provider
                 {
-                    val fetcher = FetcherSync(resolver);
+                    val fetcher = FetcherSync(params[0], resolver);
                     fetcher.register(this)
-                    fetcher.fetchProvider(params[0], behavior)
+                    fetcher.fetchProvider(behavior)
                     return params[0];
                 }
 
@@ -43,7 +43,8 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchSeries(resolver: ContentResolver,
+        public fun fetchSeries(provider: Provider,
+                               resolver: ContentResolver,
                                caller: Any,
                                complete: (thiS: Any, provider: Series) -> Unit,
                                progress: (thiS: Any, progress: Float) -> Unit,
@@ -54,7 +55,7 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Series): Series
                 {
-                    val fetcher = FetcherSync(resolver);
+                    val fetcher = FetcherSync(provider, resolver);
                     fetcher.register(this)
                     fetcher.fetchSeries(params[0], behavior)
                     return params[0];
@@ -67,7 +68,8 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchChapter(resolver: ContentResolver,
+        public fun fetchChapter(provider: Provider,
+                                resolver: ContentResolver,
                                 caller: Any,
                                 complete: (thiS: Any, provider: Chapter) -> Unit,
                                 progress: (thiS: Any, progress: Float) -> Unit,
@@ -78,7 +80,7 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Chapter): Chapter
                 {
-                    val fetcher = FetcherSync(resolver);
+                    val fetcher = FetcherSync(provider, resolver);
                     fetcher.register(this)
                     fetcher.fetchChapter(params[0], behavior)
                     return params[0];
@@ -91,7 +93,8 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchPage(resolver: ContentResolver,
+        public fun fetchPage(provider: Provider,
+                             resolver: ContentResolver,
                              caller: Any,
                              complete: (thiS: Any, provider: Page) -> Unit,
                              progress: (thiS: Any, progress: Float) -> Unit,
@@ -102,7 +105,7 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Page): Page
                 {
-                    val fetcher = FetcherSync(resolver);
+                    val fetcher = FetcherSync(provider, resolver);
                     fetcher.register(this)
                     fetcher.fetchPage(params[0], behavior)
                     return params[0];
@@ -115,7 +118,8 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchNextPage(resolver: ContentResolver,
+        public fun fetchNextPage(provider: Provider,
+                                 resolver: ContentResolver,
                                  caller: Any,
                                  complete: (thiS: Any, provider: Page) -> Unit,
                                  progress: (thiS: Any, progress: Float) -> Unit,
@@ -126,7 +130,7 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Page): Page?
                 {
-                    val fetcher = Navigation(resolver)
+                    val fetcher = Navigation(provider, resolver)
                     fetcher.register(this)
                     val next = fetcher.nextPage(params[0])
                     if (next == null)
@@ -143,7 +147,8 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchPrevPage(resolver: ContentResolver,
+        public fun fetchPrevPage(provider: Provider,
+                                 resolver: ContentResolver,
                                  caller: Any,
                                  complete: (thiS: Any, provider: Page) -> Unit,
                                  progress: (thiS: Any, progress: Float) -> Unit,
@@ -154,7 +159,7 @@ public class FetcherAsync
             {
                 override fun doInBackground(vararg params: Page): Page?
                 {
-                    val fetcher = Navigation(resolver)
+                    val fetcher = Navigation(provider, resolver)
                     fetcher.register(this)
                     val prev= fetcher.prevPage(params[0])
                     if (prev == null)
@@ -171,17 +176,18 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchFirstPageFromChapter(resolver: ContentResolver,
-                                 caller: Any,
-                                 complete: (thiS: Any, provider: Page) -> Unit,
-                                 progress: (thiS: Any, progress: Float) -> Unit)
+        public fun fetchFirstPageFromChapter(provider: Provider,
+                                             resolver: ContentResolver,
+                                             caller: Any,
+                                             complete: (thiS: Any, provider: Page) -> Unit,
+                                             progress: (thiS: Any, progress: Float) -> Unit)
                 : LambdaAsyncTask<Chapter, Float, Page>
         {
             return object: LambdaAsyncTask<Chapter, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
             {
                 override fun doInBackground(vararg params: Chapter): Page
                 {
-                    val fetcher = Navigation(resolver)
+                    val fetcher = Navigation(provider, resolver)
                     fetcher.register(this)
                     return fetcher.firstPageFromChapter(params[0])
                 }
@@ -193,17 +199,18 @@ public class FetcherAsync
             }
         }
 
-        public fun fetchPageFromSeries(resolver: ContentResolver,
-                                 caller: Any,
-                                 complete: (thiS: Any, provider: Page) -> Unit,
-                                 progress: (thiS: Any, progress: Float) -> Unit)
+        public fun fetchPageFromSeries(provider: Provider,
+                                       resolver: ContentResolver,
+                                       caller: Any,
+                                       complete: (thiS: Any, provider: Page) -> Unit,
+                                       progress: (thiS: Any, progress: Float) -> Unit)
                 : LambdaAsyncTask<Series, Float, Page>
         {
             return object : LambdaAsyncTask<Series, Float, Page>(caller, complete, progress), FetcherSync.NotifyStatus
             {
                 override fun doInBackground(vararg params: Series): Page?
                 {
-                    val fetcher = Navigation(resolver)
+                    val fetcher = Navigation(provider, resolver)
                     fetcher.register(this)
                     var arg = params[0]
                     if (arg.progressPageId == -1)
@@ -222,6 +229,7 @@ public class FetcherAsync
 
         public fun fetchOffsetFromPage(offset: Int,
                                        direction: Direction,
+                                       provider: Provider,
                                        resolver: ContentResolver,
                                        caller: Any,
                                        complete: ((thiS: Any, provider: Page) -> Unit)? = null,
@@ -234,9 +242,7 @@ public class FetcherAsync
                 {
                     try
                     {
-
-                        Log.d("PreFetch", "Executing Prefetch #${params[0].number} ${direction} ${offset}")
-                        val fetcher = Navigation(resolver)
+                        val fetcher = Navigation(provider, resolver)
                         fetcher.register(this)
                         val page = fetcher.fetchPageOffset(params[0], offset, direction)
                         if (page == null)

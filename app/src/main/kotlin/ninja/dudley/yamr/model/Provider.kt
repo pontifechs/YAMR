@@ -7,6 +7,7 @@ import android.net.Uri
 import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.db.util.Column
 import ninja.dudley.yamr.db.util.Table
+import ninja.dudley.yamr.db.util.Unique
 
 /**
  * Created by mdudley on 6/2/15.
@@ -14,6 +15,7 @@ import ninja.dudley.yamr.db.util.Table
 Table(Provider.tableName)
 public class Provider : MangaElement
 {
+    Unique
     Column(name = nameCol)
     public val name: String
     Column(name = newUrlCol)
@@ -39,7 +41,7 @@ public class Provider : MangaElement
     public val fetchNew: String
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(c: Cursor) : super(c)
+    public constructor(c: Cursor, closeAfter: Boolean = true) : super(c)
     {
         if (type != MangaElement.UriType.Provider)
         {
@@ -56,7 +58,10 @@ public class Provider : MangaElement
         stubPage = getString(c, stubPageCol)!!
         fetchPage = getString(c, fetchPageCol)!!
         fetchNew = getString(c, fetchNewCol)!!
-        c.close()
+        if (closeAfter)
+        {
+            c.close()
+        }
     }
 
     override fun getContentValues(): ContentValues

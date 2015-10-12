@@ -7,16 +7,17 @@ import android.os.Bundle
 import android.widget.RelativeLayout
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.MangaElement
+import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.ui.fragments.*
 import ninja.dudley.yamr.ui.util.OrientationAware
 
-public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadChapter,
-        ChapterViewer.LoadPage,  Favorites.LoadSeriesAndChapter, OrientationAware.I
+public class Browse : Activity(), OrientationAware.I
 {
+    public var provider: Provider? = null
 
     enum class FlowType
     {
-        ProviderAll,
+        ProviderDown,
         Favorites
     }
 
@@ -32,9 +33,9 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
             val transaction = getFragmentManager().beginTransaction()
             when (flow)
             {
-                FlowType.ProviderAll ->
+                FlowType.ProviderDown ->
                 {
-                    val providerViewer = ProviderViewer()
+                    val providerViewer = ProviderSelector()
                     transaction.replace(R.id.reader, providerViewer)
                 }
                 FlowType.Favorites ->
@@ -47,7 +48,17 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         }
     }
 
-    override fun loadSeries(series: Uri)
+    fun loadProvider(provider: Uri)
+    {
+        this.provider = Provider(getContentResolver().query(provider, null, null, null, null))
+        val transaction = getFragmentManager().beginTransaction()
+        val providerViewer = ProviderViewer.newInstance(provider)
+        transaction.replace(R.id.reader, providerViewer)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
+    fun loadSeries(series: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
         val seriesViewer = SeriesViewer.newInstance(series)
@@ -56,7 +67,7 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         transaction.commit()
     }
 
-    override fun loadChapter(chapter: Uri)
+    fun loadChapter(chapter: Uri)
     {
         val transaction = getFragmentManager().beginTransaction()
         val chapterViewer = ChapterViewer.newInstance(chapter)
@@ -65,17 +76,17 @@ public class Browse : Activity(), ProviderViewer.LoadSeries, SeriesViewer.LoadCh
         transaction.commit()
     }
 
-    override fun loadFirstPageOfChapter(chapter: Uri)
+    fun loadFirstPageOfChapter(chapter: Uri)
     {
         loadPageViewer(chapter,MangaElement.UriType.Chapter)
     }
 
-    override fun loadPage(page: Uri)
+    fun loadPage(page: Uri)
     {
         loadPageViewer(page, MangaElement.UriType.Page)
     }
 
-    override fun loadBookmarkFromSeries(series: Uri)
+    fun loadBookmarkFromSeries(series: Uri)
     {
         loadPageViewer(series, MangaElement.UriType.Series)
     }

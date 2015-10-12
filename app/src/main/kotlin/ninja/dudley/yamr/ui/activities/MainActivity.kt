@@ -76,7 +76,7 @@ public class MainActivity : Activity()
                     0 ->
                     {
                         i = Intent(this@MainActivity, javaClass<Browse>())
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderAll.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name())
                         startActivity(i)
                     }
                     1 ->

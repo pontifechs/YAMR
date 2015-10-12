@@ -4,11 +4,12 @@ import android.app.Activity
 import android.app.ListFragment
 import android.app.LoaderManager
 import android.app.ProgressDialog
-import android.content.*
+import android.content.Context
+import android.content.CursorLoader
+import android.content.Loader
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.content.LocalBroadcastManager
 import android.text.TextUtils
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -21,6 +22,7 @@ import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
+import ninja.dudley.yamr.ui.activities.Browse
 
 // Method reference functions
 public fun providerViewerStatus(providerViewer: Any, status: Float)
@@ -41,16 +43,14 @@ public class ProviderViewer :
     private var loading: ProgressDialog? = null
     private var filter: String? = null
 
-    public interface LoadSeries
-    {
-        public fun loadSeries(series: Uri)
-    }
+    private var parent: Browse? = null
 
-    private var parent: LoadSeries? = null
+    private var providerUri: Uri? = null
+
     override fun onAttach(activity: Activity?)
     {
         super<ListFragment>.onAttach(activity)
-        this.parent = activity as LoadSeries?
+        this.parent = activity as Browse?
     }
 
     fun status(status: Float)
@@ -61,6 +61,7 @@ public class ProviderViewer :
 
     fun complete(provider: Provider)
     {
+        this.providerUri = provider.uri()
         getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
         adapter!!.notifyDataSetChanged()
         loading!!.dismiss()
@@ -73,7 +74,8 @@ public class ProviderViewer :
         val layout = inflater.inflate(R.layout.fragment_provider_viewer, container, false) as LinearLayout
 
         val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus)
-        val provider = Provider(getActivity().getContentResolver().query(Provider.uri(1), null, null, null, null))
+        this.providerUri = Uri.parse(getArguments().getString(PROVIDER_ARG_KEY))
+        val provider = Provider(getActivity().getContentResolver().query(providerUri, null, null, null, null))
         fetcher.execute(provider)
 
         adapter = SimpleCursorAdapter(getActivity(),
@@ -107,7 +109,7 @@ public class ProviderViewer :
             R.id.refresh ->
             {
                 val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus, FetcherSync.Behavior.ForceRefresh)
-                val provider = Provider(getActivity().getContentResolver().query(Provider.uri(1), null, null, null, null))
+                val provider = Provider(getActivity().getContentResolver().query(providerUri, null, null, null, null))
                 fetcher.execute(provider)
 
                 loading!!.setProgress(0)
@@ -120,14 +122,15 @@ public class ProviderViewer :
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        val mangaPandaSeries = Provider.series(1)
+        //TODO:: Blechhh
+        val seriesUri = providerUri!!.buildUpon().appendPath("series").build()
         if (filter == null)
         {
-            return CursorLoader(getActivity(), mangaPandaSeries, null, null, null, null)
+            return CursorLoader(getActivity(), seriesUri, null, null, null, null)
         }
         else
         {
-            return CursorLoader(getActivity(), mangaPandaSeries, null, Series.nameCol + " like ?", arrayOf("%${filter}%"), null)
+            return CursorLoader(getActivity(), seriesUri, null, Series.nameCol + " like ?", arrayOf("%${filter}%"), null)
         }
     }
 
@@ -159,5 +162,19 @@ public class ProviderViewer :
         filter = if (!TextUtils.isEmpty(newText)) newText else null
         getLoaderManager().restartLoader(0, Bundle(), this)
         return true
+    }
+
+    companion object
+    {
+        private val PROVIDER_ARG_KEY: String = "ProviderUriArg"
+
+        fun newInstance(uri: Uri): ProviderViewer
+        {
+            val providerViewer = ProviderViewer()
+            val bundle = Bundle()
+            bundle.putString(PROVIDER_ARG_KEY, uri.toString())
+            providerViewer.setArguments(bundle)
+            return providerViewer
+        }
     }
 }

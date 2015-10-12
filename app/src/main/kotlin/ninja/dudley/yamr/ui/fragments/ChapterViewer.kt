@@ -4,14 +4,15 @@ import android.app.Activity
 import android.app.Fragment
 import android.app.LoaderManager
 import android.app.ProgressDialog
-import android.content.*
+import android.content.Context
+import android.content.CursorLoader
+import android.content.Loader
 import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +22,7 @@ import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.svc.FetcherAsync
+import ninja.dudley.yamr.ui.activities.Browse
 
 public fun chapterViewerStatus(thiS: Any, status: Float)
 {
@@ -39,11 +41,6 @@ public class ChapterViewer :
     private var chapter: Chapter? = null
 
     private var loading: ProgressDialog? = null
-
-    public interface LoadPage
-    {
-        public fun loadPage(page: Uri)
-    }
 
     private var adapter: PageThumbAdapter? = null
     public inner class PageThumbAdapter :
@@ -86,11 +83,11 @@ public class ChapterViewer :
         }
     }
 
-    private var parent: LoadPage? = null
+    private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
         super<Fragment>.onAttach(activity)
-        this.parent = activity as LoadPage?
+        this.parent = activity as Browse?
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -120,7 +117,7 @@ public class ChapterViewer :
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.setText("Chapter ${chapter!!.number}: ${chapter!!.name}")
 
-        val fetcher = FetcherAsync.fetchChapter(getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
+        val fetcher = FetcherAsync.fetchChapter(parent!!.provider!!, getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
         fetcher.execute(chapter!!)
 
         adapter = PageThumbAdapter()

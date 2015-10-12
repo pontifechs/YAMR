@@ -4,11 +4,11 @@ import android.app.Activity
 import android.app.ListFragment
 import android.app.LoaderManager
 import android.app.ProgressDialog
-import android.content.*
+import android.content.CursorLoader
+import android.content.Loader
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.content.LocalBroadcastManager
 import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
@@ -16,6 +16,7 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
+import ninja.dudley.yamr.ui.activities.Browse
 
 public fun seriesViewerStatus(thiS: Any, status: Float)
 {
@@ -38,18 +39,11 @@ public class SeriesViewer :
 
     private var loading: ProgressDialog? = null
 
-    public interface LoadChapter
-    {
-        public fun loadFirstPageOfChapter(chapter: Uri)
-
-        public fun loadChapter(chapter: Uri)
-    }
-
-    private var parent: LoadChapter? = null
+    private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
         super<ListFragment>.onAttach(activity)
-        this.parent = activity as LoadChapter?
+        this.parent = activity as Browse?
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -97,7 +91,7 @@ public class SeriesViewer :
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
+        val fetcher = FetcherAsync.fetchSeries(parent!!.provider!!, getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
         fetcher.execute(series)
 
         adapter = SimpleCursorAdapter(getActivity(),
@@ -149,7 +143,7 @@ public class SeriesViewer :
             }
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this,
+                val fetcher = FetcherAsync.fetchSeries(parent!!.provider!!, getActivity().getContentResolver(), this,
                         ::seriesViewerComplete, ::seriesViewerStatus, FetcherSync.Behavior.ForceRefresh)
                 fetcher.execute(series)
 

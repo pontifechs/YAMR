@@ -51,7 +51,7 @@ public class FetchStarter : BroadcastReceiver()
                     // None! Nada!
                     if (newUris.size() == 0)
                     {
-                        Log.d("FetchStarter", "No URIs, BITCH")
+                        Log.d("FetchStarter", "No URIs")
                         return
                     }
 

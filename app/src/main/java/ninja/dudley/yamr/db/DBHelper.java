@@ -1,6 +1,8 @@
 package ninja.dudley.yamr.db;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
@@ -32,6 +34,8 @@ import ninja.dudley.yamr.model.Series;
  */
 public class DBHelper extends SQLiteOpenHelper
 {
+    private final Context context;
+
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "YAMR.db";
 
@@ -208,7 +212,7 @@ public class DBHelper extends SQLiteOpenHelper
             return "";
         }
 
-        String constraint = " UNIQUE (" + column.get(0);
+        String constraint = ", UNIQUE (" + column.get(0);
         for (int i = 1; i < column.size(); ++i)
         {
             constraint += ", " + column.get(i);
@@ -340,6 +344,7 @@ public class DBHelper extends SQLiteOpenHelper
     public DBHelper(Context context)
     {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
@@ -412,41 +417,6 @@ public class DBHelper extends SQLiteOpenHelper
                 joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
                               Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
-
-        // TODO:: Package this up in JSON or something, it's getting unwieldy.
-        db.execSQL("INSERT INTO provider (url, type, new_url, name) values " +
-                "(" +
-                "\"http://www.mangapanda.com/alphabetical\", " +
-                "\"Provider\", " +
-                "\"http://www.mangapanda.com/latest\", " +
-                "\"MangaPanda\"" +
-                ")");
-        try
-        {
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchProviderCol + " = \"" + fetchProvider + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.stubSeriesCol + " = \"" + stubSeries + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchSeriesCol + " = \"" + fetchSeries + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchSeriesGenresCol + " = \"" + fetchSeriesGenres + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.stubChapterCol + " = \"" + stubChapter + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchChapterCol + " = \"" + fetchChapter + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.stubPageCol + " = \"" + stubPage + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchPageCol + " = \"" + fetchPage + "\";");
-            db.execSQL("UPDATE " + Provider.tableName +
-                       " set " + Provider.fetchNewCol + " = \"" + fetchNew + "\";");
-        }
-        catch (Exception e)
-        {
-            // Gotta Catch 'em ALL!
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -462,6 +432,33 @@ public class DBHelper extends SQLiteOpenHelper
         if (!db.isReadOnly())
         {
             db.execSQL("PRAGMA foreign_keys=ON;");
+        }
+
+        // Load up existing providers.
+        Map<String, Provider> existingProviders = new HashMap<>();
+        Cursor allProviders = db.query(Provider.tableName, projections.get(Provider.tableName), null, null, null, null, null);
+        allProviders.moveToFirst();
+        do
+        {
+            Provider provider = new Provider(allProviders, false);
+            existingProviders.put(provider.getName(), provider);
+        }
+        while (allProviders.moveToNext());
+
+        // Go over all the new providers and make sure they're updated to reflect the latest code
+        List<ContentValues> newProviders = ProviderLoader.Companion.loadProviders(context);
+        for (int i = 0; i < newProviders.size(); ++i)
+        {
+            ContentValues newProvider = newProviders.get(i);
+            // Is this a new one?
+            if (!existingProviders.containsKey(newProvider.getAsString(Provider.nameCol)))
+            {
+                db.insert(Provider.tableName, null, newProvider);
+            }
+            else
+            {
+                db.update(Provider.tableName, newProvider, "name = ?", new String[]{newProvider.getAsString("name")});
+            }
         }
     }
 }
