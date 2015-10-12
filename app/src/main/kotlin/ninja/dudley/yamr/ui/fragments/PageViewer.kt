@@ -176,7 +176,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     // State Changes -------------------------------------------------------------------------------
     private fun hideLoadingBar()
     {
-        val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar?
+        val loadingBar = getActivity()?.findViewById(R.id.page_loading_bar) as ProgressBar?
         loadingBar?.setVisibility(View.INVISIBLE)
     }
 
@@ -188,7 +188,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     private fun hideLoadingText()
     {
-        val loadingText = getActivity().findViewById(R.id.page_loading_text) as TextView?
+        val loadingText = getActivity()?.findViewById(R.id.page_loading_text) as TextView?
         loadingText?.setVisibility(View.INVISIBLE)
     }
 
