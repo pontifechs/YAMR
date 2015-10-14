@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.svc
 
 import android.content.ContentResolver
+import android.net.Uri
 import android.util.Log
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
@@ -256,6 +257,21 @@ public class FetcherAsync
                 {
                     Log.d("PreFetch", "PreFetch Status: ${status}")
                     publishProgress(status)
+                }
+            }
+        }
+
+        public fun fetchNew(resolver: ContentResolver,
+                            caller: Any,
+                            complete: ((thiS: Any, news: List<Uri>) -> Unit)? = null)
+                : LambdaAsyncTask<Provider, Unit, List<Uri>>
+        {
+            return object : LambdaAsyncTask<Provider, Unit, List<Uri>>(caller, complete)
+            {
+                override fun doInBackground(vararg params: Provider): List<Uri>
+                {
+                    val fetcher = FetcherSync(resolver)
+                    return fetcher.fetchNew(params[0])
                 }
             }
         }
