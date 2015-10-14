@@ -98,7 +98,6 @@ public class DBProvider : ContentProvider()
                 {
                     querySelectionArgs = arrayOf(Integer.toString(getId(code, uri)), selectionArgs[0])
                 }
-                Log.d("F", "U")
                 return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), querySelection, querySelectionArgs, null, null, sortOrder ?: Series.nameCol)
             }
             DBProvider.MatchCode.ProviderAll -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), null, null, null, null, sortOrder)

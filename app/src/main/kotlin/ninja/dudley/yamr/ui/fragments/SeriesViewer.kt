@@ -54,12 +54,18 @@ public class SeriesViewer :
 
     fun status(status: Float)
     {
+        if (!isAdded())
+            return
         val percent = 100 * status
         loading!!.setProgress(percent.toInt())
     }
 
     fun complete(series: Series)
     {
+        if(!isAdded())
+        {
+            return
+        }
         getLoaderManager().restartLoader(0, Bundle(), this@SeriesViewer)
         adapter!!.notifyDataSetChanged()
         loading?.dismiss()
@@ -91,7 +97,7 @@ public class SeriesViewer :
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        val fetcher = FetcherAsync.fetchSeries(parent!!.provider!!, getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
+        val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
         fetcher.execute(series)
 
         adapter = SimpleCursorAdapter(getActivity(),
@@ -143,7 +149,7 @@ public class SeriesViewer :
             }
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchSeries(parent!!.provider!!, getActivity().getContentResolver(), this,
+                val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this,
                         ::seriesViewerComplete, ::seriesViewerStatus, FetcherSync.Behavior.ForceRefresh)
                 fetcher.execute(series)
 

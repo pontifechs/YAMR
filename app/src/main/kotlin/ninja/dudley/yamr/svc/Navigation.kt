@@ -11,13 +11,11 @@ import java.util.NoSuchElementException
 
 public class Navigation : FetcherSync
 {
-    private val provider: Provider
     private val resolver: ContentResolver
 
-    public constructor(provider: Provider, resolver: ContentResolver)
-    : super(provider, resolver)
+    public constructor(resolver: ContentResolver)
+    : super(resolver)
     {
-        this.provider = provider
         this.resolver = resolver
     }
 

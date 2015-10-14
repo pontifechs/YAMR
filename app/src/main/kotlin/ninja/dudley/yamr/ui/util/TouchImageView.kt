@@ -270,7 +270,7 @@ public class TouchImageView : ImageView
         translate?.y = guts[Matrix.MTRANS_Y]
 
         // Vertical is a little special. Center it vertically if the image is too small
-        if (verticalSlop() == 0)
+        if (verticalSlop() == 0 && getDrawable() != null)
         {
             guts[Matrix.MTRANS_Y] = -unsafeVerticalSlop() / 2;
         }

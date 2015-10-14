@@ -99,12 +99,20 @@ public class ChapterViewer :
 
     fun status(status: Float)
     {
+        if (!isAdded())
+        {
+            return
+        }
         val percent = 100 * status
         loading!!.setProgress(percent.toInt())
     }
 
     fun complete(chapter: Chapter)
     {
+        if (!isAdded())
+        {
+            return
+        }
         getLoaderManager().restartLoader(0, Bundle(), this@ChapterViewer)
         adapter!!.notifyDataSetChanged()
         loading!!.dismiss()
@@ -117,7 +125,7 @@ public class ChapterViewer :
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.setText("Chapter ${chapter!!.number}: ${chapter!!.name}")
 
-        val fetcher = FetcherAsync.fetchChapter(parent!!.provider!!, getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
+        val fetcher = FetcherAsync.fetchChapter(getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
         fetcher.execute(chapter!!)
 
         adapter = PageThumbAdapter()

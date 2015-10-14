@@ -26,5 +26,12 @@
         android:layout_toRightOf="@+id/mascot"
         >
     </ListView>
+    <TextView
+        android:id="@+id/ver_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:textColor="@color/light_gray"
+        android:layout_centerInParent="true"/>
 </RelativeLayout>
 

@@ -55,12 +55,20 @@ public class ProviderViewer :
 
     fun status(status: Float)
     {
+        if (!isAdded())
+        {
+            return
+        }
         val percent = 100 * status
         loading!!.setProgress(percent.toInt())
     }
 
     fun complete(provider: Provider)
     {
+        if (!isAdded())
+        {
+            return
+        }
         this.providerUri = provider.uri()
         getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
         adapter!!.notifyDataSetChanged()
