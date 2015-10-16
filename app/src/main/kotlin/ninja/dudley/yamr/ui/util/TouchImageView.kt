@@ -59,10 +59,10 @@ public class TouchImageView : ImageView
         overScroller = OverScroller(context)
         gestureDetector = GestureDetector(context, gestureListener)
         scaleGestureDetector = ScaleGestureDetector(context, scaleGestureListener)
-        setScaleType(ImageView.ScaleType.MATRIX)
+        scaleType = ImageView.ScaleType.MATRIX
         val m = Matrix()
         m.setScale(minScale(), minScale())
-        setImageMatrix(m)
+        imageMatrix = m
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean
@@ -77,11 +77,11 @@ public class TouchImageView : ImageView
         if (overScroller!!.computeScrollOffset())
         {
             translate!!
-            val m = Matrix(getImageMatrix())
-            val newPos = PointF(overScroller!!.getCurrX().toFloat(), overScroller!!.getCurrY().toFloat())
+            val m = Matrix(imageMatrix)
+            val newPos = PointF(overScroller!!.currX.toFloat(), overScroller!!.currY.toFloat())
             m.postTranslate(newPos.x - translate.x, newPos.y - translate.y)
 
-            setImageMatrix(m)
+            imageMatrix = m
             postInvalidateOnAnimation()
         }
     }
@@ -114,55 +114,55 @@ public class TouchImageView : ImageView
 
     private fun screenWidth(): Int
     {
-        return getResources().getDisplayMetrics().widthPixels
+        return resources.displayMetrics.widthPixels
     }
 
     private fun screenHeight(): Int
     {
         val pt = Point()
         try {
-            getDisplay().getRealSize(pt)
+            display.getRealSize(pt)
         }
         catch (e: NullPointerException)
         {
             // This happens when we try to get the height without a the display being done initializing.
             // I need to go back through this mess. This isn't the only place I have to deal with something like this
             // as I recall.
-            return getResources().getDisplayMetrics().heightPixels
+            return resources.displayMetrics.heightPixels
         }
         return pt.y
     }
 
     private fun horizontalSlop(): Int
     {
-        if (getDrawable() == null)
+        if (drawable == null)
         {
             return 0
         }
-        return Math.max(0.0f, (getDrawable().getIntrinsicWidth() * scale) - screenWidth()).toInt()
+        return Math.max(0.0f, (drawable.intrinsicWidth * scale) - screenWidth()).toInt()
     }
 
     private fun verticalSlop(): Int
     {
-        if (getDrawable() == null)
+        if (drawable == null)
         {
             return 0
         }
-        return Math.max(0.0f, (getDrawable().getIntrinsicHeight() * scale) - screenHeight()).toInt()
+        return Math.max(0.0f, (drawable.intrinsicHeight * scale) - screenHeight()).toInt()
     }
 
     private fun unsafeVerticalSlop(): Float
     {
-        return (getDrawable().getIntrinsicHeight() * scale) - screenHeight()
+        return (drawable.intrinsicHeight * scale) - screenHeight()
     }
 
     private fun minScale(): Float
     {
-        if (getDrawable() == null)
+        if (drawable == null)
         {
             return 1.0f
         }
-        return screenWidth() / getDrawable().getIntrinsicWidth().toFloat()
+        return screenWidth() / drawable.intrinsicWidth.toFloat()
     }
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener()
@@ -175,9 +175,9 @@ public class TouchImageView : ImageView
 
         override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean
         {
-            val m = Matrix(getImageMatrix())
+            val m = Matrix(imageMatrix)
             m.postTranslate(-distanceX, -distanceY)
-            setImageMatrix(m)
+            imageMatrix = m
             return true
         }
 
@@ -213,7 +213,7 @@ public class TouchImageView : ImageView
         {
             val matrix = Matrix()
             matrix.setScale(minScale(), minScale())
-            setImageMatrix(matrix)
+            imageMatrix = matrix
         }
     }
 
@@ -221,12 +221,12 @@ public class TouchImageView : ImageView
     {
         override fun onScale(detector: ScaleGestureDetector): Boolean
         {
-            val m = Matrix(getImageMatrix())
-            m.postTranslate(-detector.getFocusX(), -detector.getFocusY())
-            val newScale = detector.getCurrentSpan() / detector.getPreviousSpan()
+            val m = Matrix(imageMatrix)
+            m.postTranslate(-detector.focusX, -detector.focusY)
+            val newScale = detector.currentSpan / detector.previousSpan
             m.postScale(newScale, newScale)
-            m.postTranslate(detector.getFocusX(), detector.getFocusY())
-            setImageMatrix(m)
+            m.postTranslate(detector.focusX, detector.focusY)
+            imageMatrix = m
             return true
         }
     }
@@ -270,7 +270,7 @@ public class TouchImageView : ImageView
         translate?.y = guts[Matrix.MTRANS_Y]
 
         // Vertical is a little special. Center it vertically if the image is too small
-        if (verticalSlop() == 0 && getDrawable() != null)
+        if (verticalSlop() == 0 && drawable != null)
         {
             guts[Matrix.MTRANS_Y] = -unsafeVerticalSlop() / 2;
         }
@@ -284,7 +284,7 @@ public class TouchImageView : ImageView
         super.setImageDrawable(drawable)
         val m = Matrix()
         m.setScale(minScale(), minScale())
-        setImageMatrix(m)
+        imageMatrix = m
     }
 }
 

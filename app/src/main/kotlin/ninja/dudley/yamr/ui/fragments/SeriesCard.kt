@@ -26,10 +26,10 @@ public class SeriesCard : Fragment()
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
-        if (getArguments() != null)
+        if (arguments != null)
         {
-            val seriesUri = Uri.parse(getArguments().getString(ArgumentKey))
-            series = Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null))
+            val seriesUri = Uri.parse(arguments.getString(ArgumentKey))
+            series = Series(activity.contentResolver.query(seriesUri, null, null, null, null))
         }
     }
 
@@ -50,7 +50,7 @@ public class SeriesCard : Fragment()
         }
         else
         {
-            d = getResources().getDrawable(R.drawable.panic, null)
+            d = resources.getDrawable(R.drawable.panic, null)
         }
 
         if (d != null)
@@ -58,11 +58,11 @@ public class SeriesCard : Fragment()
             thumbnail.setImageDrawable(d)
         }
 
-        seriesName.setText(series!!.name)
+        seriesName.text = series!!.name
 
         val info = ArrayList<String>()
 
-        val c: Cursor = getActivity().getContentResolver().query(series!!.genres(), null, null, null, null)
+        val c: Cursor = activity.contentResolver.query(series!!.genres(), null, null, null, null)
         val genres: Set<Genre> = Genre.genres(c)
         if (genres.size() > 0)
         {
@@ -83,24 +83,24 @@ public class SeriesCard : Fragment()
         info.add("<b>Status: </b>" + (if (series!!.complete) "Complete" else "Ongoing"))
         if (!StringUtil.isBlank(series!!.description))
         {
-            info.add(series!!.description)
+            info.add(series!!.description!!)
         }
 
         if (info.size() >= 1)
         {
-            firstSlot.setText(Html.fromHtml(info.get(0)))
+            firstSlot.text = Html.fromHtml(info.get(0))
         }
         if (info.size() >= 2)
         {
-            secondSlot.setText(Html.fromHtml(info.get(1)))
+            secondSlot.text = Html.fromHtml(info.get(1))
         }
         if (info.size() >= 3)
         {
-            thirdSlot.setText(Html.fromHtml(info.get(2)))
+            thirdSlot.text = Html.fromHtml(info.get(2))
         }
         if (info.size() >= 4)
         {
-            fourthSlot.setText(Html.fromHtml(info.get(3)))
+            fourthSlot.text = Html.fromHtml(info.get(3))
         }
         return layout
     }
@@ -114,7 +114,7 @@ public class SeriesCard : Fragment()
             val fragment = SeriesCard()
             val args = Bundle()
             args.putString(ArgumentKey, s.uri().toString())
-            fragment.setArguments(args)
+            fragment.arguments = args
             return fragment
         }
     }

@@ -21,6 +21,7 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import ninja.dudley.yamr.ui.activities.Browse
+import ninja.dudley.yamr.ui.activities.Settings
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.Direction
 import ninja.dudley.yamr.util.ProgressTracker
@@ -58,7 +59,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     // Lifecycle Methods ---------------------------------------------------------------------------
     override fun onAttach(activity: Activity?)
     {
-        super<Fragment>.onAttach(activity)
+        super.onAttach(activity)
         parent = activity as Browse?
     }
 
@@ -66,24 +67,24 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     {
         fun fetchUri(uri: Uri): Cursor
         {
-            return getActivity().getContentResolver().query(uri, null, null, null, null)
+            return activity.contentResolver.query(uri, null, null, null, null)
         }
 
         // Kick off the fetch.
-        val uri = Uri.parse(getArguments().getString(URI_ARG_KEY))
-        val type = MangaElement.UriType.valueOf(getArguments().getString(TYPE_ARG_KEY))
+        val uri = Uri.parse(arguments.getString(URI_ARG_KEY))
+        val type = MangaElement.UriType.valueOf(arguments.getString(TYPE_ARG_KEY))
 
 
         when (type)
         {
             MangaElement.UriType.Series -> {
                 val series = Series(fetchUri(uri))
-                FetcherAsync.fetchPageFromSeries(getActivity().getContentResolver(), this,
+                FetcherAsync.fetchPageFromSeries(activity.contentResolver, this,
                         ::pageViewerPageAcquired, ::pageViewerStatus).execute(series)
             }
             MangaElement.UriType.Chapter -> {
                 val chapter = Chapter(fetchUri(uri))
-                FetcherAsync.fetchFirstPageFromChapter(getActivity().getContentResolver(), this,
+                FetcherAsync.fetchFirstPageFromChapter(activity.contentResolver, this,
                         ::pageViewerPageAcquired, ::pageViewerStatus).execute(chapter)
             }
             MangaElement.UriType.Page -> {
@@ -104,13 +105,13 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     override fun onResume()
     {
-        super<Fragment>.onResume() // Sigh....
+        super.onResume() // Sigh....
         goFullscreen()
     }
 
     override fun onPause()
     {
-        super<Fragment>.onPause() // Sigh....
+        super.onPause() // Sigh....
         leaveFullscreen()
         preFetches.forEach{ it.cancel(true) }
     }
@@ -118,19 +119,19 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     // Page Loading --------------------------------------------------------------------------------
     public fun status(status: Float)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
         showLoadingBar()
-        val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
+        val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
         val percent = 100 * status;
-        loadingBar.setProgress(percent.toInt());
+        loadingBar.progress = percent.toInt();
     }
 
     public fun pageAcquired(page: Page)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
@@ -141,50 +142,50 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     public fun pageComplete(page: Page)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
         this.page = page
         hideLoadingBar()
-        val touchImageView = getActivity().findViewById(R.id.imageView) as TouchImageView
+        val touchImageView = activity.findViewById(R.id.imageView) as TouchImageView
         val d = Drawable.createFromPath(page.imagePath)
         touchImageView.setImageDrawable(d)
         progressTracker?.handleNewPage(page)
 
-        val chapter = Chapter(getActivity().getContentResolver().query(Chapter.uri(page.chapterId), null, null, null, null))
+        val chapter = Chapter(activity.contentResolver.query(Chapter.uri(page.chapterId), null, null, null, null))
         showLoadingText("Chapter ${chapter.number}, Page ${page.number}")
     }
 
     public fun failure()
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
-        val heritage = Heritage(getActivity().getContentResolver().query(page!!.heritage(), null, null, null, null))
-        val series = Series(getActivity().getContentResolver().query(Series.uri(heritage.seriesId), null, null, null, null))
+        val heritage = Heritage(activity.contentResolver.query(page!!.heritage(), null, null, null, null))
+        val series = Series(activity.contentResolver.query(Series.uri(heritage.seriesId), null, null, null, null))
 
-        val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
-        loadingBar.setVisibility(View.INVISIBLE)
+        val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
+        loadingBar.visibility = View.INVISIBLE
         var dialog: AlertDialog
         if (readDirection == Direction.Next)
         {
-            dialog = AlertDialog.Builder(getActivity())
+            dialog = AlertDialog.Builder(activity)
                     .setTitle("E.N.D.")
                     .setMessage("You've reached the end of ${series.name}. Check back later for new chapters.")
                     .setNegativeButton("K.", null).create()
         }
         else
         {
-            dialog = AlertDialog.Builder(getActivity())
+            dialog = AlertDialog.Builder(activity)
                     .setTitle("Genesis")
                     .setMessage("You've reached the beginning of ${series.name}. This is as ancient as it gets.")
                     .setNegativeButton("K.", null).create()
         }
         // Wow, android. Just wow. Why the hell are you fucking with my shit?
         // See http://stackoverflow.com/questions/22794049/how-to-maintain-the-immersive-mode-in-dialogs
-        dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        dialog.window.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         dialog.show()
     }
@@ -192,27 +193,27 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     // State Changes -------------------------------------------------------------------------------
     private fun hideLoadingBar()
     {
-        val loadingBar = getActivity()?.findViewById(R.id.page_loading_bar) as ProgressBar?
-        loadingBar?.setVisibility(View.INVISIBLE)
+        val loadingBar = activity?.findViewById(R.id.page_loading_bar) as ProgressBar?
+        loadingBar?.visibility = View.INVISIBLE
     }
 
     private fun showLoadingBar()
     {
-        val loadingBar = getActivity().findViewById(R.id.page_loading_bar) as ProgressBar
-        loadingBar.setVisibility(View.VISIBLE)
+        val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
+        loadingBar.visibility = View.VISIBLE
     }
 
     private fun hideLoadingText()
     {
-        val loadingText = getActivity()?.findViewById(R.id.page_loading_text) as TextView?
-        loadingText?.setVisibility(View.INVISIBLE)
+        val loadingText = activity?.findViewById(R.id.page_loading_text) as TextView?
+        loadingText?.visibility = View.INVISIBLE
     }
 
     private fun showLoadingText(text: String)
     {
-        val loadingText = getActivity().findViewById(R.id.page_loading_text) as TextView
-        loadingText.setText(text)
-        loadingText.setVisibility(View.VISIBLE)
+        val loadingText = activity.findViewById(R.id.page_loading_text) as TextView
+        loadingText.text = text
+        loadingText.visibility = View.VISIBLE
 
         val handler = Handler()
         handler.postDelayed({this.hideLoadingText()}, 3000)
@@ -221,28 +222,27 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     private var oldSystemUiVisibility: Int = -1
     private fun goFullscreen()
     {
-        oldSystemUiVisibility = getActivity().getWindow().getDecorView().getSystemUiVisibility()
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        oldSystemUiVisibility = activity.window.decorView.systemUiVisibility
+        activity.window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
     }
 
     private fun leaveFullscreen()
     {
-        getActivity().getWindow().getDecorView().setSystemUiVisibility(oldSystemUiVisibility)
+        activity.window.decorView.systemUiVisibility = oldSystemUiVisibility
     }
 
     // Pre-Fetching and Navigation -----------------------------------------------------------------
     // Fetch the current page
     private fun fetchPage()
     {
-        FetcherAsync.fetchPage(getActivity().getContentResolver(), this, ::pageViewerPageComplete,
+        FetcherAsync.fetchPage(activity.contentResolver, this, ::pageViewerPageComplete,
                 ::pageViewerStatus).execute(page)
-        if (Settings.preFetchEnabled(getActivity()))
+        if (Settings.preFetchEnabled(activity))
         {
             loadPreFetches()
         }
@@ -251,7 +251,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     private fun changePage(direction: Direction)
     {
         showLoadingBar()
-        if (Settings.preFetchEnabled(getActivity()))
+        if (Settings.preFetchEnabled(activity))
         {
             changePagePreFetch(direction)
         }
@@ -268,18 +268,18 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         {
             Direction.Next ->
             {
-                FetcherAsync.fetchNextPage(getActivity().getContentResolver(), this,
+                FetcherAsync.fetchNextPage(activity.contentResolver, this,
                         ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, page)
             }
             Direction.Prev ->
             {
-                FetcherAsync.fetchPrevPage(getActivity().getContentResolver(), this,
+                FetcherAsync.fetchPrevPage(activity.contentResolver, this,
                         ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, page)
             }
         }
     }
 
-    private var preFetches: MutableList<LambdaAsyncTask<Page, Float, Page>> = ArrayList<LambdaAsyncTask<Page, Float, Page>>()
+    private var preFetches: MutableList<LambdaAsyncTask<Page, Float, Page>> = ArrayList()
     private var readDirection: Direction = Direction.Next
     private fun changePagePreFetch(direction: Direction)
     {
@@ -305,7 +305,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             }
 
             val endFetch = FetcherAsync.fetchOffsetFromPage(preFetches.size(), direction,
-                    getActivity().getContentResolver(), this, null, null)
+                    activity.contentResolver, this, null, null)
             endFetch.execute(page)
             preFetches.set(preFetches.size()-1, endFetch)
         }
@@ -316,12 +316,12 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             {
                 Direction.Next ->
                 {
-                    FetcherAsync.fetchNextPage(getActivity().getContentResolver(), this, ::pageViewerPageAcquired,
+                    FetcherAsync.fetchNextPage(activity.contentResolver, this, ::pageViewerPageAcquired,
                             ::pageViewerStatus, ::pageViewerFailure).execute(page)
                 }
                 Direction.Prev ->
                 {
-                     FetcherAsync.fetchPrevPage(getActivity().getContentResolver(), this, ::pageViewerPageAcquired,
+                     FetcherAsync.fetchPrevPage(activity.contentResolver, this, ::pageViewerPageAcquired,
                             ::pageViewerStatus, ::pageViewerFailure).execute(page)
                 }
             }
@@ -334,13 +334,13 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         preFetches.forEach { it.cancel(true) }
 
         // Recreate the list
-        val preFetchSize = Settings.preFetchSize(getActivity())
+        val preFetchSize = Settings.preFetchSize(activity)
         preFetches = ArrayList<LambdaAsyncTask<Page, Float, Page>>(preFetchSize)
 
         for (i in 1..preFetchSize)
         {
             val nextFetch = FetcherAsync.fetchOffsetFromPage(i, readDirection,
-                    getActivity().getContentResolver(), this, null, null)
+                    activity.contentResolver, this, null, null)
             nextFetch.execute(page)
             preFetches.add(nextFetch)
         }
@@ -348,27 +348,27 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     private fun initProgressTracker(page: Page)
     {
-        val heritage = Heritage(getActivity().getContentResolver().query(page.heritage(), null, null, null, null))
-        val series = Series(getActivity().getContentResolver().query(Series.uri(heritage.seriesId), null, null, null, null))
+        val heritage = Heritage(activity.contentResolver.query(page.heritage(), null, null, null, null))
+        val series = Series(activity.contentResolver.query(Series.uri(heritage.seriesId), null, null, null, null))
         if (series.progressPageId == -1)
         {
             series.progressPageId = page.id
             series.progressChapterId = heritage.chapterId
         }
 
-        progressTracker = ProgressTracker(getActivity().getContentResolver(), series)
+        progressTracker = ProgressTracker(activity.contentResolver, series)
         progressTracker!!.handleNewPage(page)
 
         if (series.updated)
         {
             series.updated = false
-            getActivity().getContentResolver().update(series.uri(), series.getContentValues(), null, null)
+            activity.contentResolver.update(series.uri(), series.getContentValues(), null, null)
         }
     }
 
     override fun onSwipeLeft()
     {
-        if (Settings.rtlEnabled(getActivity()))
+        if (Settings.rtlEnabled(activity))
         {
             changePage(Direction.Prev)
         }
@@ -380,7 +380,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     override fun onSwipeRight()
     {
-        if (Settings.rtlEnabled(getActivity()))
+        if (Settings.rtlEnabled(activity))
         {
             changePage(Direction.Next)
         }
@@ -401,7 +401,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             val bundle = Bundle()
             bundle.putString(URI_ARG_KEY, uri.toString())
             bundle.putString(TYPE_ARG_KEY, type.name())
-            pageViewer.setArguments(bundle)
+            pageViewer.arguments = bundle
             return pageViewer
         }
     }

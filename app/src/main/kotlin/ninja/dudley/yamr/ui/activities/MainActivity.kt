@@ -2,8 +2,6 @@ package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -16,7 +14,7 @@ import android.widget.TextView
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.svc.FetchStarter
-import ninja.dudley.yamr.ui.fragments.Settings
+import ninja.dudley.yamr.ui.activities.Settings
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -31,7 +29,7 @@ public class MainActivity : Activity()
         {
             // Show version
             val versionView = findViewById(R.id.ver_name) as TextView
-            versionView.setText(BuildConfig.VERSION_NAME)
+            versionView.text = BuildConfig.VERSION_NAME
         }
 
         val maps = ArrayList<Map<String, *>>()
@@ -64,8 +62,8 @@ public class MainActivity : Activity()
                                                R.id.activity_description))
         val listView = findViewById(R.id.listView) as ListView
 
-        listView.setAdapter(adapter)
-        listView.setOnItemClickListener(object : AdapterView.OnItemClickListener
+        listView.adapter = adapter
+        listView.onItemClickListener = object : AdapterView.OnItemClickListener
         {
             override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long)
             {
@@ -92,13 +90,13 @@ public class MainActivity : Activity()
                     }
                 }
             }
-        })
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean
     {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -107,11 +105,11 @@ public class MainActivity : Activity()
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        val id = item!!.getItemId()
+        val id = item!!.itemId
 
         if (id == R.id.action_settings)
         {
-            val i = Intent(this, javaClass<FetchStarter>())
+            val i = Intent(this, FetchStarter::class.java)
             i.setAction(FetchStarter.StartChecking)
             sendBroadcast(i) // Can't be local, as Android will be creating and managing our BroadcastReceiver
             Log.d("MainActivity", "Starting a fetch new ")

@@ -23,13 +23,13 @@ public open class MangaElement
         Page,
     }
 
-    Id
+    @Id
     public val id: Int
-    Column(name = urlCol)
+    @Column(name = urlCol)
     public var url: String
-    Column(name = fullyParsedCol)
+    @Column(name = fullyParsedCol)
     public var fullyParsed: Boolean = false
-    Column(name = typeCol)
+    @Column(name = typeCol)
     public var type: UriType
 
     public constructor(url: String, type: MangaElement.UriType)
@@ -41,12 +41,12 @@ public open class MangaElement
 
     public constructor(c: Cursor)
     {
-        if (c.getCount() <= 0)
+        if (c.count <= 0)
         {
             c.close()
             throw NoSuchElementException("Empty Cursor!")
         }
-        if (c.getPosition() == -1)
+        if (c.position == -1)
         {
             c.moveToFirst()
         }
@@ -99,8 +99,8 @@ public open class MangaElement
 
     companion object
     {
-        public val urlCol: String = "url"
-        public val fullyParsedCol: String = "fully_parsed"
-        public val typeCol: String = "type"
+        const public val urlCol: String = "url"
+        const public val fullyParsedCol: String = "fully_parsed"
+        const public val typeCol: String = "type"
     }
 }

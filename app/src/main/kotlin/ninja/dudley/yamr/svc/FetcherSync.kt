@@ -10,7 +10,6 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
 import ninja.dudley.yamr.model.js.JsSeries
-import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -86,16 +85,16 @@ public open class FetcherSync
     protected fun init(mangaElement: MangaElement)
     {
         cx = Context.enter()
-        cx!!.setOptimizationLevel(-1)
+        cx!!.optimizationLevel = -1
         scope = cx!!.initStandardObjects()
 
         this.provider = getProvider(mangaElement)
 
         try
         {
-            ScriptableObject.defineClass(scope, javaClass<JsSeries>())
-            ScriptableObject.defineClass(scope, javaClass<JsChapter>())
-            ScriptableObject.defineClass(scope, javaClass<JsPage>())
+            ScriptableObject.defineClass(scope, JsSeries::class.java)
+            ScriptableObject.defineClass(scope, JsChapter::class.java)
+            ScriptableObject.defineClass(scope, JsPage::class.java)
         }
         catch (e: Exception)
         {
@@ -148,7 +147,7 @@ public open class FetcherSync
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
             val result = cx!!.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
-            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
+            val elements = Context.jsToJava(result, Elements::class.java) as Elements
             Log.d("RHINO", "${elements.size()}")
             provider.fullyParsed = true
             resolver.update(provider.uri(), provider.getContentValues(), null, null)
@@ -168,7 +167,7 @@ public open class FetcherSync
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
                 val seriesResult = cx!!.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
-                val jsSeries = Context.jsToJava(seriesResult, javaClass<JsSeries>()) as JsSeries
+                val jsSeries = Context.jsToJava(seriesResult, JsSeries::class.java) as JsSeries
                 val s = jsSeries.unJS(provider.id)
 
                 if (seriesExists(s.url))
@@ -205,7 +204,7 @@ public open class FetcherSync
             ScriptableObject.putProperty(scope, "series", Context.javaToJS(series, scope))
 
             val genreResult = cx!!.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
-            val genres = Context.jsToJava(genreResult, javaClass<List<String>>()) as List<String>
+            val genres = Context.jsToJava(genreResult, List::class.java) as List<String>
 
             for (genre in genres)
             {
@@ -221,7 +220,7 @@ public open class FetcherSync
             }
 
             val result = cx!!.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
-            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
+            val elements = Context.jsToJava(result, Elements::class.java) as Elements
 
             // Parse chapters
             val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
@@ -238,7 +237,7 @@ public open class FetcherSync
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
                 val chapterResult = cx!!.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
-                val jsChapter = Context.jsToJava(chapterResult, javaClass<JsChapter>()) as JsChapter
+                val jsChapter = Context.jsToJava(chapterResult, JsChapter::class.java) as JsChapter
                 val chapter = jsChapter.unJS(series.id)
 
                 if (chapterExists(chapter.url))
@@ -276,7 +275,7 @@ public open class FetcherSync
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             ScriptableObject.putProperty(scope, "chapter", Context.javaToJS(chapter, scope))
             val result = cx!!.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
-            val elements = Context.jsToJava(result, javaClass<Elements>()) as Elements
+            val elements = Context.jsToJava(result, Elements::class.java) as Elements
 
             val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
             var index = 0
@@ -292,7 +291,7 @@ public open class FetcherSync
 
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
                 val pageResult = cx!!.evaluateString(scope, "stubPage(element);", "fetchProvider", 600, null);
-                val jsPage = Context.jsToJava(pageResult, javaClass<JsPage>()) as JsPage
+                val jsPage = Context.jsToJava(pageResult, JsPage::class.java) as JsPage
                 val page = jsPage.unJS(chapter.id)
 
                 if (pageExists(page.url))
@@ -330,7 +329,7 @@ public open class FetcherSync
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             ScriptableObject.putProperty(scope, "page", Context.javaToJS(page, scope))
             val result = cx!!.evaluateString(scope, "fetchPage(doc, page);", "fetchProvider", 700, null);
-            val p = Context.jsToJava(result, javaClass<String>()) as String
+            val p = Context.jsToJava(result, String::class.java) as String
 
             page.imageUrl = p;
             page.fullyParsed = true
@@ -356,7 +355,7 @@ public open class FetcherSync
             val doc = fetchUrl(provider.newUrl)
             ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
             val result = cx!!.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
-            val seriesChapterPairs = Context.jsToJava(result, javaClass<List<List<Any>>>()) as List<List<Any>>
+            val seriesChapterPairs = Context.jsToJava(result, List::class.java) as List<List<Any>>
 
             for (pair in seriesChapterPairs)
             {
@@ -400,7 +399,7 @@ public open class FetcherSync
         return newChapters
     }
 
-    throws(IOException::class)
+    @Throws(IOException::class)
     private fun fetchUrl(url: String): Document
     {
         val response = Jsoup.connect(url)
@@ -414,7 +413,7 @@ public open class FetcherSync
     private fun providerExists(url: String): Boolean
     {
         val c = resolver.query(Provider.baseUri(), null, null, arrayOf(url), null)
-        val ret = c.getCount() > 0
+        val ret = c.count > 0
         c.close()
         return ret
     }
@@ -422,7 +421,7 @@ public open class FetcherSync
     private fun seriesExists(url: String): Boolean
     {
         val c = resolver.query(Series.baseUri(), null, null, arrayOf(url), null)
-        val ret = c.getCount() > 0
+        val ret = c.count > 0
         c.close()
         return ret
     }
@@ -430,7 +429,7 @@ public open class FetcherSync
     private fun chapterExists(url: String): Boolean
     {
         val c = resolver.query(Chapter.baseUri(), null, null, arrayOf(url), null)
-        val ret = c.getCount() > 0
+        val ret = c.count > 0
         c.close()
         return ret
     }
@@ -438,7 +437,7 @@ public open class FetcherSync
     private fun pageExists(url: String): Boolean
     {
         val c = resolver.query(Page.baseUri(), null, null, arrayOf(url), null)
-        val ret = c.getCount() > 0
+        val ret = c.count > 0
         c.close()
         return ret
     }
@@ -446,7 +445,7 @@ public open class FetcherSync
     private fun genreExists(name: String): Boolean
     {
         val c = resolver.query(Genre.baseUri(), null, null, arrayOf(name), null)
-        val ret = c.getCount() > 0
+        val ret = c.count > 0
         c.close()
         return ret
     }
@@ -477,12 +476,12 @@ public open class FetcherSync
         {
             val url = URL(imageUrl)
             val conn = url.openConnection() as HttpURLConnection
-            conn.setDoInput(true)
+            conn.doInput = true
             conn.connect()
-            inStream = conn.getInputStream()
+            inStream = conn.inputStream
             out = ByteArrayOutputStream()
 
-            val length = conn.getContentLength()
+            val length = conn.contentLength
             var done = 0
             val data = ByteArray(1024)
             while (done < length)
@@ -531,12 +530,12 @@ public open class FetcherSync
         val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val chapterPath = root.getAbsolutePath() + "/." + stripBadCharsForFile(heritage.providerName) + "/" +
+        val chapterPath = root.absolutePath + "/." + stripBadCharsForFile(heritage.providerName) + "/" +
                 stripBadCharsForFile(heritage.seriesName) + "/" + formatFloat(heritage.chapterNumber)
 
         val chapterDirectory = File(chapterPath)
         chapterDirectory.mkdirs()
-        val pagePath = "${chapterDirectory}/${formatFloat(heritage.pageNumber)}.png"
+        val pagePath = "$chapterDirectory/${formatFloat(heritage.pageNumber)}.png"
 
         downloadImage(p.imageUrl!!, pagePath)
 
@@ -549,16 +548,16 @@ public open class FetcherSync
         val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val seriesPath = root.getAbsolutePath() + "/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
+        val seriesPath = root.absolutePath + "/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
-        val thumbPath = "${chapterDirectory}/thumb.png"
+        val thumbPath = "$chapterDirectory/thumb.png"
 
         var out: FileOutputStream? = null
         try
         {
             val url = URL(s.thumbnailUrl)
-            val bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream())
+            val bmp = BitmapFactory.decodeStream(url.openConnection().inputStream)
             out = FileOutputStream(thumbPath)
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
         }

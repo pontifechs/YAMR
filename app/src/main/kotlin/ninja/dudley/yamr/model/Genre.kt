@@ -14,12 +14,12 @@ import ninja.dudley.yamr.db.util.Table
 /**
  * Created by mdudley on 6/25/15.
  */
-Table(Genre.tableName)
+@Table(Genre.tableName)
 public class Genre
 {
-    Id
+    @Id
     public var id: Int = -1
-    Column(name = nameCol)
+    @Column(name = nameCol)
     public var name: String
 
     // Construction / Persistence ------------------------------------------------------------------

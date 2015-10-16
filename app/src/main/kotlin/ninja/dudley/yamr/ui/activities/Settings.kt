@@ -1,4 +1,4 @@
-package ninja.dudley.yamr.ui.fragments
+package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
 import android.content.Context
@@ -17,7 +17,7 @@ public class Settings : Activity()
     {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         val settingsBox = SettingsFragment();
         transaction.replace(R.id.settingsContainer, settingsBox)
         transaction.commit()
@@ -26,13 +26,13 @@ public class Settings : Activity()
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean
     {
-        getMenuInflater().inflate(R.menu.menu_settings, menu)
+        menuInflater.inflate(R.menu.menu_settings, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
     {
-        val id = item!!.getItemId()
+        val id = item!!.itemId
 
         if (id == R.id.action_settings)
         {

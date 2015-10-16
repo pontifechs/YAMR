@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,7 +27,7 @@ public class ProviderSelector : ListFragment(), LoaderManager.LoaderCallbacks<Cu
     private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
-        super<ListFragment>.onAttach(activity)
+        super.onAttach(activity)
         this.parent = activity as Browse
     }
 
@@ -38,28 +37,28 @@ public class ProviderSelector : ListFragment(), LoaderManager.LoaderCallbacks<Cu
 
         val layout = inflater.inflate(R.layout.fragment_provider_selector, container, false) as LinearLayout
 
-        adapter = SimpleCursorAdapter(getActivity(),
+        adapter = SimpleCursorAdapter(activity,
                 R.layout.simple_series_item,
                 null,
                 arrayOf(Series.nameCol),
                 intArrayOf(R.id.series_name), 0)
-        setListAdapter(adapter)
+        listAdapter = adapter
 
-        getLoaderManager().initLoader(0, Bundle(), this)
+        loaderManager.initLoader(0, Bundle(), this)
         return layout
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
-        super<ListFragment>.onListItemClick(l, v, position, id)
+        super.onListItemClick(l, v, position, id)
         parent!!.loadProvider(Provider.uri(id.toInt()))
-        val imm: InputMethodManager = getActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(v!!.getWindowToken(), 0)
+        val imm: InputMethodManager = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(v!!.windowToken, 0)
     }
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        return CursorLoader(getActivity(), Provider.all(), null, null, null, null)
+        return CursorLoader(activity, Provider.all(), null, null, null, null)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor)

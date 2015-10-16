@@ -12,14 +12,14 @@ import ninja.dudley.yamr.db.util.Table
 /**
  * Created by mdudley on 5/19/15.
  */
-Table(Chapter.tableName)
+@Table(Chapter.tableName)
 public class Chapter : MangaElement
 {
-    ForeignKey(value = Series::class, name = seriesIdCol)
+    @ForeignKey(value = Series::class, name = seriesIdCol)
     public val seriesId: Int
-    Column(name = nameCol)
+    @Column(name = nameCol)
     public var name: String? = null
-    Column(name = numberCol, type = Column.Type.Real)
+    @Column(name = numberCol, type = Column.Type.Real)
     public val number: Float
 
     // Construction / Persistence ------------------------------------------------------------------
@@ -33,7 +33,7 @@ public class Chapter : MangaElement
     {
         if (type != MangaElement.UriType.Chapter)
         {
-            throw IllegalArgumentException("Attempted to make a chapter from a ${type}")
+            throw IllegalArgumentException("Attempted to make a chapter from a $type")
         }
         seriesId = getInt(c, seriesIdCol)
         name = getString(c, nameCol)

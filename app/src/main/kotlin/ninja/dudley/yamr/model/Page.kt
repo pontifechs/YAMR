@@ -12,16 +12,16 @@ import ninja.dudley.yamr.db.util.Table
 /**
  * Created by mdudley on 5/19/15.
  */
-Table(Page.tableName)
+@Table(Page.tableName)
 public class Page : MangaElement
 {
-    ForeignKey(value = Chapter::class, name = chapterIdCol)
+    @ForeignKey(value = Chapter::class, name = chapterIdCol)
     public val chapterId: Int
-    Column(name = numberCol, type = Column.Type.Real)
+    @Column(name = numberCol, type = Column.Type.Real)
     public val number: Float
-    Column(name = imageUrlCol)
+    @Column(name = imageUrlCol)
     public var imageUrl: String? = null
-    Column(name = imagePathCol)
+    @Column(name = imagePathCol)
     public var imagePath: String? = null
 
     // Construction / Persistence ------------------------------------------------------------------
@@ -36,7 +36,7 @@ public class Page : MangaElement
     {
         if (type != MangaElement.UriType.Page)
         {
-            throw IllegalArgumentException("Attempted to make a page from a ${type}")
+            throw IllegalArgumentException("Attempted to make a page from a $type")
         }
         chapterId = getInt(c, chapterIdCol)
         number = getFloat(c, numberCol)

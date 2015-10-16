@@ -1,7 +1,6 @@
 package ninja.dudley.yamr.model.js
 
 import ninja.dudley.yamr.model.Chapter
-import ninja.dudley.yamr.model.MangaElement
 import org.mozilla.javascript.ScriptableObject
 
 /**

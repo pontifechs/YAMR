@@ -1,7 +1,6 @@
 package ninja.dudley.yamr.util
 
 import android.content.ContentResolver
-import android.database.Cursor
 
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page

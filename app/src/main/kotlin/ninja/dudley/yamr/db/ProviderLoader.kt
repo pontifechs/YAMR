@@ -22,11 +22,11 @@ public class ProviderLoader()
         {
             val jsons = ArrayList<JSONObject>()
 
-            val assetManager = context.getAssets()
+            val assetManager = context.assets
 
             assetManager.list("providers").forEach(
                     {
-                        val inputStream = assetManager.open("providers/${it}")
+                        val inputStream = assetManager.open("providers/$it")
                         val reader = BufferedReader(InputStreamReader(inputStream));
                         val fileString = StringBuilder();
                         var line: String? = ""

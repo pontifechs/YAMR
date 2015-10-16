@@ -49,28 +49,28 @@ public class ProviderViewer :
 
     override fun onAttach(activity: Activity?)
     {
-        super<ListFragment>.onAttach(activity)
+        super.onAttach(activity)
         this.parent = activity as Browse?
     }
 
     fun status(status: Float)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
         val percent = 100 * status
-        loading!!.setProgress(percent.toInt())
+        loading!!.progress = percent.toInt()
     }
 
     fun complete(provider: Provider)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
         this.providerUri = provider.uri()
-        getLoaderManager().restartLoader(0, Bundle(), this@ProviderViewer)
+        loaderManager.restartLoader(0, Bundle(), this@ProviderViewer)
         adapter!!.notifyDataSetChanged()
         loading!!.dismiss()
     }
@@ -81,20 +81,20 @@ public class ProviderViewer :
 
         val layout = inflater.inflate(R.layout.fragment_provider_viewer, container, false) as LinearLayout
 
-        val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus)
-        this.providerUri = Uri.parse(getArguments().getString(PROVIDER_ARG_KEY))
-        val provider = Provider(getActivity().getContentResolver().query(providerUri, null, null, null, null))
+        val fetcher = FetcherAsync.fetchProvider(activity.contentResolver, this, ::providerViewerComplete, ::providerViewerStatus)
+        this.providerUri = Uri.parse(arguments.getString(PROVIDER_ARG_KEY))
+        val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
         fetcher.execute(provider)
 
-        adapter = SimpleCursorAdapter(getActivity(),
+        adapter = SimpleCursorAdapter(activity,
                                      R.layout.simple_series_item,
                                      null,
                                      arrayOf(Series.nameCol),
                                      intArrayOf(R.id.series_name), 0)
-        setListAdapter(adapter)
+        listAdapter = adapter
 
-        getLoaderManager().initLoader(0, Bundle(), this)
-        loading = ProgressDialog(getActivity())
+        loaderManager.initLoader(0, Bundle(), this)
+        loading = ProgressDialog(activity)
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
         loading!!.setTitle("Loading Series")
         loading!!.show()
@@ -105,26 +105,26 @@ public class ProviderViewer :
     {
         inflater!!.inflate(R.menu.menu_provider_viewer, menu)
         val item = menu!!.findItem(R.id.search)
-        val sv = item.getActionView() as SearchView
+        val sv = item.actionView as SearchView
         sv.setOnQueryTextListener(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
     {
-        when (item!!.getItemId())
+        when (item!!.itemId)
         {
             R.id.search -> return true
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchProvider(getActivity().getContentResolver(), this, ::providerViewerComplete, ::providerViewerStatus, FetcherSync.Behavior.ForceRefresh)
-                val provider = Provider(getActivity().getContentResolver().query(providerUri, null, null, null, null))
+                val fetcher = FetcherAsync.fetchProvider(activity.contentResolver, this, ::providerViewerComplete, ::providerViewerStatus, FetcherSync.Behavior.ForceRefresh)
+                val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
                 fetcher.execute(provider)
 
-                loading!!.setProgress(0)
+                loading!!.progress = 0
                 loading!!.show()
                 return true
             }
-            else -> return super<ListFragment>.onOptionsItemSelected(item)
+            else -> return super.onOptionsItemSelected(item)
         }
     }
 
@@ -134,11 +134,11 @@ public class ProviderViewer :
         val seriesUri = providerUri!!.buildUpon().appendPath("series").build()
         if (filter == null)
         {
-            return CursorLoader(getActivity(), seriesUri, null, null, null, null)
+            return CursorLoader(activity, seriesUri, null, null, null, null)
         }
         else
         {
-            return CursorLoader(getActivity(), seriesUri, null, Series.nameCol + " like ?", arrayOf("%${filter}%"), null)
+            return CursorLoader(activity, seriesUri, null, Series.nameCol + " like ?", arrayOf("%$filter%"), null)
         }
     }
 
@@ -154,10 +154,10 @@ public class ProviderViewer :
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
-        super<ListFragment>.onListItemClick(l, v, position, id)
+        super.onListItemClick(l, v, position, id)
         parent!!.loadSeries(Series.uri(id.toInt()))
-        val imm: InputMethodManager  = getActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(v!!.getWindowToken(), 0)
+        val imm: InputMethodManager  = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(v!!.windowToken, 0)
     }
 
     override fun onQueryTextSubmit(query: String): Boolean
@@ -168,7 +168,7 @@ public class ProviderViewer :
     override fun onQueryTextChange(newText: String): Boolean
     {
         filter = if (!TextUtils.isEmpty(newText)) newText else null
-        getLoaderManager().restartLoader(0, Bundle(), this)
+        loaderManager.restartLoader(0, Bundle(), this)
         return true
     }
 
@@ -181,7 +181,7 @@ public class ProviderViewer :
             val providerViewer = ProviderViewer()
             val bundle = Bundle()
             bundle.putString(PROVIDER_ARG_KEY, uri.toString())
-            providerViewer.setArguments(bundle)
+            providerViewer.arguments = bundle
             return providerViewer
         }
     }

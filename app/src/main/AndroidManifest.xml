@@ -40,7 +40,7 @@
             android:parentActivityName=".ui.activities.MainActivity" >
         </activity>
         <activity
-            android:name=".ui.fragments.Settings"
+            android:name=".ui.activities.Settings"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".ui.activities.MainActivity" >
             <meta-data

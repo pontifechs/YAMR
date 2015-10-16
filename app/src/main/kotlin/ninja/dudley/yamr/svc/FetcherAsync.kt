@@ -242,7 +242,7 @@ public class FetcherAsync
                         {
                             fail()
                         }
-                        Log.d("PreFetch", "Finished Prefetch #${params[0].number} ${direction} ${offset}")
+                        Log.d("PreFetch", "Finished Prefetch #${params[0].number} $direction $offset")
                         return page
 
                     }
@@ -255,7 +255,7 @@ public class FetcherAsync
 
                 override fun notify(status: Float)
                 {
-                    Log.d("PreFetch", "PreFetch Status: ${status}")
+                    Log.d("PreFetch", "PreFetch Status: $status")
                     publishProgress(status)
                 }
             }

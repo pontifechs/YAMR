@@ -4,7 +4,6 @@ import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.util.Log
 import ninja.dudley.yamr.R
@@ -40,10 +39,10 @@ public class FetchStarter : BroadcastReceiver()
                 .setContentText("${newUris.size()} New Chapters")
                 .setAutoCancel(true)
 
-        val startFavorites = Intent(context, javaClass<Browse>())
+        val startFavorites = Intent(context, Browse::class.java)
         startFavorites.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.toString())
         val stackBuilder = TaskStackBuilder.create(context)
-        stackBuilder.addParentStack(javaClass<Browse>())
+        stackBuilder.addParentStack(Browse::class.java)
         stackBuilder.addNextIntent(startFavorites)
         val pi = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
         builder.setContentIntent(pi)
@@ -54,8 +53,8 @@ public class FetchStarter : BroadcastReceiver()
     override fun onReceive(context: Context, intent: Intent)
     {
         this.context = context
-        Log.d("FetchStarter", "Received ${intent.getAction()}")
-        if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED)
+        Log.d("FetchStarter", "Received ${intent.action}")
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED)
         {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(StartChecking)
@@ -64,10 +63,10 @@ public class FetchStarter : BroadcastReceiver()
                                              AlarmManager.INTERVAL_FIFTEEN_MINUTES /15,
                                              AlarmManager.INTERVAL_HALF_DAY / 2, pi)
         }
-        else if (intent.getAction() == StartChecking)
+        else if (intent.action == StartChecking)
         {
-            val mangaPanda = Provider(context.getContentResolver().query(Provider.uri(1), null, null, null, null))
-            FetcherAsync.fetchNew(context.getContentResolver(), this, ::fetchNewComplete).execute(mangaPanda)
+            val mangaPanda = Provider(context.contentResolver.query(Provider.uri(1), null, null, null, null))
+            FetcherAsync.fetchNew(context.contentResolver, this, ::fetchNewComplete).execute(mangaPanda)
         }
     }
 

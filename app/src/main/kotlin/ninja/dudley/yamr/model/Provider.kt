@@ -12,32 +12,32 @@ import ninja.dudley.yamr.db.util.Unique
 /**
  * Created by mdudley on 6/2/15.
  */
-Table(Provider.tableName)
+@Table(Provider.tableName)
 public class Provider : MangaElement
 {
-    Unique
-    Column(name = nameCol)
+    @Unique
+    @Column(name = nameCol)
     public val name: String
-    Column(name = newUrlCol)
+    @Column(name = newUrlCol)
     public val newUrl: String
 
-    Column(name = fetchProviderCol)
+    @Column(name = fetchProviderCol)
     public val fetchProvider: String
-    Column(name = stubSeriesCol)
+    @Column(name = stubSeriesCol)
     public val stubSeries: String
-    Column(name = fetchSeriesCol)
+    @Column(name = fetchSeriesCol)
     public val fetchSeries: String
-    Column(name = fetchSeriesGenresCol)
+    @Column(name = fetchSeriesGenresCol)
     public val fetchSeriesGenres: String
-    Column(name = stubChapterCol)
+    @Column(name = stubChapterCol)
     public val stubChapter: String
-    Column(name = fetchChapterCol)
+    @Column(name = fetchChapterCol)
     public val fetchChapter: String
-    Column(name = stubPageCol)
+    @Column(name = stubPageCol)
     public val stubPage: String
-    Column(name = fetchPageCol)
+    @Column(name = fetchPageCol)
     public val fetchPage: String
-    Column(name = fetchNewCol)
+    @Column(name = fetchNewCol)
     public val fetchNew: String
 
     // Construction / Persistence ------------------------------------------------------------------
@@ -45,7 +45,7 @@ public class Provider : MangaElement
     {
         if (type != MangaElement.UriType.Provider)
         {
-            throw IllegalArgumentException("Attempted to make a provider from a ${type}")
+            throw IllegalArgumentException("Attempted to make a provider from a $type")
         }
         name = getString(c, nameCol)!!
         newUrl = getString(c, newUrlCol)!!

@@ -9,39 +9,38 @@ import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.db.util.Column
 import ninja.dudley.yamr.db.util.ForeignKey
 import ninja.dudley.yamr.db.util.Table
-import java.util.*
 
 /**
  * Created by mdudley on 5/19/15.
  */
-Table(Series.tableName)
+@Table(Series.tableName)
 public class Series : MangaElement
 {
-    ForeignKey(value = Provider::class, name = providerIdCol)
+    @ForeignKey(value = Provider::class, name = providerIdCol)
     public val providerId: Int
-    Column(name = nameCol)
+    @Column(name = nameCol)
     public var name: String
-    Column(name = descriptionCol)
+    @Column(name = descriptionCol)
     public var description: String? = null
-    Column(name = favoriteCol, type = Column.Type.Integer)
+    @Column(name = favoriteCol, type = Column.Type.Integer)
     public var favorite: Boolean = false
-    Column(name = alternateNameCol)
+    @Column(name = alternateNameCol)
     public var alternateName: String? = null
-    Column(name = completeCol, type = Column.Type.Integer)
+    @Column(name = completeCol, type = Column.Type.Integer)
     public var complete: Boolean = false
-    Column(name = authorCol)
+    @Column(name = authorCol)
     public var author: String? = null
-    Column(name = artistCol)
+    @Column(name = artistCol)
     public var artist: String? = null
-    Column(name = thumbnailUrlCol)
+    @Column(name = thumbnailUrlCol)
     public var thumbnailUrl: String? = null
-    Column(name = thumbnailPathCol)
+    @Column(name = thumbnailPathCol)
     public var thumbnailPath: String? = null
-    ForeignKey(value = Chapter::class, name = progressChapterIdCol)
+    @ForeignKey(value = Chapter::class, name = progressChapterIdCol)
     public var progressChapterId: Int? = -1
-    ForeignKey(value = Page::class, name = progressPageIdCol)
+    @ForeignKey(value = Page::class, name = progressPageIdCol)
     public var progressPageId: Int? = -1
-    Column(name = updatedCol, type = Column.Type.Integer)
+    @Column(name = updatedCol, type = Column.Type.Integer)
     public var updated: Boolean = false
 
 
@@ -58,7 +57,7 @@ public class Series : MangaElement
     {
         if (type != MangaElement.UriType.Series)
         {
-            throw IllegalArgumentException("Attempted to make a series from a ${type}")
+            throw IllegalArgumentException("Attempted to make a series from a $type")
         }
         providerId = getInt(c, providerIdCol)
         name = getString(c, nameCol)!!

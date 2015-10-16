@@ -1,6 +1,5 @@
 package ninja.dudley.yamr.model.js
 
-import android.util.Log
 import ninja.dudley.yamr.model.Page
 import org.mozilla.javascript.ScriptableObject
 

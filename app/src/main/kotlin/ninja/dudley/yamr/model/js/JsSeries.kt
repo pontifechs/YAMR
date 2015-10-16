@@ -2,7 +2,6 @@ package ninja.dudley.yamr.model.js;
 
 import ninja.dudley.yamr.model.Series
 import org.mozilla.javascript.ScriptableObject
-import java.util.*
 
 /**
  * Created by mdudley on 7/19/15.

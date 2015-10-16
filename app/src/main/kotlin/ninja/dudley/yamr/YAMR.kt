@@ -9,7 +9,7 @@ import org.acra.sender.HttpSender
 /**
  * Created by mdudley on 8/6/15.
  */
-ReportsCrashes(
+@ReportsCrashes(
         formUri = "http://dudley.ninja:5984/acra-storage/_design/acra-storage/_update/report",
         mode = ReportingInteractionMode.TOAST,
         resToastText = R.string.error_text,

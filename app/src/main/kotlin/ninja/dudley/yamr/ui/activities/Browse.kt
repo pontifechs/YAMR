@@ -20,14 +20,14 @@ public class Browse : Activity(), OrientationAware.I
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
-        super<Activity>.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browse)
         if (savedInstanceState == null)
         {
-            val b: Bundle = getIntent().getExtras()
+            val b: Bundle = intent.extras
             val flow: FlowType = FlowType.valueOf(b.get(FlowKey) as String)
 
-            val transaction = getFragmentManager().beginTransaction()
+            val transaction = fragmentManager.beginTransaction()
             when (flow)
             {
                 FlowType.ProviderDown ->
@@ -47,7 +47,7 @@ public class Browse : Activity(), OrientationAware.I
 
     fun loadProvider(provider: Uri)
     {
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         val providerViewer = ProviderViewer.newInstance(provider)
         transaction.replace(R.id.reader, providerViewer)
         transaction.addToBackStack(null)
@@ -56,7 +56,7 @@ public class Browse : Activity(), OrientationAware.I
 
     fun loadSeries(series: Uri)
     {
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         val seriesViewer = SeriesViewer.newInstance(series)
         transaction.replace(R.id.reader, seriesViewer)
         transaction.addToBackStack(null)
@@ -65,7 +65,7 @@ public class Browse : Activity(), OrientationAware.I
 
     fun loadChapter(chapter: Uri)
     {
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         val chapterViewer = ChapterViewer.newInstance(chapter)
         transaction.replace(R.id.reader, chapterViewer)
         transaction.addToBackStack(null)
@@ -89,7 +89,7 @@ public class Browse : Activity(), OrientationAware.I
 
     fun loadPageViewer(uri: Uri, type: MangaElement.UriType)
     {
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         val pageViewer = PageViewer.newInstance(uri, type)
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
@@ -99,7 +99,7 @@ public class Browse : Activity(), OrientationAware.I
     override fun onConfigurationChanged(newConfig: Configuration)
     {
         OrientationAware.handleOrientationAware(this, newConfig)
-        super<Activity>.onConfigurationChanged(newConfig)
+        super.onConfigurationChanged(newConfig)
     }
 
     override fun onPortrait(newConfig: Configuration)

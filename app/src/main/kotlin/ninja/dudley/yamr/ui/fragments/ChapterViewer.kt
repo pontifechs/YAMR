@@ -44,13 +44,13 @@ public class ChapterViewer :
 
     private var adapter: PageThumbAdapter? = null
     public inner class PageThumbAdapter :
-            SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
+            SimpleCursorAdapter(activity, 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater
 
         init
         {
-            inflater = LayoutInflater.from(getActivity())
+            inflater = LayoutInflater.from(activity)
         }
 
         override fun newView(context: Context?, cursor: Cursor?, parent: ViewGroup?): View
@@ -71,49 +71,49 @@ public class ChapterViewer :
             if (page.imagePath != null)
             {
                 val bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(page.imagePath), 192, 192)
-                val d = BitmapDrawable(getResources(), bitmap)
+                val d = BitmapDrawable(resources, bitmap)
                 thumb.setImageDrawable(d)
             }
             else
             {
-                thumb.setImageDrawable(getResources().getDrawable(R.drawable.panic))
+                thumb.setImageDrawable(resources.getDrawable(R.drawable.panic))
             }
 
-            number.setText("${page.number}")
+            number.text = "${page.number}"
         }
     }
 
     private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
-        super<Fragment>.onAttach(activity)
+        super.onAttach(activity)
         this.parent = activity as Browse?
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
-        super<Fragment>.onCreate(savedInstanceState)
-        chapterUri = Uri.parse(getArguments().getString(uriArgKey))
-        chapter = Chapter(getActivity().getContentResolver().query(chapterUri, null, null, null, null))
+        super.onCreate(savedInstanceState)
+        chapterUri = Uri.parse(arguments.getString(uriArgKey))
+        chapter = Chapter(activity.contentResolver.query(chapterUri, null, null, null, null))
     }
 
     fun status(status: Float)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
         val percent = 100 * status
-        loading!!.setProgress(percent.toInt())
+        loading!!.progress = percent.toInt()
     }
 
     fun complete(chapter: Chapter)
     {
-        if (!isAdded())
+        if (!isAdded)
         {
             return
         }
-        getLoaderManager().restartLoader(0, Bundle(), this@ChapterViewer)
+        loaderManager.restartLoader(0, Bundle(), this@ChapterViewer)
         adapter!!.notifyDataSetChanged()
         loading!!.dismiss()
     }
@@ -123,18 +123,18 @@ public class ChapterViewer :
         val view = inflater.inflate(R.layout.fragment_chapter_viewer, container, false) as LinearLayout
 
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
-        chapterName.setText("Chapter ${chapter!!.number}: ${chapter!!.name}")
+        chapterName.text = "Chapter ${chapter!!.number}: ${chapter!!.name}"
 
-        val fetcher = FetcherAsync.fetchChapter(getActivity().getContentResolver(), this, ::chapterViewerComplete, ::chapterViewerStatus)
+        val fetcher = FetcherAsync.fetchChapter(activity.contentResolver, this, ::chapterViewerComplete, ::chapterViewerStatus)
         fetcher.execute(chapter!!)
 
         adapter = PageThumbAdapter()
         val grid = view.findViewById(R.id.grid) as GridView
-        grid.setAdapter(adapter)
-        grid.setOnItemClickListener(this)
+        grid.adapter = adapter
+        grid.onItemClickListener = this
 
-        getLoaderManager().initLoader(0, Bundle(), this)
-        loading = ProgressDialog(getActivity())
+        loaderManager.initLoader(0, Bundle(), this)
+        loading = ProgressDialog(activity)
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
         loading!!.setTitle("Loading Chapters for " + chapter!!.name!!)
         loading!!.show()
@@ -149,7 +149,7 @@ public class ChapterViewer :
 
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor>?
     {
-        return CursorLoader(getActivity(), chapter!!.pages(), null, null, null, null)
+        return CursorLoader(activity, chapter!!.pages(), null, null, null, null)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>?, data: Cursor?)
@@ -171,7 +171,7 @@ public class ChapterViewer :
             val chapterViewer: ChapterViewer = ChapterViewer()
             val bundle: Bundle = Bundle()
             bundle.putString(uriArgKey, uri.toString())
-            chapterViewer.setArguments(bundle)
+            chapterViewer.arguments = bundle
             return chapterViewer
         }
 

@@ -42,37 +42,37 @@ public class SeriesViewer :
     private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
-        super<ListFragment>.onAttach(activity)
+        super.onAttach(activity)
         this.parent = activity as Browse?
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
-        super<ListFragment>.onCreate(savedInstanceState)
-        seriesUri = Uri.parse(getArguments().getString(uriArgKey))
+        super.onCreate(savedInstanceState)
+        seriesUri = Uri.parse(arguments.getString(uriArgKey))
     }
 
     fun status(status: Float)
     {
-        if (!isAdded())
+        if (!isAdded)
             return
         val percent = 100 * status
-        loading!!.setProgress(percent.toInt())
+        loading!!.progress = percent.toInt()
     }
 
     fun complete(series: Series)
     {
-        if(!isAdded())
+        if(!isAdded)
         {
             return
         }
-        getLoaderManager().restartLoader(0, Bundle(), this@SeriesViewer)
+        loaderManager.restartLoader(0, Bundle(), this@SeriesViewer)
         adapter!!.notifyDataSetChanged()
         loading?.dismiss()
-        getActivity().invalidateOptionsMenu()
+        activity.invalidateOptionsMenu()
 
         val card = SeriesCard.newInstance(series)
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         transaction.replace(R.id.list_header_container, card)
         transaction.commit()
 
@@ -88,29 +88,29 @@ public class SeriesViewer :
         val list = layout.findViewById(android.R.id.list) as ListView
         val headerContainer = inflater.inflate(R.layout.list_header_container, null) as FrameLayout
         list.addHeaderView(headerContainer)
-        list.setOnItemLongClickListener(this);
+        list.onItemLongClickListener = this;
 
-        series = Series(getActivity().getContentResolver().query(seriesUri, null, null, null, null))
+        series = Series(activity.contentResolver.query(seriesUri, null, null, null, null))
 
         val seriesCard = SeriesCard.newInstance(series!!)
-        val transaction = getFragmentManager().beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this, ::seriesViewerComplete, ::seriesViewerStatus)
+        val fetcher = FetcherAsync.fetchSeries(activity.contentResolver, this, ::seriesViewerComplete, ::seriesViewerStatus)
         fetcher.execute(series)
 
-        adapter = SimpleCursorAdapter(getActivity(),
+        adapter = SimpleCursorAdapter(activity,
                                       R.layout.chapter_item,
                                       null,
                                       arrayOf(Chapter.nameCol, Chapter.numberCol),
                                       intArrayOf(R.id.chapter_name, R.id.chapter_number),
                                       0)
-        setListAdapter(adapter)
+        listAdapter = adapter
 
-        getLoaderManager().initLoader(0, Bundle(), this)
+        loaderManager.initLoader(0, Bundle(), this)
 
-        loading = ProgressDialog(getActivity())
+        loading = ProgressDialog(activity)
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
         loading!!.setTitle("Loading Chapters for " + series!!.name)
         if (!series!!.fullyParsed)
@@ -131,7 +131,7 @@ public class SeriesViewer :
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
     {
-        when (item!!.getItemId())
+        when (item!!.itemId)
         {
             R.id.favorite ->
             {
@@ -143,17 +143,17 @@ public class SeriesViewer :
                 {
                     series!!.favorite = true
                 }
-                getActivity().getContentResolver().update(series!!.uri(), series!!.getContentValues(), null, null)
-                getActivity().invalidateOptionsMenu()
+                activity.contentResolver.update(series!!.uri(), series!!.getContentValues(), null, null)
+                activity.invalidateOptionsMenu()
                 return true
             }
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchSeries(getActivity().getContentResolver(), this,
+                val fetcher = FetcherAsync.fetchSeries(activity.contentResolver, this,
                         ::seriesViewerComplete, ::seriesViewerStatus, FetcherSync.Behavior.ForceRefresh)
                 fetcher.execute(series)
 
-                loading!!.setProgress(0)
+                loading!!.progress = 0
                 loading!!.show()
                 return true
             }
@@ -161,17 +161,17 @@ public class SeriesViewer :
             {
                 series!!.progressChapterId = -1;
                 series!!.progressPageId = -1;
-                getActivity().getContentResolver().update(series!!.uri(), series!!.getContentValues(), null, null)
-                getActivity().invalidateOptionsMenu()
+                activity.contentResolver.update(series!!.uri(), series!!.getContentValues(), null, null)
+                activity.invalidateOptionsMenu()
                 return true
             }
-            else -> return super<ListFragment>.onOptionsItemSelected(item)
+            else -> return super.onOptionsItemSelected(item)
         }
     }
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        return CursorLoader(getActivity(), series!!.chapters(), null, null, null, null)
+        return CursorLoader(activity, series!!.chapters(), null, null, null, null)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor)
@@ -202,7 +202,7 @@ public class SeriesViewer :
             val seriesViewer: SeriesViewer = SeriesViewer()
             val bundle: Bundle = Bundle()
             bundle.putString(uriArgKey, uri.toString())
-            seriesViewer.setArguments(bundle)
+            seriesViewer.arguments = bundle
             return seriesViewer
         }
 

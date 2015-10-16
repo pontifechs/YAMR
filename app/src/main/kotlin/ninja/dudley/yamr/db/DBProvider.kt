@@ -69,13 +69,13 @@ public class DBProvider : ContentProvider()
 
     override fun onCreate(): Boolean
     {
-        dbh = DBHelper(getContext())
+        dbh = DBHelper(context)
         return true
     }
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor
     {
-        val db = dbh!!.getReadableDatabase()
+        val db = dbh!!.readableDatabase
         val code = matcher.match(uri)
         val matchCode = MatchCode.from(code)
         when (matchCode)
@@ -103,13 +103,13 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.ProviderAll -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), null, null, null, null, sortOrder)
             DBProvider.MatchCode.PrevChapterInSeries ->
             {
-                val chapterNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
+                val chapterNumberStringForPrev = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val chapterNumberForPrev = java.lang.Float.parseFloat(chapterNumberStringForPrev)
                 return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=? and " + Chapter.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForPrev)), null, null, Chapter.numberCol + " desc", "1")
             }
             DBProvider.MatchCode.NextChapterInSeries ->
             {
-                val chapterNumberStringForNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
+                val chapterNumberStringForNext = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val chapterNumberForNext = java.lang.Float.parseFloat(chapterNumberStringForNext)
                 return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=? and " + Chapter.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForNext)), null, null, Chapter.numberCol + " asc", "1")
             }
@@ -130,13 +130,13 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
             DBProvider.MatchCode.PrevPagesInChapter ->
             {
-                val pageNumberStringForPrev = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
+                val pageNumberStringForPrev = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val pageNumberForPrev = java.lang.Float.parseFloat(pageNumberStringForPrev)
                 return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberForPrev)), null, null, Page.numberCol + " desc")
             }
             DBProvider.MatchCode.NextPagesInChapter ->
             {
-                val pageNumberStringNext = uri.getPathSegments().get(uri.getPathSegments().size() - 2)
+                val pageNumberStringNext = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val pageNumberNext = java.lang.Float.parseFloat(pageNumberStringNext)
                 val cursor = db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberNext)), null, null, Page.numberCol + " asc")
                 return cursor
@@ -179,7 +179,7 @@ public class DBProvider : ContentProvider()
 
     override fun insert(uri: Uri, values: ContentValues): Uri?
     {
-        val db = dbh!!.getWritableDatabase()
+        val db = dbh!!.writableDatabase
         val id: Long
         val inserted: Uri
         val code = matcher.match(uri)
@@ -197,7 +197,7 @@ public class DBProvider : ContentProvider()
                 id = db.insert(Series.tableName, null, values)
                 inserted = Series.uri(id.toInt())
                 val providerSeries = Provider.series(getId(code, uri))
-                getContext().getContentResolver().notifyChange(providerSeries, null)
+                context.contentResolver.notifyChange(providerSeries, null)
                 return inserted
             }
             DBProvider.MatchCode.ChapterMatch ->
@@ -205,7 +205,7 @@ public class DBProvider : ContentProvider()
                 id = db.insert(Chapter.tableName, null, values)
                 inserted = Chapter.uri(id.toInt())
                 val seriesChapters = Series.chapters(getId(code, uri))
-                getContext().getContentResolver().notifyChange(seriesChapters, null)
+                context.contentResolver.notifyChange(seriesChapters, null)
                 return inserted
             }
             DBProvider.MatchCode.PageMatch ->
@@ -213,7 +213,7 @@ public class DBProvider : ContentProvider()
                 id = db.insert(Page.tableName, null, values)
                 inserted = Page.uri(id.toInt())
                 val chapterPages = Chapter.pages(getId(code, uri))
-                getContext().getContentResolver().notifyChange(chapterPages, null)
+                context.contentResolver.notifyChange(chapterPages, null)
                 return inserted
             }
             DBProvider.MatchCode.GenreMatch ->
@@ -233,7 +233,7 @@ public class DBProvider : ContentProvider()
 
     override fun delete(uri: Uri, selection: String, selectionArgs: Array<String>): Int
     {
-        val db = dbh!!.getWritableDatabase()
+        val db = dbh!!.writableDatabase
         val code = matcher.match(uri)
         val matchCode = MatchCode.from(code)
         when (matchCode)
@@ -248,7 +248,7 @@ public class DBProvider : ContentProvider()
 
     override fun update(uri: Uri, values: ContentValues, selection: String?, selectionArgs: Array<String>?): Int
     {
-        val db = dbh!!.getWritableDatabase()
+        val db = dbh!!.writableDatabase
         val code = matcher.match(uri)
         val matchCode = MatchCode.from(code)
         when (matchCode)
@@ -304,17 +304,17 @@ public class DBProvider : ContentProvider()
             val matchCode = MatchCode.from(code)
             when (matchCode)
             {
-                DBProvider.MatchCode.ProviderByID, DBProvider.MatchCode.SeriesByID, DBProvider.MatchCode.ChapterByID, DBProvider.MatchCode.PageByID -> return Integer.parseInt(uri.getLastPathSegment())
+                DBProvider.MatchCode.ProviderByID, DBProvider.MatchCode.SeriesByID, DBProvider.MatchCode.ChapterByID, DBProvider.MatchCode.PageByID -> return Integer.parseInt(uri.lastPathSegment)
                 DBProvider.MatchCode.ProviderSeries, DBProvider.MatchCode.SeriesChapters, DBProvider.MatchCode.ChapterPages, DBProvider.MatchCode.PageHeritage, DBProvider.MatchCode.SeriesGenres,
                 DBProvider.MatchCode.GenreSeries ->
                 {
-                    segments = uri.getPathSegments()
+                    segments = uri.pathSegments
                     idStr = segments.get(segments.size() - 2)
                     return Integer.parseInt(idStr)
                 }
                 DBProvider.MatchCode.PrevChapterInSeries, DBProvider.MatchCode.NextChapterInSeries, DBProvider.MatchCode.PrevPagesInChapter, DBProvider.MatchCode.NextPagesInChapter ->
                 {
-                    segments = uri.getPathSegments()
+                    segments = uri.pathSegments
                     idStr = segments.get(segments.size() - 4)
                     return Integer.parseInt(idStr)
                 }

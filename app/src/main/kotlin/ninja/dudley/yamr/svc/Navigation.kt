@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.net.Uri
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
-import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException

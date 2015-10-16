@@ -22,13 +22,13 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 {
     private var adapter: ThumbSeriesAdapter? = null
     public inner class ThumbSeriesAdapter :
-            SimpleCursorAdapter(getActivity(), 0, null, arrayOf<String>(), intArrayOf(), 0)
+            SimpleCursorAdapter(activity, 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater
 
         init
         {
-            inflater = LayoutInflater.from(getActivity())
+            inflater = LayoutInflater.from(activity)
         }
 
         override fun newView(context: Context?, cursor: Cursor?, parent: ViewGroup?): View
@@ -60,20 +60,20 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
             }
             else
             {
-                thumb.setImageDrawable(getResources().getDrawable(R.drawable.panic))
+                thumb.setImageDrawable(resources.getDrawable(R.drawable.panic, null))
             }
 
-            name.setText(series.name)
+            name.text = series.name
 
             if (series.progressPageId != -1)
             {
-                val heritage = Heritage(context!!.getContentResolver()
+                val heritage = Heritage(context!!.contentResolver
                         .query(Page.heritage(series.progressPageId!!), null, null, null, null))
-                progress.setText("Chapter: " + heritage.chapterNumber + ", Page: " + heritage.pageNumber)
+                progress.text = "Chapter: " + heritage.chapterNumber + ", Page: " + heritage.pageNumber
             }
             else
             {
-                progress.setText("Not Started")
+                progress.text = "Not Started"
             }
         }
     }
@@ -81,7 +81,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
     private var parent: Browse? = null
     override fun onAttach(activity: Activity?)
     {
-        super<ListFragment>.onAttach(activity)
+        super.onAttach(activity)
         this.parent = activity as Browse
     }
 
@@ -90,12 +90,12 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
         setHasOptionsMenu(true)
         val layout = inflater.inflate(R.layout.fragment_favorites, container, false) as RelativeLayout
         val listView = layout.findViewById(android.R.id.list) as ListView
-        listView.setOnItemLongClickListener(this)
+        listView.onItemLongClickListener = this
 
         adapter = ThumbSeriesAdapter()
-        setListAdapter(adapter)
+        listAdapter = adapter
 
-        getLoaderManager().initLoader(0, Bundle(), this)
+        loaderManager.initLoader(0, Bundle(), this)
 
         return layout;
     }
@@ -108,12 +108,12 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
     {
-        when (item!!.getItemId())
+        when (item!!.itemId)
         {
             R.id.action_settings -> return true
         }
 
-        return super<ListFragment>.onOptionsItemSelected(item)
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
@@ -129,7 +129,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        return CursorLoader(getActivity(), Series.favorites(), null, null, null, null)
+        return CursorLoader(activity, Series.favorites(), null, null, null, null)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor)
@@ -144,7 +144,7 @@ public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, 
 
     override fun onResume()
     {
-        super<ListFragment>.onResume()
-        getLoaderManager().restartLoader(0, Bundle(), this)
+        super.onResume()
+        loaderManager.restartLoader(0, Bundle(), this)
     }
 }
