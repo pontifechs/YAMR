@@ -408,7 +408,7 @@ public class DBHelper extends SQLiteOpenHelper
         File root = Environment.getExternalStorageDirectory();
         try
         {
-            FileOutputStream nomediaStream = new FileOutputStream(root.getAbsolutePath() + "/YAMR");
+            FileOutputStream nomediaStream = new FileOutputStream(root.getAbsolutePath() + "/YAMR/.nomedia");
             nomediaStream.write("Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.".getBytes());
             nomediaStream.close();
         }
