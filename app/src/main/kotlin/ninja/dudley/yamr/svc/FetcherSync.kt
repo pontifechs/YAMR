@@ -530,7 +530,7 @@ public open class FetcherSync
         val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val chapterPath = root.absolutePath + "/." + stripBadCharsForFile(heritage.providerName) + "/" +
+        val chapterPath = root.absolutePath + "/YAMR/" + stripBadCharsForFile(heritage.providerName) + "/" +
                 stripBadCharsForFile(heritage.seriesName) + "/" + formatFloat(heritage.chapterNumber)
 
         val chapterDirectory = File(chapterPath)
@@ -548,7 +548,7 @@ public open class FetcherSync
         val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
         val root = Environment.getExternalStorageDirectory()
-        val seriesPath = root.absolutePath + "/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
+        val seriesPath = root.absolutePath + "/YAMR/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
         val thumbPath = "$chapterDirectory/thumb.png"

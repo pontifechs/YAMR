@@ -5,10 +5,15 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.provider.BaseColumns;
 
 import org.jsoup.helper.StringUtil;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +41,7 @@ public class DBHelper extends SQLiteOpenHelper
 {
     private final Context context;
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
@@ -54,103 +59,6 @@ public class DBHelper extends SQLiteOpenHelper
         projections.put(Page.tableName, projection(Page.class));
         projections.put(Genre.tableName, projection(Genre.class));
     }
-
-
-    public static final String fetchProvider =
-            "function fetchProvider(doc, provider) { \n" +
-            "   return doc.select('.series_alpha li a[href]');\n" +
-            "};";
-    public static final String stubSeries =
-            "function stubSeries(element) {\n" +
-            "   var jsSeries = new JsSeries();\n" +
-            "   jsSeries.url = element.absUrl('href');\n" +
-            "   jsSeries.name = element.ownText();\n" +
-            "   return jsSeries;\n" +
-            "};";
-    public static final String fetchSeries =
-            "function fetchSeries(doc, series) {\n" +
-            "   var thumb = doc.select('#mangaimg img[src]').first();\n" +
-            "   series.thumbnailUrl = thumb.absUrl('src');\n" +
-            "\n" +
-            "   var summary = doc.select('#readmangasum p').first();\n" +
-            "   series.description = summary.text();\n" +
-            "\n" +
-            "   var properties = doc.select('.propertytitle');\n" +
-            "   for each(var property in properties.toArray()) {\n" +
-            "       var propTitle = property.text();\n" +
-            "       var sibling = property.parent().select('td:eq(1)').first();\n" +
-            "       switch (propTitle) {\n" +
-            "           case 'Alternate Name:':\n" +
-            "               series.alternateName = sibling.text();\n" +
-            "               break;\n" +
-            "           case 'Status:':\n" +
-            "               series.complete = sibling.text() !== 'Ongoing';\n" +
-            "               break;\n" +
-            "           case 'Author:':\n" +
-            "               series.author= sibling.text();\n" +
-            "               break;\n" +
-            "           case 'Artist:':\n" +
-            "               series.artist= sibling.text();\n" +
-            "               break;\n" +
-            "           case 'Genre:':\n" +
-            "               break;\n" +
-            "       }\n" +
-            "   }\n" +
-            "   return doc.select('td .chico_manga ~ a[href]');\n" +
-            "};";
-    public static final String fetchSeriesGenres =
-            "function fetchSeriesGenres(doc, series) {\n" +
-            "   var genreElements = doc.select('.genretags');\n" +
-            "   var genres = [];\n" +
-            "   for each (var genre in genreElements.toArray()) {\n" +
-            "       genres.push(genre.text());\n" +
-            "   }\n" +
-            "   return genres;\n" +
-            "};";
-    public static final String stubChapter =
-            "function stubChapter(element) {\n" +
-            "   var jsChapter = new JsChapter();\n" +
-            "   jsChapter.url = element.absUrl('href');\n" +
-            "   jsChapter.name = element.parent().ownText().replace(':', '');\n" +
-            "   var number = element.text();\n" +
-            "   jsChapter.number = parseFloat(number.substring(number.lastIndexOf(' ')));\n" +
-            "   return jsChapter;\n" +
-            "};";
-    public static final String fetchChapter =
-            "function fetchChapter(doc, chapter) {\n" +
-            "   return doc.select('#pageMenu option[value]');\n" +
-            "};";
-    public static final String stubPage =
-            "function stubPage(element) {\n" +
-            "   var page = new JsPage();\n" +
-            "   page.url = element.absUrl('value');\n" +
-            "   page.number = parseFloat(element.text());\n" +
-            "   return page;\n" +
-            "};";
-    public static final String fetchPage =
-            "function fetchPage(doc, page) {\n" +
-            "   return doc.select('img[src]').first().absUrl('src');\n" +
-            "};";
-    public static final String fetchNew =
-            "function fetchNew(doc) {\n" +
-            "   var ret = [];\n" +
-            "   var rows = doc.select('.c2');\n" +
-            "   for each (var row in rows.toArray()) {\n" +
-            "       var seriesElement = row.select('.chapter').first();\n" +
-            "       var series = new JsSeries();\n" +
-            "       series.name = seriesElement.text();\n" +
-            "       series.url = seriesElement.absUrl('href');\n" +
-            "       \n" +
-            "       var chapters = row.select('.chaptersrec');\n" +
-            "       for each (var chapterElement in chapters.toArray()) {\n" +
-            "           var chapter = new JsChapter();\n" +
-            "           chapter.number= chapterElement.text().replace(series.name, '');\n" +
-            "           chapter.url = chapterElement.absUrl('href');\n" +
-            "           ret.push([series, chapter]);\n" +
-            "       }\n" +
-            "   }\n" +
-            "   return ret;\n" +
-            "};";
 
     public static abstract class SeriesGenreEntry implements BaseColumns
     {
@@ -417,12 +325,44 @@ public class DBHelper extends SQLiteOpenHelper
                 joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
                               Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
+
+        // Set up the basic directory structure
+        createNoMedia();
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
-        // Cry
+        // The main difference between v1 and v2 is that the file structure, and therefore
+        // the page and series thumb paths will need to change.
+        if (oldVersion <= 1)
+        {
+            File root = Environment.getExternalStorageDirectory();
+
+            // Series Thumbs
+            Cursor seriesThumbs = db.query(Series.tableName, projections.get(Series.tableName), Series.thumbnailPathCol + " is not null", null, null, null, null);
+            while (seriesThumbs.moveToNext())
+            {
+                String thumbPath = seriesThumbs.getString(seriesThumbs.getColumnIndex(Series.thumbnailPathCol));
+                File existing = new File(thumbPath);
+                String newThumbPath = thumbPath.replace(root.getAbsolutePath(), root.getAbsolutePath() + "/YAMR");
+                existing.renameTo(new File(newThumbPath));
+            }
+            seriesThumbs.close();
+
+            // Pages
+            Cursor pages = db.query(Page.tableName, projections.get(Page.tableName), Page.imagePathCol + " is not null", null, null, null, null);
+            while (pages.moveToNext())
+            {
+                String pagePath = pages.getString(pages.getColumnIndex(Page.imagePathCol));
+                File existing = new File(pagePath);
+                String newPagePath = pagePath.replace(root.getAbsolutePath() + "/.", root.getAbsolutePath() + "/YAMR/");
+                existing.renameTo(new File(newPagePath));
+            }
+
+            // Additionally, throw the .nomedia in the YAMR directory.
+            createNoMedia();
+        }
     }
 
     @Override
@@ -459,6 +399,28 @@ public class DBHelper extends SQLiteOpenHelper
             {
                 db.update(Provider.tableName, newProvider, "name = ?", new String[]{newProvider.getAsString("name")});
             }
+        }
+        allProviders.close();
+    }
+
+    private void createNoMedia()
+    {
+        File root = Environment.getExternalStorageDirectory();
+        try
+        {
+            FileOutputStream nomediaStream = new FileOutputStream(root.getAbsolutePath() + "/YAMR");
+            nomediaStream.write("Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.".getBytes());
+            nomediaStream.close();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }
