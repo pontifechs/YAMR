@@ -411,6 +411,8 @@ public class DBHelper extends SQLiteOpenHelper
         try
         {
             File noMedia = new File(root.getAbsolutePath() + "/YAMR/.nomedia");
+            noMedia.getParentFile().mkdirs();
+            noMedia.createNewFile();
             FileOutputStream nomediaStream = new FileOutputStream(noMedia);
             nomediaStream.write("Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.".getBytes());
             nomediaStream.close();
