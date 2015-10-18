@@ -78,7 +78,7 @@ public class Navigation : FetcherSync
         return chapter
     }
 
-    public fun nextPage(page: Page): Page?
+    public fun nextPage(page: Page): Page
     {
         var nextPage: Page
         try
@@ -88,21 +88,14 @@ public class Navigation : FetcherSync
         catch (noPage: NoSuchElementException)
         {
             val wrongChapter = chapterFromPage(page)
-            try
-            {
-                val rightChapter = nextChapter(wrongChapter)!!
-                nextPage = firstPageFromChapter(rightChapter)
-                nextPage = fetchPage(nextPage)
-            }
-            catch (noChapter: NoSuchElementException)
-            {
-                return null
-            }
+            val rightChapter = nextChapter(wrongChapter)
+            nextPage = firstPageFromChapter(rightChapter)
+            nextPage = fetchPage(nextPage)
         }
         return nextPage
     }
 
-    public fun prevPage(page: Page): Page?
+    public fun prevPage(page: Page): Page
     {
         var prevPage: Page
         try
@@ -112,27 +105,19 @@ public class Navigation : FetcherSync
         catch (noPage: NoSuchElementException)
         {
             val wrongChapter = chapterFromPage(page)
-            try
-            {
-                val rightChapter = prevChapter(wrongChapter)!!
-                prevPage = lastPageFromChapter(rightChapter)
-                prevPage = fetchPage(prevPage)
-            }
-            catch (noChapter: NoSuchElementException)
-            {
-                return null
-            }
-
+            val rightChapter = prevChapter(wrongChapter)
+            prevPage = lastPageFromChapter(rightChapter)
+            prevPage = fetchPage(prevPage)
         }
         return prevPage
     }
 
-    private fun nextChapter(chapter: Chapter): Chapter?
+    private fun nextChapter(chapter: Chapter): Chapter
     {
         return neighboringChapter(chapter, Direction.Next)
     }
 
-    private fun prevChapter(chapter: Chapter): Chapter?
+    private fun prevChapter(chapter: Chapter): Chapter
     {
         return neighboringChapter(chapter, Direction.Prev)
     }
@@ -180,7 +165,7 @@ public class Navigation : FetcherSync
         return page(pageUri)
     }
 
-    public fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page?
+    public fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page
     {
         var currentChapter = chapterFromPage(page)
         var neighboringPagesUri =
@@ -203,9 +188,9 @@ public class Navigation : FetcherSync
             else
             {
                 val neighboringChapter =  if (direction == Direction.Next)
-                    nextChapter(currentChapter) ?: return null
+                    nextChapter(currentChapter)
                 else
-                    prevChapter(currentChapter) ?: return null
+                    prevChapter(currentChapter)
                 fetchChapter(neighboringChapter)
                 currentChapter = neighboringChapter
                 neighboringPagesUri =

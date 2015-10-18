@@ -81,10 +81,9 @@ public class ProviderViewer :
 
         val layout = inflater.inflate(R.layout.fragment_provider_viewer, container, false) as LinearLayout
 
-        val fetcher = FetcherAsync.fetchProvider(activity.contentResolver, this, ::providerViewerComplete, ::providerViewerStatus)
         this.providerUri = Uri.parse(arguments.getString(PROVIDER_ARG_KEY))
         val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
-        fetcher.execute(provider)
+        FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus)
 
         adapter = SimpleCursorAdapter(activity,
                                      R.layout.simple_series_item,
@@ -116,9 +115,8 @@ public class ProviderViewer :
             R.id.search -> return true
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchProvider(activity.contentResolver, this, ::providerViewerComplete, ::providerViewerStatus, FetcherSync.Behavior.ForceRefresh)
                 val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
-                fetcher.execute(provider)
+                FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus, behavior = FetcherSync.Behavior.ForceRefresh)
 
                 loading!!.progress = 0
                 loading!!.show()

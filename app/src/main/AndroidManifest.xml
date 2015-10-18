@@ -20,6 +20,8 @@
             </intent-filter>
         </receiver>
 
+        <service android:name=".svc.FetcherAsync"/>
+
         <provider
             android:name=".db.DBProvider"
             android:authorities="ninja.dudley.yamr.db.DBProvider" />

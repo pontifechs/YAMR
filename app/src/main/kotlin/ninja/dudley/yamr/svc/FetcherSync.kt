@@ -116,7 +116,7 @@ public open class FetcherSync
 
     public interface NotifyStatus
     {
-        public fun notify(status: Float)
+        public fun notify(status: Float): Boolean
     }
 
     protected var listener: NotifyStatus? = null

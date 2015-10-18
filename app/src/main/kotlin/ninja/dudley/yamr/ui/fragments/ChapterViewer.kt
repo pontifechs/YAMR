@@ -125,8 +125,7 @@ public class ChapterViewer :
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.text = "Chapter ${chapter!!.number}: ${chapter!!.name}"
 
-        val fetcher = FetcherAsync.fetchChapter(activity.contentResolver, this, ::chapterViewerComplete, ::chapterViewerStatus)
-        fetcher.execute(chapter!!)
+        val fetcher = FetcherAsync.fetchChapter(chapter!!, this, ::chapterViewerComplete, ::chapterViewerStatus)
 
         adapter = PageThumbAdapter()
         val grid = view.findViewById(R.id.grid) as GridView

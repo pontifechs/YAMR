@@ -97,8 +97,7 @@ public class SeriesViewer :
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        val fetcher = FetcherAsync.fetchSeries(activity.contentResolver, this, ::seriesViewerComplete, ::seriesViewerStatus)
-        fetcher.execute(series)
+        FetcherAsync.fetchSeries(series!!, this, ::seriesViewerComplete, ::seriesViewerStatus)
 
         adapter = SimpleCursorAdapter(activity,
                                       R.layout.chapter_item,
@@ -149,9 +148,7 @@ public class SeriesViewer :
             }
             R.id.refresh ->
             {
-                val fetcher = FetcherAsync.fetchSeries(activity.contentResolver, this,
-                        ::seriesViewerComplete, ::seriesViewerStatus, FetcherSync.Behavior.ForceRefresh)
-                fetcher.execute(series)
+                FetcherAsync.fetchSeries(series!!, this, ::seriesViewerComplete, ::seriesViewerStatus, behavior = FetcherSync.Behavior.ForceRefresh)
 
                 loading!!.progress = 0
                 loading!!.show()

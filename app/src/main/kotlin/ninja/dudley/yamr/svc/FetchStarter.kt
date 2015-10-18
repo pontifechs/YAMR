@@ -66,7 +66,7 @@ public class FetchStarter : BroadcastReceiver()
         else if (intent.action == StartChecking)
         {
             val mangaPanda = Provider(context.contentResolver.query(Provider.uri(1), null, null, null, null))
-            FetcherAsync.fetchNew(context.contentResolver, this, ::fetchNewComplete).execute(mangaPanda)
+            FetcherAsync.fetchNew(mangaPanda, this, ::fetchNewComplete)
         }
     }
 

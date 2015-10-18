@@ -1,6 +1,8 @@
 package ninja.dudley.yamr
 
 import android.app.Application
+import android.content.Intent
+import ninja.dudley.yamr.svc.FetcherAsync
 import org.acra.ACRA
 import org.acra.ReportingInteractionMode
 import org.acra.annotation.ReportsCrashes
@@ -27,5 +29,6 @@ class YAMR : Application()
         {
             ACRA.init(this);
         }
+        startService(Intent(this, FetcherAsync::class.java))
     }
 }
