@@ -11,7 +11,6 @@ import android.provider.BaseColumns;
 import org.jsoup.helper.StringUtil;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -377,13 +376,16 @@ public class DBHelper extends SQLiteOpenHelper
         // Load up existing providers.
         Map<String, Provider> existingProviders = new HashMap<>();
         Cursor allProviders = db.query(Provider.tableName, projections.get(Provider.tableName), null, null, null, null, null);
-        allProviders.moveToFirst();
-        do
+        if (allProviders.getCount() > 0)
         {
-            Provider provider = new Provider(allProviders, false);
-            existingProviders.put(provider.getName(), provider);
+            allProviders.moveToFirst();
+            do
+            {
+                Provider provider = new Provider(allProviders, false);
+                existingProviders.put(provider.getName(), provider);
+            }
+            while (allProviders.moveToNext());
         }
-        while (allProviders.moveToNext());
 
         // Go over all the new providers and make sure they're updated to reflect the latest code
         List<ContentValues> newProviders = ProviderLoader.Companion.loadProviders(context);
@@ -408,14 +410,10 @@ public class DBHelper extends SQLiteOpenHelper
         File root = Environment.getExternalStorageDirectory();
         try
         {
-            FileOutputStream nomediaStream = new FileOutputStream(root.getAbsolutePath() + "/YAMR/.nomedia");
+            File noMedia = new File(root.getAbsolutePath() + "/YAMR/.nomedia");
+            FileOutputStream nomediaStream = new FileOutputStream(noMedia);
             nomediaStream.write("Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.".getBytes());
             nomediaStream.close();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-            throw new RuntimeException(e);
         }
         catch (IOException e)
         {
