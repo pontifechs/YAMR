@@ -80,8 +80,8 @@ public class DBProvider : ContentProvider()
         val matchCode = MatchCode.from(code)
         when (matchCode)
         {
-            DBProvider.MatchCode.ProviderMatch -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
-            DBProvider.MatchCode.ProviderByID -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.ProviderMatch -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
+            DBProvider.MatchCode.ProviderByID -> return db.query(Provider.tableName, DBHelper.projections.get(Provider.tableName), "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.ProviderSeries ->
             {
                 var querySelection = Series.providerIdCol + "=?"
@@ -105,46 +105,46 @@ public class DBProvider : ContentProvider()
             {
                 val chapterNumberStringForPrev = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val chapterNumberForPrev = java.lang.Float.parseFloat(chapterNumberStringForPrev)
-                return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=? and " + Chapter.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForPrev)), null, null, Chapter.numberCol + " desc", "1")
+                return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), "${Chapter.seriesIdCol}=? and ${Chapter.numberCol}<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForPrev)), null, null, Chapter.numberCol + " desc", "1")
             }
             DBProvider.MatchCode.NextChapterInSeries ->
             {
                 val chapterNumberStringForNext = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val chapterNumberForNext = java.lang.Float.parseFloat(chapterNumberStringForNext)
-                return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=? and " + Chapter.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForNext)), null, null, Chapter.numberCol + " asc", "1")
+                return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), "${Chapter.seriesIdCol}=? and ${Chapter.numberCol}>?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForNext)), null, null, Chapter.numberCol + " asc", "1")
             }
-            DBProvider.MatchCode.SeriesMatch -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
-            DBProvider.MatchCode.SeriesByID -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
-            DBProvider.MatchCode.SeriesChapters -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), Chapter.seriesIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Chapter.numberCol)
-            DBProvider.MatchCode.SeriesFavorites -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), Series.favoriteCol + " > 0", null, null, null, sortOrder)
+            DBProvider.MatchCode.SeriesMatch -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
+            DBProvider.MatchCode.SeriesByID -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.SeriesChapters -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), "${Chapter.seriesIdCol}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Chapter.numberCol)
+            DBProvider.MatchCode.SeriesFavorites -> return db.query(Series.tableName, DBHelper.projections.get(Series.tableName), "${Series.favoriteCol} > 0", null, null, null, sortOrder)
             DBProvider.MatchCode.SeriesGenres ->
             {
-                return db.query(DBHelper.SeriesGenreEntry.SERIES_GENRES_VIEW, DBHelper.projections.get(Genre.tableName), DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+                return db.query(DBHelper.SeriesGenreEntry.SERIES_GENRES_VIEW, DBHelper.projections.get(Genre.tableName), "${DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID} =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
             }
             DBProvider.MatchCode.GenreSeries ->
             {
-                return db.query(DBHelper.SeriesGenreEntry.GENRE_SERIES_VIEW, DBHelper.projections.get(Series.tableName), DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID + " =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+                return db.query(DBHelper.SeriesGenreEntry.GENRE_SERIES_VIEW, DBHelper.projections.get(Series.tableName), "${DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID} =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
             }
-            DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
-            DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
-            DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
+            DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
+            DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections.get(Chapter.tableName), "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${Page.chapterIdCol}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
             DBProvider.MatchCode.PrevPagesInChapter ->
             {
                 val pageNumberStringForPrev = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val pageNumberForPrev = java.lang.Float.parseFloat(pageNumberStringForPrev)
-                return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + "<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberForPrev)), null, null, Page.numberCol + " desc")
+                return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${Page.chapterIdCol}=? and ${Page.numberCol}<?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberForPrev)), null, null, Page.numberCol + " desc")
             }
             DBProvider.MatchCode.NextPagesInChapter ->
             {
                 val pageNumberStringNext = uri.pathSegments.get(uri.pathSegments.size() - 2)
                 val pageNumberNext = java.lang.Float.parseFloat(pageNumberStringNext)
-                val cursor = db.query(Page.tableName, DBHelper.projections.get(Page.tableName), Page.chapterIdCol + "=? and " + Page.numberCol + ">?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberNext)), null, null, Page.numberCol + " asc")
+                val cursor = db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${Page.chapterIdCol}=? and ${Page.numberCol}>?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(pageNumberNext)), null, null, Page.numberCol + " asc")
                 return cursor
             }
-            DBProvider.MatchCode.PageMatch -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), MangaElement.urlCol + "=?", selectionArgs, null, null, sortOrder)
-            DBProvider.MatchCode.PageByID -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
-            DBProvider.MatchCode.PageHeritage -> return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME, DBHelper.PageHeritageViewEntry.projection, DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID + "=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
-            DBProvider.MatchCode.GenreMatch -> return db.query(Genre.tableName, DBHelper.projections.get(Genre.tableName), Genre.nameCol + "=?", selectionArgs, null, null, null, "1")
+            DBProvider.MatchCode.PageMatch -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
+            DBProvider.MatchCode.PageByID -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.PageHeritage -> return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME, DBHelper.PageHeritageViewEntry.projection, "${DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.GenreMatch -> return db.query(Genre.tableName, DBHelper.projections.get(Genre.tableName), "${Genre.nameCol}=?", selectionArgs, null, null, null, "1")
             else -> throw IllegalArgumentException("Invalid query uri: " + uri.toString())
         }
     }
@@ -231,17 +231,18 @@ public class DBProvider : ContentProvider()
         }
     }
 
-    override fun delete(uri: Uri, selection: String, selectionArgs: Array<String>): Int
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int
     {
         val db = dbh!!.writableDatabase
         val code = matcher.match(uri)
         val matchCode = MatchCode.from(code)
         when (matchCode)
         {
-            DBProvider.MatchCode.ProviderByID -> return db.delete(Provider.tableName, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.SeriesByID -> return db.delete(Series.tableName, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.ChapterByID -> return db.delete(Chapter.tableName, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.PageByID -> return db.delete(Page.tableName, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.ProviderByID -> return db.delete(Provider.tableName, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.SeriesByID -> return db.delete(Series.tableName, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.ChapterByID -> return db.delete(Chapter.tableName, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.PageByID -> return db.delete(Page.tableName, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.SeriesGenres -> return db.delete(DBHelper.SeriesGenreEntry.TABLE_NAME, "${DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID}=?", arrayOf(Integer.toString(getId(code, uri))))
             else -> throw IllegalArgumentException("Invalid delete uri : " + uri.toString())
         }
     }
@@ -253,10 +254,10 @@ public class DBProvider : ContentProvider()
         val matchCode = MatchCode.from(code)
         when (matchCode)
         {
-            DBProvider.MatchCode.ProviderByID -> return db.update(Provider.tableName, values, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.SeriesByID -> return db.update(Series.tableName, values, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.ChapterByID -> return db.update(Chapter.tableName, values, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
-            DBProvider.MatchCode.PageByID -> return db.update(Page.tableName, values, DBHelper.ID + "=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.ProviderByID -> return db.update(Provider.tableName, values, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.SeriesByID -> return db.update(Series.tableName, values, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.ChapterByID -> return db.update(Chapter.tableName, values, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
+            DBProvider.MatchCode.PageByID -> return db.update(Page.tableName, values, "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))))
             else -> throw IllegalArgumentException("Invalid update uri: " + uri.toString())
         }
     }

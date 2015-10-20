@@ -71,11 +71,11 @@ public class Page : MangaElement
 
     companion object
     {
-        public val tableName: String = "page"
-        public val chapterIdCol: String = Chapter.tableName + DBHelper.ID
-        public val numberCol: String = "number"
-        public val imageUrlCol: String = "image_url"
-        public val imagePathCol: String = "image_path"
+        const public val tableName: String = "page"
+        const public val chapterIdCol: String = Chapter.tableName + DBHelper.ID
+        const public val numberCol: String = "number"
+        const public val imageUrlCol: String = "image_url"
+        const public val imagePathCol: String = "image_path"
 
 
         // Uri Handling ----------------------------------------------------------------------------

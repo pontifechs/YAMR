@@ -85,18 +85,18 @@ public class Provider : MangaElement
 
     companion object
     {
-        public val tableName: String = "provider"
-        public val nameCol: String = "name"
-        public val newUrlCol: String = "new_url"
-        public val fetchProviderCol: String = "fetch_provider"
-        public val stubSeriesCol: String = "stub_series"
-        public val fetchSeriesCol: String = "fetch_series"
-        public val fetchSeriesGenresCol: String = "fetch_series_genres"
-        public val stubChapterCol: String = "stub_chapter_col"
-        public val fetchChapterCol: String = "fetch_chapter"
-        public val stubPageCol: String = "stub_page"
-        public val fetchPageCol: String = "fetch_page"
-        public val fetchNewCol: String = "fetch_new"
+        const public val tableName: String = "provider"
+        const public val nameCol: String = "name"
+        const public val newUrlCol: String = "new_url"
+        const public val fetchProviderCol: String = "fetch_provider"
+        const public val stubSeriesCol: String = "stub_series"
+        const public val fetchSeriesCol: String = "fetch_series"
+        const public val fetchSeriesGenresCol: String = "fetch_series_genres"
+        const public val stubChapterCol: String = "stub_chapter_col"
+        const public val fetchChapterCol: String = "fetch_chapter"
+        const public val stubPageCol: String = "stub_page"
+        const public val fetchPageCol: String = "fetch_page"
+        const public val fetchNewCol: String = "fetch_new"
 
         // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri

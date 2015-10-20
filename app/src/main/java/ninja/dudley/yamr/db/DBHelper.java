@@ -40,7 +40,7 @@ public class DBHelper extends SQLiteOpenHelper
 {
     private final Context context;
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
@@ -332,36 +332,7 @@ public class DBHelper extends SQLiteOpenHelper
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
-        // The main difference between v1 and v2 is that the file structure, and therefore
-        // the page and series thumb paths will need to change.
-        if (oldVersion <= 1)
-        {
-            File root = Environment.getExternalStorageDirectory();
-
-            // Series Thumbs
-            Cursor seriesThumbs = db.query(Series.tableName, projections.get(Series.tableName), Series.thumbnailPathCol + " is not null", null, null, null, null);
-            while (seriesThumbs.moveToNext())
-            {
-                String thumbPath = seriesThumbs.getString(seriesThumbs.getColumnIndex(Series.thumbnailPathCol));
-                File existing = new File(thumbPath);
-                String newThumbPath = thumbPath.replace(root.getAbsolutePath(), root.getAbsolutePath() + "/YAMR");
-                existing.renameTo(new File(newThumbPath));
-            }
-            seriesThumbs.close();
-
-            // Pages
-            Cursor pages = db.query(Page.tableName, projections.get(Page.tableName), Page.imagePathCol + " is not null", null, null, null, null);
-            while (pages.moveToNext())
-            {
-                String pagePath = pages.getString(pages.getColumnIndex(Page.imagePathCol));
-                File existing = new File(pagePath);
-                String newPagePath = pagePath.replace(root.getAbsolutePath() + "/.", root.getAbsolutePath() + "/YAMR/");
-                existing.renameTo(new File(newPagePath));
-            }
-
-            // Additionally, throw the .nomedia in the YAMR directory.
-            createNoMedia();
-        }
+        // Cry
     }
 
     @Override

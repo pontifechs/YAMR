@@ -73,10 +73,10 @@ public class Chapter : MangaElement
 
     companion object
     {
-        public val tableName: String = "chapter"
-        public val seriesIdCol: String = Series.tableName + DBHelper.ID
-        public val nameCol: String = "name"
-        public val numberCol: String = "number"
+        const public val tableName: String = "chapter"
+        const public val seriesIdCol: String = Series.tableName + DBHelper.ID
+        const public val nameCol: String = "name"
+        const public val numberCol: String = "number"
 
         // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri

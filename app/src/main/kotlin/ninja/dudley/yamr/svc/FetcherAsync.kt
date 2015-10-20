@@ -36,7 +36,7 @@ public class FetcherAsync: Service()
         FetchFirstPageFromChapter,
         FetchPageFromSeries,
         FetchOffsetFromPage,
-        FetchNew,
+        FetchAllNew,
     }
 
     public class FetchRequest<Arg, Return>: Comparable<Any>
@@ -108,7 +108,7 @@ public class FetcherAsync: Service()
                     RequestType.FetchFirstPageFromChapter -> { fetchFirstPageFromChapter(next as FetchRequest<Chapter, Page>) }
                     RequestType.FetchPageFromSeries-> { fetchPageFromSeries(next as FetchRequest<Series, Page>) }
                     RequestType.FetchOffsetFromPage -> { fetchOffsetFromPage(next as FetchRequest<Page, Page>) }
-                    RequestType.FetchNew -> { fetchNew(next as FetchRequest<Provider, List<Uri>>) }
+                    RequestType.FetchAllNew -> { fetchAllNew(next as FetchRequest<Unit, List<Uri>>) }
                 }
             }
         })
@@ -331,10 +331,10 @@ public class FetcherAsync: Service()
         }
     }
 
-    private fun fetchNew(req: FetchRequest<Provider, List<Uri>>)
+    private fun fetchAllNew(req: FetchRequest<Unit, List<Uri>>)
     {
         val fetcher = FetcherSync(contentResolver)
-        val ret = fetcher.fetchNew(req.arg)
+        val ret = fetcher.fetchAllNew()
         Handler(Looper.getMainLooper()).post {
             req.complete(req.thiS, ret)
         }
@@ -447,12 +447,10 @@ public class FetcherAsync: Service()
             Fetcher!!.queue.add(req)
         }
 
-        public fun fetchNew(provider: Provider,
-                            caller: Any,
-                            complete: ((thiS: Any, news: List<Uri>) -> Unit),
-                            priority: Int = LowPriority)
+        public fun fetchAllNew(caller: Any,
+                               complete: ((thiS: Any, news: List<Uri>) -> Unit))
         {
-            val req = FetchRequest(provider, caller, complete, ::statusNop,  ::failureNop, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchNew)
+            val req = FetchRequest(Unit, caller, complete, ::statusNop, ::failureNop, LowPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllNew)
             Fetcher!!.queue.add(req)
         }
     }

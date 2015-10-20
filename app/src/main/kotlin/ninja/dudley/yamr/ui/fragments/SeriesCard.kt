@@ -67,7 +67,7 @@ public class SeriesCard : Fragment()
         if (genres.size() > 0)
         {
             var genreString = ""
-            genres.forEach {
+            genres.sortedBy { it.name }.forEach {
                 genreString += ", ${it.name}"
             }
             info.add(genreString.substring(2))

@@ -206,6 +206,9 @@ public open class FetcherSync
             val genreResult = cx!!.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
             val genres = Context.jsToJava(genreResult, List::class.java) as List<String>
 
+            // Clean up any the existing relations (Only really relevant with a refresh.)
+            resolver.delete(Series.genres(series.id), null, null)
+
             for (genre in genres)
             {
                 if (!genreExists(genre))
@@ -214,6 +217,7 @@ public open class FetcherSync
                     resolver.insert(Genre.baseUri(), g.getContentValues())
                 }
                 val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre), null))
+
 
                 // Now that we have the genre for sure, add the relation.
                 resolver.insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
@@ -397,6 +401,19 @@ public open class FetcherSync
         }
 
         return newChapters
+    }
+
+    public fun fetchAllNew(): List<Uri>
+    {
+        val ret = ArrayList<Uri>()
+
+        val providersCursor = resolver.query(Provider.all(), null, null, null, null)
+        while (providersCursor.moveToNext())
+        {
+            val provider = Provider(providersCursor, false)
+            ret.addAll(fetchNew(provider))
+        }
+        return ret
     }
 
     @Throws(IOException::class)

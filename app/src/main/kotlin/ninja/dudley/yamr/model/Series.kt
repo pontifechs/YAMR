@@ -139,20 +139,20 @@ public class Series : MangaElement
 
     companion object
     {
-        public val tableName: String = "series"
-        public val providerIdCol: String = Provider.tableName + DBHelper.ID
-        public val nameCol: String = "name"
-        public val descriptionCol: String = "description"
-        public val favoriteCol: String = "favorite"
-        public val alternateNameCol: String = "alternate_name"
-        public val completeCol: String = "complete"
-        public val authorCol: String = "author"
-        public val artistCol: String = "artist"
-        public val thumbnailUrlCol: String = "thumbnail_url"
-        public val thumbnailPathCol: String = "thumbnail_path"
-        public val progressChapterIdCol: String = "progress_" + Chapter.tableName + DBHelper.ID
-        public val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
-        public val updatedCol: String = "updated"
+        const public val tableName: String = "series"
+        const public val providerIdCol: String = Provider.tableName + DBHelper.ID
+        const public val nameCol: String = "name"
+        const public val descriptionCol: String = "description"
+        const public val favoriteCol: String = "favorite"
+        const public val alternateNameCol: String = "alternate_name"
+        const public val completeCol: String = "complete"
+        const public val authorCol: String = "author"
+        const public val artistCol: String = "artist"
+        const public val thumbnailUrlCol: String = "thumbnail_url"
+        const public val thumbnailPathCol: String = "thumbnail_path"
+        const public val progressChapterIdCol: String = "progress_" + Chapter.tableName + DBHelper.ID
+        const public val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
+        const public val updatedCol: String = "updated"
 
         // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri
