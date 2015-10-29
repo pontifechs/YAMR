@@ -97,7 +97,7 @@
   ],
   "fetchPage" : [
     "function fetchPage(doc, page) {",
-    "   return doc.select('img[src]').first().absUrl('src');",
+    "   return doc.select('#image').first().absUrl('src');",
     "};"
   ],
   "fetchNew" : [
