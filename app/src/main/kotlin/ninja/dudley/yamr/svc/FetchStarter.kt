@@ -34,7 +34,7 @@ public class FetchStarter : BroadcastReceiver()
 
         // Notify
         val builder = Notification.Builder(context)
-                .setSmallIcon(R.drawable.yamr_notif_icon)
+                .setSmallIcon(R.drawable.yamr_pirate_icon)
                 .setContentTitle("YARR")
                 .setContentText("${newUris.size()} New Chapters")
                 .setAutoCancel(true)

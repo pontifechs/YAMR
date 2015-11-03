@@ -29,7 +29,7 @@ public class Chapter : MangaElement
         this.number = number
     }
 
-    public constructor(c: Cursor) : super(c)
+    public constructor(c: Cursor, close: Boolean = true) : super(c)
     {
         if (type != MangaElement.UriType.Chapter)
         {
@@ -38,7 +38,10 @@ public class Chapter : MangaElement
         seriesId = getInt(c, seriesIdCol)
         name = getString(c, nameCol)
         number = getFloat(c, numberCol)
-        c.close()
+        if (close)
+        {
+            c.close()
+        }
     }
 
     override fun getContentValues(): ContentValues

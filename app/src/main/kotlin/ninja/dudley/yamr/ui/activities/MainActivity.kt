@@ -14,7 +14,6 @@ import android.widget.TextView
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.svc.FetchStarter
-import ninja.dudley.yamr.ui.activities.Settings
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -73,19 +72,19 @@ public class MainActivity : Activity()
                 {
                     0 ->
                     {
-                        i = Intent(this@MainActivity, javaClass<Browse>())
+                        i = Intent(this@MainActivity, Browse::class.java)
                         i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name())
                         startActivity(i)
                     }
                     1 ->
                     {
-                        i = Intent(this@MainActivity, javaClass<Browse>())
+                        i = Intent(this@MainActivity, Browse::class.java)
                         i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name())
                         startActivity(i)
                     }
                     2 ->
                     {
-                        i = Intent(this@MainActivity, javaClass<Settings>())
+                        i = Intent(this@MainActivity, Settings::class.java)
                         startActivity(i)
                     }
                 }

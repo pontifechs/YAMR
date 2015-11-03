@@ -14,15 +14,15 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
+import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.ui.activities.Browse
+import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
 public fun chapterViewerStatus(thiS: Any, status: Float)
 {
@@ -120,12 +120,14 @@ public class ChapterViewer :
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View?
     {
+        setHasOptionsMenu(true)
+
         val view = inflater.inflate(R.layout.fragment_chapter_viewer, container, false) as LinearLayout
 
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.text = "Chapter ${chapter!!.number}: ${chapter!!.name}"
 
-        val fetcher = FetcherAsync.fetchChapter(chapter!!, this, ::chapterViewerComplete, ::chapterViewerStatus)
+        FetcherAsync.fetchChapter(chapter!!, this, ::chapterViewerComplete, ::chapterViewerStatus)
 
         adapter = PageThumbAdapter()
         val grid = view.findViewById(R.id.grid) as GridView
@@ -138,6 +140,27 @@ public class ChapterViewer :
         loading!!.setTitle("Loading Chapters for " + chapter!!.name!!)
         loading!!.show()
         return view
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
+    {
+        inflater!!.inflate(R.menu.menu_chapter_viewer, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean
+    {
+        when (item!!.itemId)
+        {
+            R.id.fetch_all ->
+            {
+                val series = Series(activity.contentResolver.query(Series.uri(chapter!!.seriesId), null, null, null, null))
+                FetcherAsync.fetchEntireChapter(chapter!!, this,
+                        {thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number} Complete!", 1.0f)},
+                        {thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number}", status)})
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onItemClick(viewParent: AdapterView<*>, view: View, position: Int, id: Long)

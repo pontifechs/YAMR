@@ -416,6 +416,50 @@ public open class FetcherSync
         return ret
     }
 
+    public fun fetchEntireChapter(chapter: Chapter, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Chapter
+    {
+        fetchChapter(chapter, behavior)
+        val pages = resolver.query(chapter.pages(), null, null, null, null)
+
+        // Only send status updates between pages, not status for each page
+        val localListener = listener
+        listener = null
+
+        var i = 1.0f
+        while (pages.moveToNext())
+        {
+            Log.d("FetchAll", "page ${i / pages.count.toFloat()}")
+            val page = Page(pages, false)
+            fetchPage(page, behavior)
+
+            localListener?.notify(i++ / pages.count.toFloat())
+        }
+        listener = localListener
+        return chapter
+    }
+
+    public fun fetchEntireSeries(series: Series, behavior: Behavior = FetcherSync.Behavior.ForceRefresh): Series
+    {
+        fetchSeries(series, behavior)
+        val chapters = resolver.query(series.chapters(), null, null, null, null)
+
+        // Only send status updates between chapters, not status for each chapter
+        val localListener = listener
+        listener = null
+
+        var i = 1.0f
+        while (chapters.moveToNext())
+        {
+            Log.d("FetchAll", "chapter ${i / chapters.count.toFloat()}")
+            val chapter = Chapter(chapters, false)
+            fetchEntireChapter(chapter, behavior)
+
+            localListener?.notify(i++ / chapters.count.toFloat())
+        }
+        listener = localListener
+        return series
+    }
+
     @Throws(IOException::class)
     private fun fetchUrl(url: String): Document
     {

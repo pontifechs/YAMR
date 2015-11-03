@@ -1,9 +1,7 @@
 package ninja.dudley.yamr.ui.fragments
 
-import android.app.Activity
-import android.app.ListFragment
-import android.app.LoaderManager
-import android.app.ProgressDialog
+import android.app.*
+import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor
@@ -17,6 +15,7 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 import ninja.dudley.yamr.ui.activities.Browse
+import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
 public fun seriesViewerStatus(thiS: Any, status: Float)
 {
@@ -160,6 +159,13 @@ public class SeriesViewer :
                 series!!.progressPageId = -1;
                 activity.contentResolver.update(series!!.uri(), series!!.getContentValues(), null, null)
                 activity.invalidateOptionsMenu()
+                return true
+            }
+            R.id.fetch_all ->
+            {
+                FetcherAsync.fetchEntireSeries(series!!, this,
+                        {thiS , series -> FetchAllProgress.notify(activity, "Fetching ${series.name} Complete!", 1.0f)},
+                        {thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series!!.name}", status)} )
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
