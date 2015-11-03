@@ -9,6 +9,8 @@ import android.view.Menu
 import android.view.MenuItem
 
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.svc.FetcherAsync
+import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
 public class Settings : Activity()
 {
@@ -34,9 +36,15 @@ public class Settings : Activity()
     {
         val id = item!!.itemId
 
-        if (id == R.id.action_settings)
+        if (id == R.id.action_fetch_all_series)
         {
-            return true
+            FetcherAsync.fetchAllSeries(this,
+                    {thiS, unit ->
+                        FetchAllProgress.notify(this, "Done!", 1.0f)
+                        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+                        pref.edit().putBoolean(ALL_SERIES_FETCHED, true);
+                    },
+                    {thiS, status -> FetchAllProgress.notify(this, "Going!", status)})
         }
 
         return super.onOptionsItemSelected(item)
@@ -56,6 +64,7 @@ public class Settings : Activity()
     {
         private val RTL_ENABLED_KEY: String = "rtl_enabled"
         private val PRE_FETCH_BUFFER_KEY: String = "pre_fetch_buffer"
+        private val ALL_SERIES_FETCHED: String = "all_series_fetched"
 
         public fun rtlEnabled(context: Context): Boolean
         {
@@ -72,6 +81,12 @@ public class Settings : Activity()
         {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             return pref.getInt(PRE_FETCH_BUFFER_KEY, -1)
+        }
+
+        public fun allSeriesFetched(context: Context): Boolean
+        {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getBoolean(ALL_SERIES_FETCHED, false)
         }
     }
 }

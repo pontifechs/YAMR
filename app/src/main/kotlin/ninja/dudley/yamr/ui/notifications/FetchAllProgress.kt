@@ -24,10 +24,6 @@ public class FetchAllProgress
             val title = "YAMR Downloading"
 
             val builder = Notification.Builder(context)
-                    // Set appropriate defaults for the notification light, sound,
-                    // and vibration.
-                    .setDefaults(Notification.DEFAULT_ALL)
-
                     // Set required fields, including the small icon, the
                     // notification title, and text.
                     .setSmallIcon(R.drawable.yamr_pirate_icon)

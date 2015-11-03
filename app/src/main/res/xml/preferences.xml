@@ -21,4 +21,15 @@
             custom:max="10"
             />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="fetching_settings"
+        android:title="Fetching">
+        <SwitchPreference
+            android:key="all_series_fetched"
+            android:summary="All series have been fetched, and are available for advanced browsing"
+            android:title="All Series Fetched"
+            android:defaultValue="false"
+            android:selectable="false"
+            />
+    </PreferenceCategory>
 </PreferenceScreen>

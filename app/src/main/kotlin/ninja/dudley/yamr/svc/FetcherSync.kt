@@ -1,15 +1,18 @@
 package ninja.dudley.yamr.svc
 
 import android.content.ContentResolver
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
+import android.preference.PreferenceManager
 import android.util.Log
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
 import ninja.dudley.yamr.model.js.JsSeries
+import org.acra.ACRA
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -196,7 +199,7 @@ public open class FetcherSync
         }
 
         init(series)
-        Log.d("Fetch", "Starting Series fetch")
+        Log.d("Fetch", "Starting Series fetch: ${series.id}: ${series.url}")
         try
         {
             val doc = fetchUrl(series.url)
@@ -458,6 +461,45 @@ public open class FetcherSync
         }
         listener = localListener
         return series
+    }
+
+    public fun fetchAllSeries()
+    {
+        val providersCursor = resolver.query(Provider.all(), null, null, null, null)
+        var totalSeries = 0
+        val providerSeriesList = ArrayList<Cursor>()
+
+        val localListener = listener
+        listener = null
+
+        while (providersCursor.moveToNext())
+        {
+            val provider = Provider(providersCursor, false)
+            fetchProvider(provider)
+            val providerSeries = resolver.query(provider.series(), null, null, null, null)
+            totalSeries += providerSeries.count
+            providerSeriesList.add(providerSeries)
+        }
+
+        var i = 1.0f;
+        providerSeriesList.forEach {
+            while (it.moveToNext())
+            {
+                Log.d("All Series Fetch", "${i / totalSeries.toFloat()}")
+                val series = Series(it, false)
+                try
+                {
+                    fetchSeries(series)
+                }
+                catch (e: Exception)
+                {
+                    val reporter = ACRA.getErrorReporter()
+                    reporter.handleSilentException(Exception("Stale Series? ${series.url}"))
+                }
+                localListener?.notify(i++ / totalSeries.toFloat())
+            }
+        }
+        listener = localListener
     }
 
     @Throws(IOException::class)

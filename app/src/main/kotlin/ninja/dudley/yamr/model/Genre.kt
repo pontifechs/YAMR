@@ -92,6 +92,10 @@ public class Genre
             return uri(id).buildUpon().appendPath("series").build()
         }
 
+        public fun all(): Uri{
+            return baseUri().buildUpon().appendPath("all").build()
+        }
+
         public fun genres(c: Cursor): Set<Genre>
         {
             val genres = HashSet<Genre>()

@@ -15,6 +15,7 @@ public class Browse : Activity(), OrientationAware.I
     enum class FlowType
     {
         ProviderDown,
+        Genre,
         Favorites
     }
 
@@ -34,6 +35,11 @@ public class Browse : Activity(), OrientationAware.I
                 {
                     val providerViewer = ProviderSelector()
                     transaction.replace(R.id.reader, providerViewer)
+                }
+                FlowType.Genre ->
+                {
+                    val genreViewer = GenreSelector()
+                    transaction.replace(R.id.reader, genreViewer)
                 }
                 FlowType.Favorites ->
                 {

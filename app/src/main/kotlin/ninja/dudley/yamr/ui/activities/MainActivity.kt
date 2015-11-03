@@ -36,9 +36,15 @@ public class MainActivity : Activity()
         // Set up activities
         val browseMap = HashMap<String, Any>()
         browseMap.put(iconKey, R.drawable.ic_explore_black_48dp)
-        browseMap.put(nameKey, "Browse Manga")
+        browseMap.put(nameKey, "Browse by Provider")
         browseMap.put(descriptionKey, "Browse through a provider's series")
         maps.add(browseMap)
+
+        val genreMap = HashMap<String, Any>()
+        genreMap.put(iconKey, R.drawable.ic_cake_black_48dp)
+        genreMap.put(nameKey, "Browse by Genre")
+        genreMap.put(descriptionKey, "Browse through manga by genres")
+        maps.add(genreMap)
 
         val favoritesMap = HashMap<String, Any>()
         favoritesMap.put(iconKey, R.drawable.ic_favorite_black_48dp)
@@ -79,10 +85,16 @@ public class MainActivity : Activity()
                     1 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name())
                         startActivity(i)
                     }
                     2 ->
+                    {
+                        i = Intent(this@MainActivity, Browse::class.java)
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name())
+                        startActivity(i)
+                    }
+                    3 ->
                     {
                         i = Intent(this@MainActivity, Settings::class.java)
                         startActivity(i)

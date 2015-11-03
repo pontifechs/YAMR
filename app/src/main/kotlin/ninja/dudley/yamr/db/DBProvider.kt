@@ -39,6 +39,7 @@ public class DBProvider : ContentProvider()
         PageHeritage(lastCode++),
         GenreMatch(lastCode++),
         GenreSeries(lastCode++),
+        GenreAll(lastCode++),
         SeriesGenreRelator(lastCode++);
 
         override fun toString(): String
@@ -145,6 +146,7 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.PageByID -> return db.query(Page.tableName, DBHelper.projections.get(Page.tableName), "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.PageHeritage -> return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME, DBHelper.PageHeritageViewEntry.projection, "${DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.GenreMatch -> return db.query(Genre.tableName, DBHelper.projections.get(Genre.tableName), "${Genre.nameCol}=?", selectionArgs, null, null, null, "1")
+            DBProvider.MatchCode.GenreAll -> return db.query(Genre.tableName, DBHelper.projections.get(Genre.tableName), null, null, null, null, sortOrder)
             else -> throw IllegalArgumentException("Invalid query uri: " + uri.toString())
         }
     }
@@ -294,6 +296,7 @@ public class DBProvider : ContentProvider()
             matcher.addURI(DBHelper.AUTHORITY, "/page/#", MatchCode.PageByID.value())
             matcher.addURI(DBHelper.AUTHORITY, "/page/#/heritage", MatchCode.PageHeritage.value())
             matcher.addURI(DBHelper.AUTHORITY, "/genre", MatchCode.GenreMatch.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/genre/all", MatchCode.GenreAll.value())
             matcher.addURI(DBHelper.AUTHORITY, "/genre/relator", MatchCode.SeriesGenreRelator.value())
             matcher.addURI(DBHelper.AUTHORITY, "/genre/#/series", MatchCode.GenreSeries.value())
         }
