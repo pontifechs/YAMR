@@ -82,11 +82,5 @@ public class Settings : Activity()
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             return pref.getInt(PRE_FETCH_BUFFER_KEY, -1)
         }
-
-        public fun allSeriesFetched(context: Context): Boolean
-        {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getBoolean(ALL_SERIES_FETCHED, false)
-        }
     }
 }

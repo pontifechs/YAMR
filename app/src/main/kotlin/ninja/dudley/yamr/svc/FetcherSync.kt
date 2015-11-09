@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import android.preference.PreferenceManager
 import android.util.Log
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
@@ -26,8 +25,8 @@ import java.net.URL
 import java.util.ArrayList
 
 /**
- * Created by mdudley on 5/19/15.
- */
+* Created by mdudley on 5/19/15. Yup.
+*/
 public open class FetcherSync
 {
     private var cx: Context? = null
@@ -40,7 +39,6 @@ public open class FetcherSync
         this.resolver = resolver
     }
 
-    //TODO:: Generify heritage?
     private fun providerFromSeries(series: Series): Provider
     {
         return Provider(resolver.query(Provider.uri(series.providerId), null, null, null, null))
@@ -151,12 +149,12 @@ public open class FetcherSync
             ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
             val result = cx!!.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
             val elements = Context.jsToJava(result, Elements::class.java) as Elements
-            Log.d("RHINO", "${elements.size()}")
+            Log.d("RHINO", "${elements.size}")
             provider.fullyParsed = true
             resolver.update(provider.uri(), provider.getContentValues(), null, null)
             Log.d("Fetch", "Iteration complete. Provider Fetched.")
 
-            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
+            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
             var index = 0
             for (e in elements)
             {
@@ -164,8 +162,8 @@ public open class FetcherSync
                 index++
                 if (index % statusStride == 0 && listener != null)
                 {
-                    val progress = index / elements.size().toFloat()
-                    Log.d("Fetch", "ProviderFetch progress: ${progress}")
+                    val progress = index / elements.size.toFloat()
+                    Log.d("Fetch", "ProviderFetch progress: $progress")
                     listener?.notify(progress)
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
@@ -230,7 +228,7 @@ public open class FetcherSync
             val elements = Context.jsToJava(result, Elements::class.java) as Elements
 
             // Parse chapters
-            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
+            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
             var index = 0
             for (e in elements)
             {
@@ -238,8 +236,8 @@ public open class FetcherSync
                 index++
                 if (index % statusStride == 0 && listener != null)
                 {
-                    val progress = index / elements.size().toFloat()
-                    Log.d("Fetch", "SeriesFetch progress: ${progress}")
+                    val progress = index / elements.size.toFloat()
+                    Log.d("Fetch", "SeriesFetch progress: $progress")
                     listener?.notify(progress)
                 }
                 ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
@@ -284,15 +282,15 @@ public open class FetcherSync
             val result = cx!!.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
             val elements = Context.jsToJava(result, Elements::class.java) as Elements
 
-            val statusStride = Math.ceil((elements.size() / 100.0f).toDouble()).toInt()
+            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
             var index = 0
             for (e in elements)
             {
                 index++
                 if (index % statusStride == 0 && listener != null)
                 {
-                    val progress = index / elements.size().toFloat()
-                    Log.d("Fetch", "Chapter fetch progress: ${progress}")
+                    val progress = index / elements.size.toFloat()
+                    Log.d("Fetch", "Chapter fetch progress: $progress")
                     listener?.notify(progress)
                 }
 
@@ -366,8 +364,8 @@ public open class FetcherSync
 
             for (pair in seriesChapterPairs)
             {
-                val jsSeries = pair.get(0) as JsSeries;
-                val jsChapter = pair.get(1) as JsChapter;
+                val jsSeries = pair[0] as JsSeries;
+                val jsChapter = pair[1] as JsChapter;
 
                 var series = jsSeries.unJS(provider.id);
                 if (seriesExists(series.url))
@@ -566,7 +564,7 @@ public open class FetcherSync
         }
         else
         {
-            return "${f}"
+            return "$f"
         }
     }
 

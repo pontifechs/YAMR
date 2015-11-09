@@ -1,7 +1,6 @@
 package ninja.dudley.yamr.ui.fragments
 
 import android.app.*
-import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor

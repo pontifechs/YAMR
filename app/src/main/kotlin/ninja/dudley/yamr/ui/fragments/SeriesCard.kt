@@ -64,7 +64,7 @@ public class SeriesCard : Fragment()
 
         val c: Cursor = activity.contentResolver.query(series!!.genres(), null, null, null, null)
         val genres: Set<Genre> = Genre.genres(c)
-        if (genres.size() > 0)
+        if (genres.size > 0)
         {
             var genreString = ""
             genres.sortedBy { it.name }.forEach {
@@ -86,21 +86,21 @@ public class SeriesCard : Fragment()
             info.add(series!!.description!!)
         }
 
-        if (info.size() >= 1)
+        if (info.size >= 1)
         {
-            firstSlot.text = Html.fromHtml(info.get(0))
+            firstSlot.text = Html.fromHtml(info[0])
         }
-        if (info.size() >= 2)
+        if (info.size >= 2)
         {
-            secondSlot.text = Html.fromHtml(info.get(1))
+            secondSlot.text = Html.fromHtml(info[1])
         }
-        if (info.size() >= 3)
+        if (info.size >= 3)
         {
-            thirdSlot.text = Html.fromHtml(info.get(2))
+            thirdSlot.text = Html.fromHtml(info[2])
         }
-        if (info.size() >= 4)
+        if (info.size >= 4)
         {
-            fourthSlot.text = Html.fromHtml(info.get(3))
+            fourthSlot.text = Html.fromHtml(info[3])
         }
         return layout
     }

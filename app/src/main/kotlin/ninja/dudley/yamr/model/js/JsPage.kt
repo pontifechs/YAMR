@@ -4,8 +4,8 @@ import ninja.dudley.yamr.model.Page
 import org.mozilla.javascript.ScriptableObject
 
 /**
- * Created by mdudley on 7/21/15.
- */
+* Created by mdudley on 7/21/15. Yup.
+*/
 public class JsPage : ScriptableObject
 {
     override fun getClassName(): String?

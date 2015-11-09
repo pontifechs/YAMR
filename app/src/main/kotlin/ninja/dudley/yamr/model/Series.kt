@@ -11,8 +11,8 @@ import ninja.dudley.yamr.db.util.ForeignKey
 import ninja.dudley.yamr.db.util.Table
 
 /**
- * Created by mdudley on 5/19/15.
- */
+* Created by mdudley on 5/19/15. Yup.
+*/
 @Table(Series.tableName)
 public class Series : MangaElement
 {

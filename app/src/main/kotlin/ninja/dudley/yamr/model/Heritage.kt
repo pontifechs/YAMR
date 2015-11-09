@@ -4,8 +4,8 @@ import android.database.Cursor
 import ninja.dudley.yamr.db.DBHelper
 
 /**
- * Created by mdudley on 7/19/15.
- */
+* Created by mdudley on 7/19/15. Yup.
+*/
 public class Heritage
 {
     public val providerId: Int

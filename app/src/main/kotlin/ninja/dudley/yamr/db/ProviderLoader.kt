@@ -12,8 +12,8 @@ import java.util.ArrayList
 
 
 /**
- * Created by mdudley on 10/10/15.
- */
+* Created by mdudley on 10/10/15. Yup.
+*/
 public class ProviderLoader()
 {
     public companion object

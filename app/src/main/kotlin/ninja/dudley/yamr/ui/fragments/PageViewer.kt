@@ -370,7 +370,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             val pageViewer = PageViewer()
             val bundle = Bundle()
             bundle.putString(URI_ARG_KEY, uri.toString())
-            bundle.putString(TYPE_ARG_KEY, type.name())
+            bundle.putString(TYPE_ARG_KEY, type.name)
             pageViewer.arguments = bundle
             return pageViewer
         }

@@ -10,8 +10,8 @@ import ninja.dudley.yamr.db.util.Column
 import ninja.dudley.yamr.db.util.Id
 
 /**
- * Created by mdudley on 6/2/15.
- */
+* Created by mdudley on 6/2/15. Yup.
+*/
 public open class MangaElement
 {
     enum class UriType
@@ -65,7 +65,7 @@ public open class MangaElement
         }
         values.put(urlCol, url)
         values.put(fullyParsedCol, fullyParsed)
-        values.put(typeCol, type.name())
+        values.put(typeCol, type.name)
         return values
     }
 

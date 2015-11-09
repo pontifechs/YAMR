@@ -9,8 +9,8 @@ import org.acra.annotation.ReportsCrashes
 import org.acra.sender.HttpSender
 
 /**
- * Created by mdudley on 8/6/15.
- */
+* Created by mdudley on 8/6/15. Yup.
+*/
 @ReportsCrashes(
         formUri = "http://dudley.ninja:5984/acra-storage/_design/acra-storage/_update/report",
         mode = ReportingInteractionMode.TOAST,

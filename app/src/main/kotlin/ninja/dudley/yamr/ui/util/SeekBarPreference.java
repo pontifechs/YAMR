@@ -105,7 +105,7 @@ public class SeekBarPreference extends Preference implements SeekBar.OnSeekBarCh
         }
 
         //if dependency is false from the beginning, disable the seek bar
-        if (view != null && !view.isEnabled())
+        if (!view.isEnabled())
         {
             mSeekBar.setEnabled(false);
         }
@@ -115,8 +115,6 @@ public class SeekBarPreference extends Preference implements SeekBar.OnSeekBarCh
 
     /**
      * Update a SeekBarPreference view with our current state
-     *
-     * @param view
      */
     protected void updateView(View view)
     {

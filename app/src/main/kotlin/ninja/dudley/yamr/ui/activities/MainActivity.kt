@@ -79,19 +79,19 @@ public class MainActivity : Activity()
                     0 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name)
                         startActivity(i)
                     }
                     1 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name)
                         startActivity(i)
                     }
                     2 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name())
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name)
                         startActivity(i)
                     }
                     3 ->

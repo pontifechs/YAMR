@@ -3,8 +3,8 @@ package ninja.dudley.yamr.ui.util
 import android.content.res.Configuration
 
 /**
- * Created by mdudley on 5/17/15.
- */
+* Created by mdudley on 5/17/15. Yup.
+*/
 public object OrientationAware
 {
     // Silly Java, why won't you let me separate my concerns like I want to?

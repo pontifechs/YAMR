@@ -23,16 +23,6 @@ public class Navigation : FetcherSync
         return Page(resolver.query(uri, null, null, null, null))
     }
 
-    private fun chapter(uri: Uri): Chapter
-    {
-        return Chapter(resolver.query(uri, null, null, null, null))
-    }
-
-    private fun series(uri: Uri): Series
-    {
-        return Series(resolver.query(uri, null, null, null, null))
-    }
-
     private fun chapterFromPage(p: Page): Chapter
     {
         val chapter = Chapter.uri(p.chapterId)

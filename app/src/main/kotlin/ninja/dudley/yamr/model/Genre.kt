@@ -12,8 +12,8 @@ import ninja.dudley.yamr.db.util.Id
 import ninja.dudley.yamr.db.util.Table
 
 /**
- * Created by mdudley on 6/25/15.
- */
+* Created by mdudley on 6/25/15. Yup.
+*/
 @Table(Genre.tableName)
 public class Genre
 {
@@ -68,8 +68,8 @@ public class Genre
 
     companion object
     {
-        public val tableName: String = "genre"
-        public val nameCol: String = "name"
+        public const val tableName: String = "genre"
+        public const val nameCol: String = "name"
 
         // Uri Handling ----------------------------------------------------------------------------
         public fun baseUri(): Uri

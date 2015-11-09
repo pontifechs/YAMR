@@ -7,12 +7,11 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import ninja.dudley.yamr.R
-import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.ui.activities.Browse
 
 /**
- * Created by mdudley on 6/23/15.
- */
+* Created by mdudley on 6/23/15. Yup.
+*/
 
 public fun fetchNewComplete(thiS: Any, newUris: List<Uri>)
 {
@@ -26,7 +25,7 @@ public class FetchStarter : BroadcastReceiver()
     public fun complete(newUris: List<Uri>)
     {
         // None! Nada!
-        if (newUris.size() == 0)
+        if (newUris.size == 0)
         {
             Log.d("FetchStarter", "No URIs")
             return
@@ -36,7 +35,7 @@ public class FetchStarter : BroadcastReceiver()
         val builder = Notification.Builder(context)
                 .setSmallIcon(R.drawable.yamr_pirate_icon)
                 .setContentTitle("YARR")
-                .setContentText("${newUris.size()} New Chapters")
+                .setContentText("${newUris.size} New Chapters")
                 .setAutoCancel(true)
 
         val startFavorites = Intent(context, Browse::class.java)

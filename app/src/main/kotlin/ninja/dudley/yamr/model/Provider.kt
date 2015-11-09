@@ -10,8 +10,8 @@ import ninja.dudley.yamr.db.util.Table
 import ninja.dudley.yamr.db.util.Unique
 
 /**
- * Created by mdudley on 6/2/15.
- */
+* Created by mdudley on 6/2/15. Yup.
+*/
 @Table(Provider.tableName)
 public class Provider : MangaElement
 {

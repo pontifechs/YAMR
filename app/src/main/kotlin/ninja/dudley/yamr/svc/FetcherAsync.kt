@@ -10,11 +10,10 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.util.Direction
 import java.util.*
 import java.util.concurrent.PriorityBlockingQueue
-import kotlin.concurrent.thread
 
 /**
- * Created by mdudley on 6/11/15.
- */
+* Created by mdudley on 6/11/15. Yup.
+*/
 
 private fun failureNop(thiS: Any) {}
 

@@ -3,8 +3,8 @@ package ninja.dudley.yamr.svc.util
 import android.os.AsyncTask
 
 /**
- * Created by mdudley on 8/28/15.
- */
+* Created by mdudley on 8/28/15. Yup.
+*/
 
 public abstract class LambdaAsyncTask<Params, Progress, Result> : AsyncTask<Params, Progress, Result>
 {

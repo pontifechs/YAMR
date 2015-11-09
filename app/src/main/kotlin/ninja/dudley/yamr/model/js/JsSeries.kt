@@ -4,8 +4,8 @@ import ninja.dudley.yamr.model.Series
 import org.mozilla.javascript.ScriptableObject
 
 /**
- * Created by mdudley on 7/19/15.
- */
+* Created by mdudley on 7/19/15. Yup.
+*/
 public class JsSeries : ScriptableObject
 {
     override fun getClassName(): String?
