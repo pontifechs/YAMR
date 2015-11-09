@@ -123,7 +123,21 @@ public class DBProvider : ContentProvider()
             }
             DBProvider.MatchCode.GenreSeries ->
             {
-                return db.query(DBHelper.SeriesGenreEntry.GENRE_SERIES_VIEW, DBHelper.projections[Series.tableName], "${DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID} =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+                var querySelection = DBHelper.SeriesGenreEntry.COLUMN_GENRE_ID + "=?"
+                if (selection != null)
+                {
+                    querySelection += " and " + selection
+                }
+                val querySelectionArgs: Array<String>
+                if (selectionArgs == null)
+                {
+                    querySelectionArgs = arrayOf(Integer.toString(getId(code, uri)))
+                }
+                else
+                {
+                    querySelectionArgs = arrayOf(Integer.toString(getId(code, uri)), selectionArgs[0])
+                }
+                return db.query(DBHelper.SeriesGenreEntry.GENRE_SERIES_VIEW, DBHelper.projections[Series.tableName], querySelection, querySelectionArgs, null, null, null)
             }
             DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
             DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
@@ -145,7 +159,7 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.PageByID -> return db.query(Page.tableName, DBHelper.projections[Page.tableName], "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.PageHeritage -> return db.query(DBHelper.PageHeritageViewEntry.TABLE_NAME, DBHelper.PageHeritageViewEntry.projection, "${DBHelper.PageHeritageViewEntry.COLUMN_PAGE_ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.GenreMatch -> return db.query(Genre.tableName, DBHelper.projections[Genre.tableName], "${Genre.nameCol}=?", selectionArgs, null, null, null, "1")
-            DBProvider.MatchCode.GenreAll -> return db.query(Genre.tableName, DBHelper.projections[Genre.tableName], null, null, null, null, sortOrder)
+            DBProvider.MatchCode.GenreAll -> return db.query(Genre.tableName, DBHelper.projections[Genre.tableName], null, null, null, null, "name")
             else -> throw IllegalArgumentException("Invalid query uri: " + uri.toString())
         }
     }

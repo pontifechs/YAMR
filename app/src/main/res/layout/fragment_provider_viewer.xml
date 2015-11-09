@@ -4,7 +4,7 @@
               android:layout_height="match_parent"
               android:layout_margin="16dp"
               android:orientation="vertical"
-              tools:context="ninja.dudley.yamr.ui.fragments.ProviderViewer"
+              tools:context="ninja.dudley.yamr.ui.fragments.SeriesSelector"
     >
 
     <TextView

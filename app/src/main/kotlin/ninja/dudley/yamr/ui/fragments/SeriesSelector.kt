@@ -18,6 +18,7 @@ import android.widget.ListView
 import android.widget.SearchView
 import android.widget.SimpleCursorAdapter
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
@@ -27,17 +28,24 @@ import ninja.dudley.yamr.ui.activities.Browse
 // Method reference functions
 public fun providerViewerStatus(providerViewer: Any, status: Float)
 {
-    (providerViewer as ProviderViewer).status(status)
+    (providerViewer as SeriesSelector).status(status)
 }
 
 public fun providerViewerComplete(providerViewer: Any, provider: Provider)
 {
-    (providerViewer as ProviderViewer).complete(provider)
+    (providerViewer as SeriesSelector).complete(provider)
 }
 
-public class ProviderViewer :
+public class SeriesSelector :
         ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
 {
+    public enum class FilterMode
+    {
+        Provider,
+        Genre,
+        All
+    }
+
     private var adapter: SimpleCursorAdapter? = null
 
     private var loading: ProgressDialog? = null
@@ -45,7 +53,8 @@ public class ProviderViewer :
 
     private var parent: Browse? = null
 
-    private var providerUri: Uri? = null
+    private var filterMode: FilterMode? = null
+    private var filterUri: Uri? = null
 
     override fun onAttach(activity: Activity?)
     {
@@ -69,8 +78,8 @@ public class ProviderViewer :
         {
             return
         }
-        this.providerUri = provider.uri()
-        loaderManager.restartLoader(0, Bundle(), this@ProviderViewer)
+        this.filterUri = provider.uri()
+        loaderManager.restartLoader(0, Bundle(), this@SeriesSelector)
         adapter!!.notifyDataSetChanged()
         loading!!.dismiss()
     }
@@ -81,9 +90,14 @@ public class ProviderViewer :
 
         val layout = inflater.inflate(R.layout.fragment_provider_viewer, container, false) as LinearLayout
 
-        this.providerUri = Uri.parse(arguments.getString(PROVIDER_ARG_KEY))
-        val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
-        FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus)
+        this.filterMode = FilterMode.valueOf(arguments.getString(FILTER_ARG_KEY))
+        this.filterUri = Uri.parse(arguments.getString(PROVIDER_ARG_KEY))
+
+        if (filterMode == FilterMode.Provider)
+        {
+            val provider = Provider(activity.contentResolver.query(filterUri, null, null, null, null))
+            FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus)
+        }
 
         adapter = SimpleCursorAdapter(activity,
                                      R.layout.simple_series_item,
@@ -93,10 +107,14 @@ public class ProviderViewer :
         listAdapter = adapter
 
         loaderManager.initLoader(0, Bundle(), this)
-        loading = ProgressDialog(activity)
-        loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-        loading!!.setTitle("Loading Series")
-        loading!!.show()
+
+        if (filterMode == FilterMode.Provider)
+        {
+            loading = ProgressDialog(activity)
+            loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+            loading!!.setTitle("Loading Series")
+            loading!!.show()
+        }
         return layout
     }
 
@@ -115,7 +133,7 @@ public class ProviderViewer :
             R.id.search -> return true
             R.id.refresh ->
             {
-                val provider = Provider(activity.contentResolver.query(providerUri, null, null, null, null))
+                val provider = Provider(activity.contentResolver.query(filterUri, null, null, null, null))
                 FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus, behavior = FetcherSync.Behavior.ForceRefresh)
 
                 loading!!.progress = 0
@@ -128,15 +146,28 @@ public class ProviderViewer :
 
     override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor>
     {
-        //TODO:: Blechhh
-        val seriesUri = providerUri!!.buildUpon().appendPath("series").build()
-        if (filter == null)
+        when (filterMode!!)
         {
-            return CursorLoader(activity, seriesUri, null, null, null, null)
-        }
-        else
-        {
-            return CursorLoader(activity, seriesUri, null, Series.nameCol + " like ?", arrayOf("%$filter%"), null)
+            FilterMode.Provider, FilterMode.All ->
+            {
+                //TODO:: Blechhh
+                val seriesUri = filterUri!!.buildUpon().appendPath("series").build()
+                if (filter == null) {
+                    return CursorLoader(activity, seriesUri, null, null, null, null)
+                } else {
+                    return CursorLoader(activity, seriesUri, null, Series.nameCol + " like ?", arrayOf("%$filter%"), null)
+                }
+            }
+            FilterMode.Genre ->
+            {
+                //TODO:: Blechhh
+                val genreUri = filterUri!!.buildUpon().appendPath("series").build()
+                if (filter == null) {
+                    return CursorLoader(activity, genreUri, null, null, null, null)
+                } else {
+                    return CursorLoader(activity, genreUri, null, Series.nameCol + " like ?", arrayOf("%$filter%"), null)
+                }
+            }
         }
     }
 
@@ -173,12 +204,14 @@ public class ProviderViewer :
     companion object
     {
         private val PROVIDER_ARG_KEY: String = "ProviderUriArg"
+        private val FILTER_ARG_KEY: String = "FilterArg"
 
-        fun newInstance(uri: Uri): ProviderViewer
+        fun newInstance(filter: FilterMode, uri: Uri): SeriesSelector
         {
-            val providerViewer = ProviderViewer()
+            val providerViewer = SeriesSelector()
             val bundle = Bundle()
             bundle.putString(PROVIDER_ARG_KEY, uri.toString())
+            bundle.putString(FILTER_ARG_KEY, filter.toString())
             providerViewer.arguments = bundle
             return providerViewer
         }

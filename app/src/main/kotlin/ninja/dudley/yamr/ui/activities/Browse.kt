@@ -51,10 +51,19 @@ public class Browse : Activity(), OrientationAware.I
         }
     }
 
+    fun loadGenre(genre: Uri)
+    {
+        val transaction = fragmentManager.beginTransaction()
+        val providerViewer = SeriesSelector.newInstance(SeriesSelector.FilterMode.Genre, genre)
+        transaction.replace(R.id.reader, providerViewer)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
     fun loadProvider(provider: Uri)
     {
         val transaction = fragmentManager.beginTransaction()
-        val providerViewer = ProviderViewer.newInstance(provider)
+        val providerViewer = SeriesSelector.newInstance(SeriesSelector.FilterMode.Provider, provider)
         transaction.replace(R.id.reader, providerViewer)
         transaction.addToBackStack(null)
         transaction.commit()

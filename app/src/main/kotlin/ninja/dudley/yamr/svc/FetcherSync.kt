@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
@@ -491,8 +492,11 @@ public open class FetcherSync
                 }
                 catch (e: Exception)
                 {
-                    val reporter = ACRA.getErrorReporter()
-                    reporter.handleSilentException(Exception("Stale Series? ${series.url}"))
+                    if (!BuildConfig.DEBUG)
+                    {
+                        val reporter = ACRA.getErrorReporter()
+                        reporter.handleSilentException(Exception("Stale Series? ${series.url}"))
+                    }
                 }
                 localListener?.notify(i++ / totalSeries.toFloat())
             }
