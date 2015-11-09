@@ -378,20 +378,19 @@ public open class FetcherSync
                     Log.d("Fetch", "Completely New Series!!")
                     val inserted = resolver.insert(Series.baseUri(), series.getContentValues())
                     series = Series(resolver.query(inserted, null, null, null, null))
-                    fetchSeries(series)
-                    continue
+                    fetchSeries(series)  // FYI, this will always make the newly fetched chapter exist already.
                 }
 
                 val chapter = jsChapter.unJS(series.id);
                 if (!chapterExists(chapter.url))
                 {
                     Log.d("Fetch", "Haven't seen this one.")
-                    resolver.insert(Chapter.baseUri(), chapter.getContentValues())
+                    val newChapterUri = resolver.insert(Chapter.baseUri(), chapter.getContentValues())
                     if (series.favorite)
                     {
                         series.updated = true
                         resolver.update(series.uri(), series.getContentValues(), null, null)
-                        newChapters.add(chapter.uri())
+                        newChapters.add(newChapterUri)
                     }
                 }
             }
@@ -401,7 +400,6 @@ public open class FetcherSync
             // Panic? IDK what might cause this.
             throw RuntimeException(e)
         }
-
         return newChapters
     }
 

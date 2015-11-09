@@ -7,7 +7,9 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.activities.Browse
+import java.util.*
 
 /**
 * Created by mdudley on 6/23/15. Yup.
@@ -31,12 +33,21 @@ public class FetchStarter : BroadcastReceiver()
             return
         }
 
+        // Get all the series names.
+        val seriesList = newUris.map {
+            Series(context!!.contentResolver.query(it, null, null, null, null))
+        }
+
+        val msg = seriesList.joinToString(transform = { it.name })
+
         // Notify
         val builder = Notification.Builder(context)
                 .setSmallIcon(R.drawable.yamr_pirate_icon)
                 .setContentTitle("YARR")
                 .setContentText("${newUris.size} New Chapters")
                 .setAutoCancel(true)
+                .setStyle(Notification.BigTextStyle()
+                         .bigText(msg))
 
         val startFavorites = Intent(context, Browse::class.java)
         startFavorites.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.toString())
