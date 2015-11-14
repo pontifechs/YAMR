@@ -96,7 +96,7 @@ public class SeriesSelector :
         if (filterMode == FilterMode.Provider)
         {
             val provider = Provider(activity.contentResolver.query(filterUri, null, null, null, null))
-            FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus)
+            FetcherAsync.fetchProvider(provider, this, FetcherAsync.Comms(::providerViewerComplete, ::providerViewerStatus))
         }
 
         adapter = SimpleCursorAdapter(activity,
@@ -134,7 +134,7 @@ public class SeriesSelector :
             R.id.refresh ->
             {
                 val provider = Provider(activity.contentResolver.query(filterUri, null, null, null, null))
-                FetcherAsync.fetchProvider(provider, this, ::providerViewerComplete, ::providerViewerStatus, behavior = FetcherSync.Behavior.ForceRefresh)
+                FetcherAsync.fetchProvider(provider, this, FetcherAsync.Comms(::providerViewerComplete, ::providerViewerStatus), behavior = FetcherSync.Behavior.ForceRefresh)
 
                 loading!!.progress = 0
                 loading!!.show()

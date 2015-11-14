@@ -8,7 +8,6 @@ import android.os.IBinder
 import android.os.Looper
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.util.Direction
-import java.util.*
 import java.util.concurrent.PriorityBlockingQueue
 
 /**
@@ -38,13 +37,27 @@ public class FetcherAsync: Service()
         FetchAllSeries
     }
 
-    public class FetchRequest<Arg, Return>: Comparable<Any>
+    public class Comms<Return>
+    {
+        public var complete: (thiS: Any, ret: Return) -> Unit
+        public var status: (thiS: Any, status: Float) -> Unit
+        public var failure: (thiS: Any, e: Exception) -> Unit
+
+        public constructor(complete: (thiS: Any, ret: Return) -> Unit = { thiS: Any, ret: Return ->},
+                           status: (thiS: Any, status: Float) -> Unit = { thiS: Any, status: Float ->},
+                           failure: (thiS: Any, e: Exception) -> Unit = {thiS: Any, e: Exception -> throw e})
+        {
+            this.complete = complete
+            this.status = status
+            this.failure = failure
+        }
+    }
+
+    private class FetchRequest<Arg, Return>: Comparable<Any>
     {
         public val arg: Arg
         public val thiS: Any
-        public var complete: (thiS: Any, ret: Return) -> Unit
-        public var status: (thiS: Any, status: Float) -> Unit
-        public var failure: (thiS: Any) -> Unit
+        public val comms: Comms<Return>
         public val priority: Int
         public val behavior: FetcherSync.Behavior
         public val type: RequestType
@@ -52,9 +65,7 @@ public class FetcherAsync: Service()
 
         public constructor(arg: Arg,
                            thiS: Any,
-                           complete: (thiS: Any, ret: Return) -> Unit,
-                           status: (thiS: Any, status: Float) -> Unit,
-                           failure: (thiS: Any) -> Unit,
+                           comms: Comms<Return>,
                            priority: Int,
                            behavior: FetcherSync.Behavior,
                            type: RequestType,
@@ -62,14 +73,11 @@ public class FetcherAsync: Service()
         {
             this.arg = arg
             this.thiS = thiS
-            this.complete = complete
-            this.status = status
-            this.failure = failure
+            this.comms = comms
             this.priority = priority
             this.behavior = behavior
             this.type = type
             this.otherArgs = otherArgs
-
         }
 
         override fun compareTo(other: Any): Int
@@ -128,7 +136,7 @@ public class FetcherAsync: Service()
                 }
             }
         })
-        noPrioThread.priority = 1
+        noPrioThread.priority = 5
         noPrioThread.start()
 
         return ret
@@ -153,16 +161,18 @@ public class FetcherAsync: Service()
         fetcher.register( object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
-
-        val ret = fetcher.fetchProvider(req.arg, req.behavior)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchProvider(req.arg, req.behavior)
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -172,15 +182,18 @@ public class FetcherAsync: Service()
         fetcher.register(object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
-        val ret = fetcher.fetchSeries(req.arg, req.behavior)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchSeries(req.arg, req.behavior)
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -190,15 +203,19 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
-        val ret = fetcher.fetchChapter(req.arg, req.behavior)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+
+        try
+        {
+            val ret = fetcher.fetchChapter(req.arg, req.behavior)
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -208,15 +225,18 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
-        val ret = fetcher.fetchPage(req.arg, req.behavior)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchPage(req.arg, req.behavior)
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -226,24 +246,18 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
         try
         {
             val ret = fetcher.nextPage(req.arg)
-            Handler(Looper.getMainLooper()).post {
-                req.complete(req.thiS, ret)
-            }
+            postComplete(req, ret)
         }
-        catch (e: NoSuchElementException)
+        catch (e: Exception)
         {
-            Handler(Looper.getMainLooper()).post {
-                req.failure(req.thiS)
-            }
+            postFailure(req, e)
         }
     }
 
@@ -253,24 +267,18 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
         try
         {
             val ret = fetcher.prevPage(req.arg)
-            Handler(Looper.getMainLooper()).post {
-                req.complete(req.thiS, ret)
-            }
+            postComplete(req, ret)
         }
-        catch (e: NoSuchElementException)
+        catch (e: Exception)
         {
-            Handler(Looper.getMainLooper()).post {
-                req.failure(req.thiS)
-            }
+            postFailure(req, e)
         }
     }
 
@@ -280,24 +288,18 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
         try
         {
             val ret = fetcher.firstPageFromChapter(req.arg)
-            Handler(Looper.getMainLooper()).post {
-                req.complete(req.thiS, ret)
-            }
+            postComplete(req, ret)
         }
-        catch (e: NoSuchElementException)
+        catch (e: Exception)
         {
-            Handler(Looper.getMainLooper()).post {
-                req.failure(req.thiS)
-            }
+            postFailure(req, e)
         }
     }
 
@@ -307,9 +309,7 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
@@ -320,15 +320,11 @@ public class FetcherAsync: Service()
                 fetcher.bookmarkFirstPage(req.arg)
             }
             val ret = fetcher.pageFromBookmark(req.arg)
-            Handler(Looper.getMainLooper()).post {
-                req.complete(req.thiS, ret)
-            }
+            postComplete(req, ret)
         }
-        catch (e: NoSuchElementException)
+        catch (e: Exception)
         {
-            Handler(Looper.getMainLooper()).post {
-                req.failure(req.thiS)
-            }
+            postFailure(req, e)
         }
     }
 
@@ -338,9 +334,7 @@ public class FetcherAsync: Service()
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
@@ -348,24 +342,25 @@ public class FetcherAsync: Service()
         {
             val pair = req.otherArgs as Pair<Int, Direction>
             val ret = fetcher.fetchPageOffset(req.arg, pair.first, pair.second)
-            Handler(Looper.getMainLooper()).post {
-                req.complete(req.thiS, ret)
-            }
+            postComplete(req, ret)
         }
-        catch (e: NoSuchElementException)
+        catch (e: Exception)
         {
-            Handler(Looper.getMainLooper()).post {
-                req.failure(req.thiS)
-            }
+            postFailure(req, e)
         }
     }
 
     private fun fetchAllNew(req: FetchRequest<Unit, List<Uri>>)
     {
         val fetcher = FetcherSync(contentResolver)
-        val ret = fetcher.fetchAllNew()
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchAllNew()
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -376,16 +371,19 @@ public class FetcherAsync: Service()
         {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
 
-        val ret = fetcher.fetchEntireChapter(req.arg)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchEntireChapter(req.arg)
+            postComplete(req, ret)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -396,16 +394,19 @@ public class FetcherAsync: Service()
         {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
 
-        val ret = fetcher.fetchEntireSeries(req.arg)
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, ret)
+        try
+        {
+            val ret = fetcher.fetchEntireSeries(req.arg)
+            postComplete(req, ret)
+        }
+        catch(e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
@@ -416,19 +417,42 @@ public class FetcherAsync: Service()
         {
             override fun notify(status: Float): Boolean
             {
-                Handler(Looper.getMainLooper()).post {
-                    req.status(req.thiS, status)
-                }
+                postStatus(req, status)
                 return true
             }
         })
 
-        fetcher.fetchAllSeries()
-        Handler(Looper.getMainLooper()).post {
-            req.complete(req.thiS, Unit)
+        try
+        {
+            fetcher.fetchAllSeries()
+            postComplete(req, Unit)
+        }
+        catch (e: Exception)
+        {
+            postFailure(req, e)
         }
     }
 
+    private fun postStatus(req: FetchRequest<*,*>, status: Float)
+    {
+        Handler(Looper.getMainLooper()).post {
+            req.comms.status(req.thiS, status)
+        }
+    }
+
+    private fun <Return> postComplete(req: FetchRequest<*,Return>, ret: Return )
+    {
+        Handler(Looper.getMainLooper()).post {
+            req.comms.complete(req.thiS, ret)
+        }
+    }
+
+    private fun postFailure(req: FetchRequest<*,*>, e: Exception)
+    {
+        Handler(Looper.getMainLooper()).post {
+            req.comms.failure(req.thiS, e)
+        }
+    }
 
     companion object
     {
@@ -442,87 +466,77 @@ public class FetcherAsync: Service()
 
         public fun fetchProvider(provider: Provider,
                                  caller: Any,
-                                 complete: (thiS: Any, provider: Provider) -> Unit,
-                                 progress: (thiS: Any, progress: Float) -> Unit,
+                                 comms: Comms<Provider>,
                                  priority: Int = LowPriority,
                                  behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
         {
-            val req = FetchRequest(provider, caller, complete, progress, ::failureNop, priority, behavior, RequestType.FetchProvider)
+            val req = FetchRequest(provider, caller, comms, priority, behavior, RequestType.FetchProvider)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchSeries(series: Series,
                                caller: Any,
-                               complete: (thiS: Any, provider: Series) -> Unit,
-                               progress: (thiS: Any, progress: Float) -> Unit,
+                               comms: Comms<Series>,
                                priority: Int = LowPriority,
                                behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
         {
-            val req = FetchRequest(series, caller, complete, progress, ::failureNop, priority, behavior, RequestType.FetchSeries)
+            val req = FetchRequest(series, caller, comms, priority, behavior, RequestType.FetchSeries)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchChapter(chapter: Chapter,
                                 caller: Any,
-                                complete: (thiS: Any, provider: Chapter) -> Unit,
-                                progress: (thiS: Any, progress: Float) -> Unit,
+                                comms: Comms<Chapter>,
                                 priority: Int = LowPriority,
                                 behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
         {
-            val req = FetchRequest(chapter, caller, complete, progress, ::failureNop, priority, behavior, RequestType.FetchChapter)
+            val req = FetchRequest(chapter, caller, comms, priority, behavior, RequestType.FetchChapter)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchPage(page: Page,
                              caller: Any,
-                             complete: (thiS: Any, provider: Page) -> Unit,
-                             progress: (thiS: Any, progress: Float) -> Unit,
+                             comms: Comms<Page>,
                              priority: Int = LowPriority,
                              behavior: FetcherSync.Behavior = FetcherSync.Behavior.LazyFetch)
         {
-            val req = FetchRequest(page, caller, complete, progress, ::failureNop, priority, behavior, RequestType.FetchPage)
+            val req = FetchRequest(page, caller, comms, priority, behavior, RequestType.FetchPage)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchNextPage(page: Page,
                                  caller: Any,
-                                 complete: (thiS: Any, provider: Page) -> Unit,
-                                 progress: (thiS: Any, progress: Float) -> Unit,
-                                 failure: (thiS: Any) -> Unit,
+                                 comms: Comms<Page>,
                                  priority: Int = LowPriority)
         {
-            val req = FetchRequest(page, caller, complete, progress, failure, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchNextPage)
+            val req = FetchRequest(page, caller, comms, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchNextPage)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchPrevPage(page: Page,
                                  caller: Any,
-                                 complete: (thiS: Any, provider: Page) -> Unit,
-                                 progress: (thiS: Any, progress: Float) -> Unit,
-                                 failure: (thiS: Any) -> Unit,
+                                 comms: Comms<Page>,
                                  priority: Int = LowPriority)
         {
-            val req = FetchRequest(page, caller, complete, progress, failure, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchPrevPage)
+            val req = FetchRequest(page, caller, comms, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchPrevPage)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchFirstPageFromChapter(chapter: Chapter,
                                              caller: Any,
-                                             complete: (thiS: Any, provider: Page) -> Unit,
-                                             progress: (thiS: Any, progress: Float) -> Unit,
+                                             comms: Comms<Page>,
                                              priority: Int = LowPriority)
         {
-            val req = FetchRequest(chapter, caller, complete, progress, ::failureNop, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchFirstPageFromChapter)
+            val req = FetchRequest(chapter, caller, comms, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchFirstPageFromChapter)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchPageFromSeries(series: Series,
                                        caller: Any,
-                                       complete: (thiS: Any, provider: Page) -> Unit,
-                                       progress: (thiS: Any, progress: Float) -> Unit,
+                                       comms: Comms<Page>,
                                        priority: Int = LowPriority)
         {
-            val req = FetchRequest(series, caller, complete, progress, ::failureNop, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchPageFromSeries)
+            val req = FetchRequest(series, caller, comms, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchPageFromSeries)
             Fetcher!!.enqueue(req)
         }
 
@@ -530,44 +544,40 @@ public class FetcherAsync: Service()
                                        offset: Int,
                                        direction: Direction,
                                        caller: Any,
-                                       complete: ((thiS: Any, provider: Page) -> Unit),
-                                       progress:((thiS: Any, progress: Float) -> Unit),
+                                       comms: Comms<Page>,
                                        priority: Int = LowPriority)
         {
-            val req = FetchRequest(page, caller, complete, progress, ::failureNop, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchOffsetFromPage, Pair(offset, direction))
+            val req = FetchRequest(page, caller, comms, priority, FetcherSync.Behavior.LazyFetch, RequestType.FetchOffsetFromPage, Pair(offset, direction))
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchAllNew(caller: Any,
-                               complete: ((thiS: Any, news: List<Uri>) -> Unit))
+                               comms: Comms<List<Uri>>)
         {
-            val req = FetchRequest(Unit, caller, complete, ::statusNop, ::failureNop, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllNew)
+            val req = FetchRequest(Unit, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllNew)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchEntireChapter(chapter: Chapter,
                                       caller: Any,
-                                      complete: ((thiS: Any, chapter: Chapter) -> Unit),
-                                      progress: ((thiS: Any, progress: Float) -> Unit))
+                                      comms: Comms<Chapter>)
         {
-            val req = FetchRequest(chapter, caller, complete, progress, ::failureNop, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchEntireChapter)
+            val req = FetchRequest(chapter, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchEntireChapter)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchEntireSeries(series: Series,
                                      caller: Any,
-                                     complete: ((thiS: Any, chapter: Series) -> Unit),
-                                     progress: ((thiS: Any, progress: Float) -> Unit))
+                                     comms: Comms<Series>)
         {
-            val req = FetchRequest(series, caller, complete, progress, ::failureNop, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchEntireSeries)
+            val req = FetchRequest(series, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchEntireSeries)
             Fetcher!!.enqueue(req)
         }
 
         public fun fetchAllSeries(caller: Any,
-                                  complete: ((thiS: Any, nop: Unit) -> Unit),
-                                  progress: ((thiS: Any, progress: Float) -> Unit))
+                                  comms: Comms<Series>)
         {
-            val req = FetchRequest(Unit, caller, complete, progress, ::failureNop, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllSeries)
+            val req = FetchRequest(Unit, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllSeries)
             Fetcher!!.enqueue(req)
         }
     }

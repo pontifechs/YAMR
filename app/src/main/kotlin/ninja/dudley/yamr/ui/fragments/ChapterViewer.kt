@@ -127,7 +127,7 @@ public class ChapterViewer :
         val chapterName = view.findViewById(R.id.chapter_name) as TextView
         chapterName.text = "Chapter ${chapter!!.number}: ${chapter!!.name}"
 
-        FetcherAsync.fetchChapter(chapter!!, this, ::chapterViewerComplete, ::chapterViewerStatus)
+        FetcherAsync.fetchChapter(chapter!!, this, FetcherAsync.Comms(::chapterViewerComplete, ::chapterViewerStatus))
 
         adapter = PageThumbAdapter()
         val grid = view.findViewById(R.id.grid) as GridView
@@ -155,8 +155,8 @@ public class ChapterViewer :
             {
                 val series = Series(activity.contentResolver.query(Series.uri(chapter!!.seriesId), null, null, null, null))
                 FetcherAsync.fetchEntireChapter(chapter!!, this,
-                        {thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number} Complete!", 1.0f)},
-                        {thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number}", status)})
+                        FetcherAsync.Comms({ thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number} Complete!", 1.0f) },
+                                           { thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number}", status) }))
                 return true
             }
             else -> return super.onOptionsItemSelected(item)

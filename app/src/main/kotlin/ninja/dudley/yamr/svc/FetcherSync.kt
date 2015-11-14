@@ -143,48 +143,40 @@ public open class FetcherSync
 
         init(provider)
         Log.d("Fetch", "Starting a Provider fetch")
-        try
-        {
-            val doc = fetchUrl(provider.url)
-            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-            ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
-            val result = cx!!.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
-            val elements = Context.jsToJava(result, Elements::class.java) as Elements
-            Log.d("RHINO", "${elements.size}")
-            provider.fullyParsed = true
-            resolver.update(provider.uri(), provider.getContentValues(), null, null)
-            Log.d("Fetch", "Iteration complete. Provider Fetched.")
 
-            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
-            var index = 0
-            for (e in elements)
+        val doc = fetchUrl(provider.url)
+        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+        ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
+        val result = cx!!.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
+        val elements = Context.jsToJava(result, Elements::class.java) as Elements
+        Log.d("RHINO", "${elements.size}")
+        provider.fullyParsed = true
+        resolver.update(provider.uri(), provider.getContentValues(), null, null)
+        Log.d("Fetch", "Iteration complete. Provider Fetched.")
+
+        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        var index = 0
+        for (e in elements)
+        {
+            index++
+            if (index % statusStride == 0 && listener != null)
             {
-
-                index++
-                if (index % statusStride == 0 && listener != null)
-                {
-                    val progress = index / elements.size.toFloat()
-                    Log.d("Fetch", "ProviderFetch progress: $progress")
-                    listener?.notify(progress)
-                }
-                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-                val seriesResult = cx!!.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
-                val jsSeries = Context.jsToJava(seriesResult, JsSeries::class.java) as JsSeries
-                val s = jsSeries.unJS(provider.id)
-
-                if (seriesExists(s.url))
-                {
-                    continue
-                }
-                resolver.insert(Series.baseUri(), s.getContentValues())
+                val progress = index / elements.size.toFloat()
+                Log.d("Fetch", "ProviderFetch progress: $progress")
+                listener?.notify(progress)
             }
-            provider.fullyParsed = true
+            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+            val seriesResult = cx!!.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
+            val jsSeries = Context.jsToJava(seriesResult, JsSeries::class.java) as JsSeries
+            val s = jsSeries.unJS(provider.id)
+
+            if (seriesExists(s.url))
+            {
+                continue
+            }
+            resolver.insert(Series.baseUri(), s.getContentValues())
         }
-        catch (e: IOException)
-        {
-            // Shrug?
-            throw RuntimeException(e)
-        }
+        provider.fullyParsed = true
 
         return provider
     }
@@ -199,69 +191,59 @@ public open class FetcherSync
 
         init(series)
         Log.d("Fetch", "Starting Series fetch: ${series.id}: ${series.url}")
-        try
+        val doc = fetchUrl(series.url)
+        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+        ScriptableObject.putProperty(scope, "series", Context.javaToJS(series, scope))
+
+        val genreResult = cx!!.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
+        val genres = Context.jsToJava(genreResult, List::class.java) as List<String>
+
+        // Clean up any the existing relations (Only really relevant with a refresh.)
+        resolver.delete(Series.genres(series.id), null, null)
+
+        for (genre in genres)
         {
-            val doc = fetchUrl(series.url)
-            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-            ScriptableObject.putProperty(scope, "series", Context.javaToJS(series, scope))
-
-            val genreResult = cx!!.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
-            val genres = Context.jsToJava(genreResult, List::class.java) as List<String>
-
-            // Clean up any the existing relations (Only really relevant with a refresh.)
-            resolver.delete(Series.genres(series.id), null, null)
-
-            for (genre in genres)
+            if (!genreExists(genre))
             {
-                if (!genreExists(genre))
-                {
-                    val g = Genre(genre)
-                    resolver.insert(Genre.baseUri(), g.getContentValues())
-                }
-                val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre), null))
-
-
-                // Now that we have the genre for sure, add the relation.
-                resolver.insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
+                val g = Genre(genre)
+                resolver.insert(Genre.baseUri(), g.getContentValues())
             }
+            val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre), null))
 
-            val result = cx!!.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
-            val elements = Context.jsToJava(result, Elements::class.java) as Elements
-
-            // Parse chapters
-            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
-            var index = 0
-            for (e in elements)
-            {
-
-                index++
-                if (index % statusStride == 0 && listener != null)
-                {
-                    val progress = index / elements.size.toFloat()
-                    Log.d("Fetch", "SeriesFetch progress: $progress")
-                    listener?.notify(progress)
-                }
-                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-                val chapterResult = cx!!.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
-                val jsChapter = Context.jsToJava(chapterResult, JsChapter::class.java) as JsChapter
-                val chapter = jsChapter.unJS(series.id)
-
-                if (chapterExists(chapter.url))
-                {
-                    continue
-                }
-                resolver.insert(Chapter.baseUri(), chapter.getContentValues())
-            }
-            series.fullyParsed = true
-            series.thumbnailPath = saveThumbnail(series)
-            resolver.update(series.uri(), series.getContentValues(), null, null)
-            Log.d("Fetch", "Iteration complete. Series Fetched.")
+            // Now that we have the genre for sure, add the relation.
+            resolver.insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
         }
-        catch (e: IOException)
+
+        val result = cx!!.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
+        val elements = Context.jsToJava(result, Elements::class.java) as Elements
+
+        // Parse chapters
+        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        var index = 0
+        for (e in elements)
         {
-            // Panic? IDK what might cause this.
-            throw RuntimeException(e)
+            index++
+            if (index % statusStride == 0 && listener != null)
+            {
+                val progress = index / elements.size.toFloat()
+                Log.d("Fetch", "SeriesFetch progress: $progress")
+                listener?.notify(progress)
+            }
+            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+            val chapterResult = cx!!.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
+            val jsChapter = Context.jsToJava(chapterResult, JsChapter::class.java) as JsChapter
+            val chapter = jsChapter.unJS(series.id)
+
+            if (chapterExists(chapter.url))
+            {
+                continue
+            }
+            resolver.insert(Chapter.baseUri(), chapter.getContentValues())
         }
+        series.fullyParsed = true
+        series.thumbnailPath = saveThumbnail(series)
+        resolver.update(series.uri(), series.getContentValues(), null, null)
+        Log.d("Fetch", "Iteration complete. Series Fetched.")
 
         return series
     }
@@ -275,79 +257,63 @@ public open class FetcherSync
         }
 
         init(chapter)
-        try
-        {
-            val doc = fetchUrl(chapter.url)
-            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-            ScriptableObject.putProperty(scope, "chapter", Context.javaToJS(chapter, scope))
-            val result = cx!!.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
-            val elements = Context.jsToJava(result, Elements::class.java) as Elements
+        val doc = fetchUrl(chapter.url)
+        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+        ScriptableObject.putProperty(scope, "chapter", Context.javaToJS(chapter, scope))
+        val result = cx!!.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
+        val elements = Context.jsToJava(result, Elements::class.java) as Elements
 
-            val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
-            var index = 0
-            for (e in elements)
+        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        var index = 0
+        for (e in elements)
+        {
+            index++
+            if (index % statusStride == 0 && listener != null)
             {
-                index++
-                if (index % statusStride == 0 && listener != null)
-                {
-                    val progress = index / elements.size.toFloat()
-                    Log.d("Fetch", "Chapter fetch progress: $progress")
-                    listener?.notify(progress)
-                }
-
-                ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-                val pageResult = cx!!.evaluateString(scope, "stubPage(element);", "fetchProvider", 600, null);
-                val jsPage = Context.jsToJava(pageResult, JsPage::class.java) as JsPage
-                val page = jsPage.unJS(chapter.id)
-
-                if (pageExists(page.url))
-                {
-                    continue
-                }
-
-                resolver.insert(Page.baseUri(), page.getContentValues())
+                val progress = index / elements.size.toFloat()
+                Log.d("Fetch", "Chapter fetch progress: $progress")
+                listener?.notify(progress)
             }
-            chapter.fullyParsed = true
-            resolver.update(chapter.uri(), chapter.getContentValues(), null, null)
-            Log.d("Fetch", "Iteration complete. Chapter fetched")
+
+            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
+            val pageResult = cx!!.evaluateString(scope, "stubPage(element);", "fetchProvider", 600, null);
+            val jsPage = Context.jsToJava(pageResult, JsPage::class.java) as JsPage
+            val page = jsPage.unJS(chapter.id)
+
+            if (pageExists(page.url))
+            {
+                continue
+            }
+
+            resolver.insert(Page.baseUri(), page.getContentValues())
         }
-        catch (e: IOException)
-        {
-            // Panic? IDK what might cause this.
-            throw RuntimeException(e)
-        }
+        chapter.fullyParsed = true
+        resolver.update(chapter.uri(), chapter.getContentValues(), null, null)
+        Log.d("Fetch", "Iteration complete. Chapter fetched")
 
         return chapter
     }
 
     public fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
     {
-        try
+        if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed)
         {
-            if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed)
-            {
-                Log.d("FetchPage", "Already parsed. Ignoring")
-                return page
-            }
-            init(page)
-            val doc = fetchUrl(page.url)
-
-            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-            ScriptableObject.putProperty(scope, "page", Context.javaToJS(page, scope))
-            val result = cx!!.evaluateString(scope, "fetchPage(doc, page);", "fetchProvider", 700, null);
-            val p = Context.jsToJava(result, String::class.java) as String
-
-            page.imageUrl = p;
-            page.fullyParsed = true
-            savePageImage(page)
-            Log.d("FetchPage", "Done")
+            Log.d("FetchPage", "Already parsed. Ignoring")
+            return page
         }
-        catch (e: IOException)
-        {
-            // Panic? IDK what might cause this.
-            throw  RuntimeException(e);
-        }
+        init(page)
+        val doc = fetchUrl(page.url)
 
+        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+        ScriptableObject.putProperty(scope, "page", Context.javaToJS(page, scope))
+        val result = cx!!.evaluateString(scope, "fetchPage(doc, page);", "fetchProvider", 700, null);
+        val p = Context.jsToJava(result, String::class.java) as String
+
+        page.imageUrl = p;
+        page.fullyParsed = true
+        page.imagePath = savePageImage(page)
+        Log.d("FetchPage", "Done")
+        resolver.update(page.uri(), page.getContentValues(), null, null)
         return page
     }
 
@@ -356,50 +322,43 @@ public open class FetcherSync
         init(provider)
         Log.d("FetchStarter", "Starting")
         val newChapters = ArrayList<Uri>()
-        try
+        val doc = fetchUrl(provider.newUrl)
+        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
+        val result = cx!!.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
+        val seriesChapterPairs = Context.jsToJava(result, List::class.java) as List<List<Any>>
+
+        for (pair in seriesChapterPairs)
         {
-            val doc = fetchUrl(provider.newUrl)
-            ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-            val result = cx!!.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
-            val seriesChapterPairs = Context.jsToJava(result, List::class.java) as List<List<Any>>
+            val jsSeries = pair[0] as JsSeries;
+            val jsChapter = pair[1] as JsChapter;
 
-            for (pair in seriesChapterPairs)
+            var series = jsSeries.unJS(provider.id);
+            if (seriesExists(series.url))
             {
-                val jsSeries = pair[0] as JsSeries;
-                val jsChapter = pair[1] as JsChapter;
+                series = Series(resolver.query(Series.baseUri(), null, null, arrayOf(series.url), null))
+            }
+            else
+            {
+                Log.d("Fetch", "Completely New Series!!")
+                val inserted = resolver.insert(Series.baseUri(), series.getContentValues())
+                series = Series(resolver.query(inserted, null, null, null, null))
+                fetchSeries(series)  // FYI, this will always make the newly fetched chapter exist already.
+            }
 
-                var series = jsSeries.unJS(provider.id);
-                if (seriesExists(series.url))
+            val chapter = jsChapter.unJS(series.id);
+            if (!chapterExists(chapter.url))
+            {
+                Log.d("Fetch", "Haven't seen this one.")
+                val newChapterUri = resolver.insert(Chapter.baseUri(), chapter.getContentValues())
+                if (series.favorite)
                 {
-                    series = Series(resolver.query(Series.baseUri(), null, null, arrayOf(series.url), null))
-                }
-                else
-                {
-                    Log.d("Fetch", "Completely New Series!!")
-                    val inserted = resolver.insert(Series.baseUri(), series.getContentValues())
-                    series = Series(resolver.query(inserted, null, null, null, null))
-                    fetchSeries(series)  // FYI, this will always make the newly fetched chapter exist already.
-                }
-
-                val chapter = jsChapter.unJS(series.id);
-                if (!chapterExists(chapter.url))
-                {
-                    Log.d("Fetch", "Haven't seen this one.")
-                    val newChapterUri = resolver.insert(Chapter.baseUri(), chapter.getContentValues())
-                    if (series.favorite)
-                    {
-                        series.updated = true
-                        resolver.update(series.uri(), series.getContentValues(), null, null)
-                        newChapters.add(newChapterUri)
-                    }
+                    series.updated = true
+                    resolver.update(series.uri(), series.getContentValues(), null, null)
+                    newChapters.add(newChapterUri)
                 }
             }
         }
-        catch (e: IOException)
-        {
-            // Panic? IDK what might cause this.
-            throw RuntimeException(e)
-        }
+
         return newChapters
     }
 
@@ -502,7 +461,6 @@ public open class FetcherSync
         listener = localListener
     }
 
-    @Throws(IOException::class)
     private fun fetchUrl(url: String): Document
     {
         val response = Jsoup.connect(url)
@@ -573,62 +531,35 @@ public open class FetcherSync
     private fun downloadImage(imageUrl: String, imagePath: String)
     {
         val inStream: InputStream
-        var out: ByteArrayOutputStream? = null
         var count: Int
-        try
-        {
-            val url = URL(imageUrl)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.doInput = true
-            conn.connect()
-            inStream = conn.inputStream
-            out = ByteArrayOutputStream()
+        val url = URL(imageUrl)
+        val conn = url.openConnection() as HttpURLConnection
+        conn.doInput = true
+        conn.connect()
+        inStream = conn.inputStream
+        val out = ByteArrayOutputStream()
 
-            val length = conn.contentLength
-            var done = 0
-            val data = ByteArray(1024)
-            while (done < length)
-            {
-                count = inStream.read(data)
-                done += count
-
-                listener?.notify(done / length.toFloat())
-                out.write(data, 0, count)
-            }
-
-            // flushing output
-            out.flush()
-
-            val bmp = BitmapFactory.decodeByteArray(out.toByteArray(), 0, length)
-            val fileOut = FileOutputStream(imagePath)
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
-        }
-        catch (e: MalformedURLException)
+        val length = conn.contentLength
+        var done = 0
+        val data = ByteArray(1024)
+        while (done < length)
         {
-            // TODO:: better error handling/checking
-            throw RuntimeException(e)
+            count = inStream.read(data)
+            done += count
+
+            listener?.notify(done / length.toFloat())
+            out.write(data, 0, count)
         }
-        catch (e: IOException)
-        {
-            // TODO:: better error handling/checking
-            throw RuntimeException(e)
-        }
-        finally
-        {
-            try
-            {
-                out!!.close()
-            }
-            catch (e: IOException)
-            {
-                //TODO:: better error handling/checking
-                throw RuntimeException(e)
-            }
-        }
+        out.flush()
+
+        val bmp = BitmapFactory.decodeByteArray(out.toByteArray(), 0, length)
+        val fileOut = FileOutputStream(imagePath)
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
+
+        out.close()
     }
 
-    // TODO:: not a huge fan of this method. Will probably want to future-proof it as much as possible.
-    private fun savePageImage(p: Page)
+    private fun savePageImage(p: Page): String
     {
         val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
@@ -642,11 +573,10 @@ public open class FetcherSync
 
         downloadImage(p.imageUrl!!, pagePath)
 
-        p.imagePath = pagePath
-        resolver.update(p.uri(), p.getContentValues(), null, null) // Save the path off
+        return pagePath
     }
 
-    private fun saveThumbnail(s: Series): String?
+    private fun saveThumbnail(s: Series): String
     {
         val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
@@ -655,41 +585,8 @@ public open class FetcherSync
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
         val thumbPath = "$chapterDirectory/thumb.png"
+        downloadImage(s.thumbnailUrl!!, thumbPath)
 
-        var out: FileOutputStream? = null
-        try
-        {
-            val url = URL(s.thumbnailUrl)
-            val bmp = BitmapFactory.decodeStream(url.openConnection().inputStream)
-            out = FileOutputStream(thumbPath)
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
-        catch (e: MalformedURLException)
-        {
-            // TODO:: better error handling/checking
-            throw RuntimeException(e)
-        }
-        catch (e: IOException)
-        {
-            // Couldn't get it
-            return null
-        }
-        finally
-        {
-            try
-            {
-                if (out != null)
-                {
-                    out.close()
-                }
-            }
-            catch (e: IOException)
-            {
-                //TODO:: better error handling/checking
-                throw RuntimeException(e)
-            }
-
-        }
         return thumbPath
     }
 }

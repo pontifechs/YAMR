@@ -95,7 +95,7 @@ public class SeriesViewer :
         transaction.replace(R.id.list_header_container, seriesCard)
         transaction.commit()
 
-        FetcherAsync.fetchSeries(series!!, this, ::seriesViewerComplete, ::seriesViewerStatus)
+        FetcherAsync.fetchSeries(series!!, this, FetcherAsync.Comms(::seriesViewerComplete, ::seriesViewerStatus))
 
         adapter = SimpleCursorAdapter(activity,
                                       R.layout.chapter_item,
@@ -146,7 +146,7 @@ public class SeriesViewer :
             }
             R.id.refresh ->
             {
-                FetcherAsync.fetchSeries(series!!, this, ::seriesViewerComplete, ::seriesViewerStatus, behavior = FetcherSync.Behavior.ForceRefresh)
+                FetcherAsync.fetchSeries(series!!, this, FetcherAsync.Comms(::seriesViewerComplete, ::seriesViewerStatus), behavior = FetcherSync.Behavior.ForceRefresh)
 
                 loading!!.progress = 0
                 loading!!.show()
@@ -163,8 +163,9 @@ public class SeriesViewer :
             R.id.fetch_all ->
             {
                 FetcherAsync.fetchEntireSeries(series!!, this,
-                        {thiS , series -> FetchAllProgress.notify(activity, "Fetching ${series.name} Complete!", 1.0f)},
-                        {thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series!!.name}", status)} )
+                        FetcherAsync.Comms(
+                                { thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} Complete!", 1.0f) },
+                                { thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series!!.name}", status) }))
                 return true
             }
             else -> return super.onOptionsItemSelected(item)

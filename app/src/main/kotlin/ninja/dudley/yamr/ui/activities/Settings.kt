@@ -39,12 +39,13 @@ public class Settings : Activity()
         if (id == R.id.action_fetch_all_series)
         {
             FetcherAsync.fetchAllSeries(this,
-                    {thiS, unit ->
-                        FetchAllProgress.notify(this, "Done!", 1.0f)
-                        val pref = PreferenceManager.getDefaultSharedPreferences(this)
-                        pref.edit().putBoolean(ALL_SERIES_FETCHED, true);
-                    },
-                    {thiS, status -> FetchAllProgress.notify(this, "Going!", status)})
+                    FetcherAsync.Comms(
+                            { thiS, unit ->
+                                FetchAllProgress.notify(this, "Done!", 1.0f)
+                                val pref = PreferenceManager.getDefaultSharedPreferences(this)
+                                pref.edit().putBoolean(ALL_SERIES_FETCHED, true);
+                            },
+                            { thiS, status -> FetchAllProgress.notify(this, "Going!", status) }))
         }
 
         return super.onOptionsItemSelected(item)

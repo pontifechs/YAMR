@@ -75,7 +75,8 @@ public class FetchStarter : BroadcastReceiver()
         }
         else if (intent.action == StartChecking)
         {
-            FetcherAsync.fetchAllNew(this, ::fetchNewComplete)
+            context.startService(Intent(context, FetcherAsync::class.java))
+            FetcherAsync.fetchAllNew(this, FetcherAsync.Comms(complete = ::fetchNewComplete))
         }
     }
 

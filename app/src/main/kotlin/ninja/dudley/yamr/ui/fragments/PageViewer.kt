@@ -39,7 +39,7 @@ private fun pageViewerPageComplete(thiS: Any, page: Page)
     (thiS as PageViewer).pageComplete(page)
 }
 
-private fun pageViewerFailure(thiS: Any)
+private fun pageViewerFailure(thiS: Any, e: Exception)
 {
     (thiS as PageViewer).failure()
 }
@@ -47,6 +47,8 @@ private fun pageViewerFailure(thiS: Any)
 private fun pageCompleteNop(thiS: Any, page: Page) {}
 
 private fun pageStatusNop(thiS: Any, status: Float) {}
+
+private fun pageFailNop(thiS: Any, e: Exception) {}
 
 public class PageViewer : Fragment(), TouchImageView.SwipeListener
 {
@@ -82,12 +84,12 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             MangaElement.UriType.Series -> {
                 val series = Series(fetchUri(uri))
                 FetcherAsync.fetchPageFromSeries(series, this,
-                        ::pageViewerPageAcquired, ::pageViewerStatus)
+                        FetcherAsync.Comms(::pageViewerPageAcquired, ::pageViewerStatus))
             }
             MangaElement.UriType.Chapter -> {
                 val chapter = Chapter(fetchUri(uri))
                 FetcherAsync.fetchFirstPageFromChapter(chapter, this,
-                        ::pageViewerPageAcquired, ::pageViewerStatus)
+                        FetcherAsync.Comms(::pageViewerPageAcquired, ::pageViewerStatus))
             }
             MangaElement.UriType.Page -> {
                 this.page = Page(fetchUri(uri))
@@ -241,7 +243,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     // Fetch the current page
     private fun fetchPage()
     {
-        FetcherAsync.fetchPage(page!!, this, ::pageViewerPageComplete, ::pageViewerStatus)
+        FetcherAsync.fetchPage(page!!, this, FetcherAsync.Comms(::pageViewerPageComplete, ::pageViewerStatus))
         if (Settings.preFetchEnabled(activity))
         {
             loadPreFetches(FetcherAsync.LowPriority)
@@ -268,11 +270,11 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         {
             Direction.Next ->
             {
-                FetcherAsync.fetchNextPage(page!!, this, ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure, priority = FetcherAsync.HighPriority)
+                FetcherAsync.fetchNextPage(page!!, this, FetcherAsync.Comms(::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure), priority = FetcherAsync.HighPriority)
             }
             Direction.Prev ->
             {
-                FetcherAsync.fetchPrevPage(page!!, this, ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure, priority = FetcherAsync.HighPriority)
+                FetcherAsync.fetchPrevPage(page!!, this, FetcherAsync.Comms(::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure), priority = FetcherAsync.HighPriority)
             }
         }
     }
@@ -288,7 +290,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             changePageSimple(direction)
 
             // Request the furthest out fetch.
-            FetcherAsync.fetchOffsetFromPage(page!!, Settings.preFetchSize(activity), direction, activity.contentResolver, ::pageCompleteNop, ::pageStatusNop)
+            FetcherAsync.fetchOffsetFromPage(page!!, Settings.preFetchSize(activity), direction, activity.contentResolver, FetcherAsync.Comms(::pageCompleteNop, ::pageStatusNop, ::pageFailNop))
         }
         else
         {
@@ -296,12 +298,12 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
             {
                 Direction.Next ->
                 {
-                    FetcherAsync.fetchNextPage(page!!, this, ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure, FetcherAsync.HighPriority)
+                    FetcherAsync.fetchNextPage(page!!, this, FetcherAsync.Comms(::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure), FetcherAsync.HighPriority)
                     loadPreFetches(FetcherAsync.MediumPriority)
                 }
                 Direction.Prev ->
                 {
-                    FetcherAsync.fetchPrevPage(page!!, this, ::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure, FetcherAsync.HighPriority)
+                    FetcherAsync.fetchPrevPage(page!!, this, FetcherAsync.Comms(::pageViewerPageComplete, ::pageViewerStatus, ::pageViewerFailure), FetcherAsync.HighPriority)
                     loadPreFetches(FetcherAsync.MediumPriority)
                 }
             }
@@ -312,7 +314,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     {
         for (i in 1..Settings.preFetchSize(activity))
         {
-            FetcherAsync.fetchOffsetFromPage(page!!, i, readDirection, this, ::pageCompleteNop, ::pageStatusNop, priority - i)
+            FetcherAsync.fetchOffsetFromPage(page!!, i, readDirection, this, FetcherAsync.Comms(::pageCompleteNop, ::pageStatusNop, ::pageFailNop), priority - i)
         }
     }
 
