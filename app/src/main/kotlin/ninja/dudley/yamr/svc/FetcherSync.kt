@@ -332,7 +332,7 @@ public open class FetcherSync
             val jsSeries = pair[0] as JsSeries;
             val jsChapter = pair[1] as JsChapter;
 
-            var series = jsSeries.unJS(provider.id);
+            var series = jsSeries.unJS(provider.id) ;
             if (seriesExists(series.url))
             {
                 series = Series(resolver.query(Series.baseUri(), null, null, arrayOf(series.url), null))
@@ -528,7 +528,7 @@ public open class FetcherSync
         }
     }
 
-    private fun downloadImage(imageUrl: String, imagePath: String)
+    private fun downloadImage(imageUrl: String, imagePath: String): Boolean
     {
         val inStream: InputStream
         var count: Int
@@ -536,7 +536,15 @@ public open class FetcherSync
         val conn = url.openConnection() as HttpURLConnection
         conn.doInput = true
         conn.connect()
-        inStream = conn.inputStream
+        try
+        {
+            inStream = conn.inputStream
+        }
+        catch (fnfe: FileNotFoundException)
+        {
+            return false
+        }
+
         val out = ByteArrayOutputStream()
 
         val length = conn.contentLength
@@ -557,9 +565,10 @@ public open class FetcherSync
         bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
 
         out.close()
+        return true
     }
 
-    private fun savePageImage(p: Page): String
+    private fun savePageImage(p: Page): String?
     {
         val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
@@ -571,12 +580,17 @@ public open class FetcherSync
         chapterDirectory.mkdirs()
         val pagePath = "$chapterDirectory/${formatFloat(heritage.pageNumber)}.png"
 
-        downloadImage(p.imageUrl!!, pagePath)
-
-        return pagePath
+        if (downloadImage(p.imageUrl!!, pagePath))
+        {
+            return pagePath
+        }
+        else
+        {
+            return null
+        }
     }
 
-    private fun saveThumbnail(s: Series): String
+    private fun saveThumbnail(s: Series): String?
     {
         val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
@@ -585,8 +599,14 @@ public open class FetcherSync
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
         val thumbPath = "$chapterDirectory/thumb.png"
-        downloadImage(s.thumbnailUrl!!, thumbPath)
 
-        return thumbPath
+        if (downloadImage(s.thumbnailUrl!!, thumbPath))
+        {
+            return thumbPath
+        }
+        else
+        {
+            return null
+        }
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.activities.Browse
 import java.util.*
@@ -34,8 +35,9 @@ public class FetchStarter : BroadcastReceiver()
         }
 
         // Get all the series names.
-        val seriesList = newUris.map {
-            Series(context!!.contentResolver.query(it, null, null, null, null))
+        val seriesList: List<Series> = newUris.map {
+            val chapter = Chapter(context!!.contentResolver.query(it, null, null, null, null))
+            Series(context!!.contentResolver.query(Series.uri(chapter.seriesId), null, null, null, null))
         }
 
         val msg = seriesList.joinToString(transform = { it.name })
