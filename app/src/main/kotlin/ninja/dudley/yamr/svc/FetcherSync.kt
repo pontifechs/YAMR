@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import ninja.dudley.yamr.BuildConfig
+import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
@@ -378,6 +379,11 @@ public open class FetcherSync
     public fun fetchEntireChapter(chapter: Chapter, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Chapter
     {
         fetchChapter(chapter, behavior)
+        if (chapterPageComplete(chapter) && behavior != FetcherSync.Behavior.ForceRefresh)
+        {
+            Log.d("FetchEntire", "${chapter.url} is Page Complete. Skipping ")
+            return chapter
+        }
         val pages = resolver.query(chapter.pages(), null, null, null, null)
 
         // Only send status updates between pages, not status for each page
@@ -385,9 +391,10 @@ public open class FetcherSync
         listener = null
 
         var i = 1.0f
+        localListener?.notify(0.0f);
         while (pages.moveToNext())
         {
-            Log.d("FetchAll", "page ${i / pages.count.toFloat()}")
+            Log.d("FetchAll", "page ${i} / ${pages.count}")
             val page = Page(pages, false)
             fetchPage(page, behavior)
 
@@ -397,9 +404,14 @@ public open class FetcherSync
         return chapter
     }
 
-    public fun fetchEntireSeries(series: Series, behavior: Behavior = FetcherSync.Behavior.ForceRefresh): Series
+    public fun fetchEntireSeries(series: Series, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Series
     {
         fetchSeries(series, behavior)
+        if (seriesPageComplete(series) && behavior != FetcherSync.Behavior.ForceRefresh)
+        {
+            Log.d("FetchEntire", "${series.url} is Page Complete. Skipping")
+            return series
+        }
         val chapters = resolver.query(series.chapters(), null, null, null, null)
 
         // Only send status updates between chapters, not status for each chapter
@@ -407,9 +419,10 @@ public open class FetcherSync
         listener = null
 
         var i = 1.0f
+        localListener?.notify(0.0f)
         while (chapters.moveToNext())
         {
-            Log.d("FetchAll", "chapter ${i / chapters.count.toFloat()}")
+            Log.d("FetchAll", "chapter $i / ${chapters.count}")
             val chapter = Chapter(chapters, false)
             fetchEntireChapter(chapter, behavior)
 
@@ -464,11 +477,36 @@ public open class FetcherSync
     private fun fetchUrl(url: String): Document
     {
         val response = Jsoup.connect(url)
+                            .maxBodySize(0)    //// KEKEKEKEKEKEK. MangaHere's List page is over 1MB
                             .timeout(10000)
                             .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
                             .referrer("http://www.google.com").method(Connection.Method.GET)
                             .execute()
         return response.parse()
+    }
+
+    private fun seriesPageComplete(series: Series): Boolean
+    {
+        val c = resolver.query(series.pageComplete(), null, null, null, null)
+        c.moveToFirst()
+        val totalIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_TOTAL);
+        val fetchedIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_FETCHED);
+        val total = c.getInt(totalIndex);
+        val fetched = c.getInt(fetchedIndex);
+        c.close()
+        return total != 0 && total == fetched;
+    }
+
+    private fun chapterPageComplete(chapter: Chapter): Boolean
+    {
+        val c = resolver.query(chapter.pageComplete(), null, null, null, null)
+        c.moveToFirst()
+        val totalIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_TOTAL);
+        val fetchedIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_FETCHED);
+        val total = c.getInt(totalIndex);
+        val fetched = c.getInt(fetchedIndex);
+        c.close()
+        return total != 0 && total == fetched;
     }
 
     private fun providerExists(url: String): Boolean
@@ -534,7 +572,8 @@ public open class FetcherSync
         var count: Int
         val url = URL(imageUrl)
         val conn = url.openConnection() as HttpURLConnection
-        conn.doInput = true
+        conn.readTimeout = 10000
+        conn.connectTimeout = 10000
         conn.connect()
         try
         {

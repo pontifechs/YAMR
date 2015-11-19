@@ -74,6 +74,11 @@ public class Chapter : MangaElement
         return nextPage(id, num)
     }
 
+    public fun pageComplete(): Uri
+    {
+       return pageComplete(id)
+    }
+
     companion object
     {
         const public val tableName: String = "chapter"
@@ -109,6 +114,11 @@ public class Chapter : MangaElement
             return pages(id).buildUpon()
                     .appendPath(java.lang.Float.toString(num))
                     .appendPath("next").build()
+        }
+
+        public fun pageComplete(id: Int): Uri
+        {
+            return uri(id).buildUpon().appendPath("pageComplete").build();
         }
     }
 }

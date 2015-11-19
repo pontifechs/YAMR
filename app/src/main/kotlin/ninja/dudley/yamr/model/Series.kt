@@ -137,6 +137,11 @@ public class Series : MangaElement
         return genres(id)
     }
 
+    public fun pageComplete(): Uri
+    {
+       return pageComplete(id)
+    }
+
     companion object
     {
         const public val tableName: String = "series"
@@ -192,6 +197,11 @@ public class Series : MangaElement
         public fun genres(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("genres").build()
+        }
+
+        public fun pageComplete(id: Int): Uri
+        {
+            return uri(id).buildUpon().appendPath("pageComplete").build();
         }
     }
 }

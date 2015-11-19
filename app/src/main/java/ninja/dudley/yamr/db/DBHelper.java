@@ -40,7 +40,7 @@ public class DBHelper extends SQLiteOpenHelper
 {
     private final Context context;
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
@@ -99,6 +99,24 @@ public class DBHelper extends SQLiteOpenHelper
                     COLUMN_SERIES_NAME, COLUMN_CHAPTER_ID, COLUMN_CHAPTER_NUMBER,
                     COLUMN_PAGE_NUMBER, COLUMN_PAGE_ID};
         }
+    }
+
+    public static abstract class SeriesPageCompleteViewEntry
+    {
+        public static final String TABLE_NAME = "series_page_complete";
+
+        public static final String COLUMN_TOTAL = "total";
+        public static final String COLUMN_FETCHED = "fetched";
+        public static final String COLUMN_SERIES_ID = "series_id";
+    }
+
+    public static abstract class ChapterPageCompleteViewEntry
+    {
+        public static final String TABLE_NAME = "chapter_page_complete";
+
+        public static final String COLUMN_TOTAL = "total";
+        public static final String COLUMN_FETCHED = "fetched";
+        public static final String COLUMN_CHAPTER_ID = "chapter_id";
     }
 
     private static String makeColumn(String name, Column.Type type)
@@ -257,6 +275,12 @@ public class DBHelper extends SQLiteOpenHelper
     @Override
     public void onCreate(SQLiteDatabase db)
     {
+        createV1(db);
+        createAndUpdateV2(db);
+    }
+
+    private void createV1(SQLiteDatabase db)
+    {
         db.execSQL(schema(Provider.class));
         db.execSQL(schema(Series.class));
         db.execSQL(schema(Chapter.class));
@@ -265,74 +289,102 @@ public class DBHelper extends SQLiteOpenHelper
 
         String pageHeritageView =
                 "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
-                "select " +
-                joinedAliasedColumn(Provider.tableName, ID,
-                                    PageHeritageViewEntry.COLUMN_PROVIDER_ID) + ", " +
-                joinedAliasedColumn(Provider.tableName, "name",
-                                    PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", " +
-                joinedAliasedColumn(Series.tableName, ID,
-                                    PageHeritageViewEntry.COLUMN_SERIES_ID) + ", " +
-                joinedAliasedColumn(Series.tableName, "name",
-                                    PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", " +
-                joinedAliasedColumn(Chapter.tableName, ID,
-                                    PageHeritageViewEntry.COLUMN_CHAPTER_ID) + ", " +
-                joinedAliasedColumn(Chapter.tableName, "number",
-                                    PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", " +
-                joinedAliasedColumn(Page.tableName, ID,
-                                    PageHeritageViewEntry.COLUMN_PAGE_ID) + ", " +
-                joinedAliasedColumn(Page.tableName, "number",
-                                    PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
-                " from " + Provider.tableName +
-                joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID) +
-                joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID) +
-                joinStatement(Chapter.tableName, ID, Page.tableName, Chapter.tableName + ID);
+                        "select " +
+                        joinedAliasedColumn(Provider.tableName, ID,
+                                PageHeritageViewEntry.COLUMN_PROVIDER_ID) + ", " +
+                        joinedAliasedColumn(Provider.tableName, "name",
+                                PageHeritageViewEntry.COLUMN_PROVIDER_NAME) + ", " +
+                        joinedAliasedColumn(Series.tableName, ID,
+                                PageHeritageViewEntry.COLUMN_SERIES_ID) + ", " +
+                        joinedAliasedColumn(Series.tableName, "name",
+                                PageHeritageViewEntry.COLUMN_SERIES_NAME) + ", " +
+                        joinedAliasedColumn(Chapter.tableName, ID,
+                                PageHeritageViewEntry.COLUMN_CHAPTER_ID) + ", " +
+                        joinedAliasedColumn(Chapter.tableName, "number",
+                                PageHeritageViewEntry.COLUMN_CHAPTER_NUMBER) + ", " +
+                        joinedAliasedColumn(Page.tableName, ID,
+                                PageHeritageViewEntry.COLUMN_PAGE_ID) + ", " +
+                        joinedAliasedColumn(Page.tableName, "number",
+                                PageHeritageViewEntry.COLUMN_PAGE_NUMBER) +
+                        " from " + Provider.tableName +
+                        joinStatement(Provider.tableName, ID, Series.tableName, Provider.tableName + ID) +
+                        joinStatement(Series.tableName, ID, Chapter.tableName, Series.tableName + ID) +
+                        joinStatement(Chapter.tableName, ID, Page.tableName, Chapter.tableName + ID);
         db.execSQL(pageHeritageView);
 
         String seriesGenreCreate =
                 "CREATE TABLE " + SeriesGenreEntry.TABLE_NAME + " " +
-                "(" +
-                SeriesGenreEntry._ID + " INTEGER PRIMARY KEY, " +
-                makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID,
-                          SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) + ", " +
-                makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID,
-                           SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) + ", " +
-                makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID,
-                               Series.tableName, DBHelper.ID) + ", " +
-                makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID,
-                               Genre.tableName, DBHelper.ID) +
-                ")";
+                        "(" +
+                        SeriesGenreEntry._ID + " INTEGER PRIMARY KEY, " +
+                        makeColumn(SeriesGenreEntry.COLUMN_SERIES_ID,
+                                SeriesGenreEntry.COLUMN_SERIES_ID_TYPE) + ", " +
+                        makeColumn(SeriesGenreEntry.COLUMN_GENRE_ID,
+                                SeriesGenreEntry.COLUMN_GENRE_ID_TYPE) + ", " +
+                        makeForeignKey(SeriesGenreEntry.COLUMN_SERIES_ID,
+                                Series.tableName, DBHelper.ID) + ", " +
+                        makeForeignKey(SeriesGenreEntry.COLUMN_GENRE_ID,
+                                Genre.tableName, DBHelper.ID) +
+                        ")";
         db.execSQL(seriesGenreCreate);
 
         // Genres in the given series
         String seriesGenreViewCreate =
                 "CREATE VIEW " + SeriesGenreEntry.SERIES_GENRES_VIEW + " AS " +
-                "select " + Genre.tableName + ".* , " +
-                            SeriesGenreEntry.TABLE_NAME +
-                            ".series_id as series_id " +
-                "from " + SeriesGenreEntry.TABLE_NAME +
-                joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID,
-                              Genre.tableName, ID);
+                        "select " + Genre.tableName + ".* , " +
+                        SeriesGenreEntry.TABLE_NAME +
+                        ".series_id as series_id " +
+                        "from " + SeriesGenreEntry.TABLE_NAME +
+                        joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_GENRE_ID,
+                                Genre.tableName, ID);
         db.execSQL(seriesGenreViewCreate);
 
         // Series in the given genre
         String genreSeriesViewCreate =
                 "CREATE VIEW " + SeriesGenreEntry.GENRE_SERIES_VIEW + " AS " +
-                "select " + Series.tableName + ".* , " +
-                            SeriesGenreEntry.TABLE_NAME +
-                            ".genre_id as genre_id " +
-                "from " + SeriesGenreEntry.TABLE_NAME +
-                joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
-                              Series.tableName, ID);
+                        "select " + Series.tableName + ".* , " +
+                        SeriesGenreEntry.TABLE_NAME +
+                        ".genre_id as genre_id " +
+                        "from " + SeriesGenreEntry.TABLE_NAME +
+                        joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
+                                Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
 
         // Set up the basic directory structure
         createNoMedia();
     }
 
+    private void createAndUpdateV2(SQLiteDatabase db)
+    {
+        // Chapter Page Fetching Status
+        String chapterPageComplete =
+                "CREATE VIEW " + ChapterPageCompleteViewEntry.TABLE_NAME + " AS " +
+                        "select sum(1) as " + ChapterPageCompleteViewEntry.COLUMN_TOTAL + ", " +
+                        "sum(case when " + Page.imagePathCol + " is null then 0 else 1 end) as " + ChapterPageCompleteViewEntry.COLUMN_FETCHED + ", " + Page.chapterIdCol + " " +
+                        "from " + Chapter.tableName + " as c " +
+                        "left join " +  Page.tableName + " as p " +
+                        "on  c._id = p." + Page.chapterIdCol + " " +
+                        "group by c._id";
+        db.execSQL(chapterPageComplete);
+
+        // Series Page complete
+        String seriesPageComplete =
+                "CREATE VIEW " + SeriesPageCompleteViewEntry.TABLE_NAME  + " AS " +
+                        "select sum(" + ChapterPageCompleteViewEntry.COLUMN_TOTAL + ") as " + SeriesPageCompleteViewEntry.COLUMN_TOTAL + ", " +
+                        "sum(" + ChapterPageCompleteViewEntry.COLUMN_FETCHED + ") as " + SeriesPageCompleteViewEntry.COLUMN_FETCHED + " , " + Chapter.seriesIdCol + " " +
+                        "from  " + Chapter.tableName + " " +
+                        "left join " + ChapterPageCompleteViewEntry.TABLE_NAME + " as cpc " +
+                        "on " + Chapter.tableName + "._id = cpc." + ChapterPageCompleteViewEntry.COLUMN_CHAPTER_ID + " " +
+                        "group by " + Chapter.seriesIdCol;
+        db.execSQL(seriesPageComplete);
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
-        // Cry
+        if (oldVersion < 2)
+        {
+            createAndUpdateV2(db);
+        }
     }
 
     @Override

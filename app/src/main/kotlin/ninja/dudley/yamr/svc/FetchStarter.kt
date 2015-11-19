@@ -9,6 +9,7 @@ import android.util.Log
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
+import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import ninja.dudley.yamr.ui.activities.Browse
 import java.util.*
 
@@ -77,8 +78,13 @@ public class FetchStarter : BroadcastReceiver()
         }
         else if (intent.action == StartChecking)
         {
-            context.startService(Intent(context, FetcherAsync::class.java))
-            FetcherAsync.fetchAllNew(this, FetcherAsync.Comms(complete = ::fetchNewComplete))
+            object: LambdaAsyncTask<Unit, Float, List<Uri>>(this, ::fetchNewComplete)
+            {
+                override fun doInBackground(vararg params: Unit?): List<Uri>? {
+                    val fetch = FetcherSync(context.contentResolver);
+                    return fetch.fetchAllNew()
+                }
+            }.execute()
         }
     }
 

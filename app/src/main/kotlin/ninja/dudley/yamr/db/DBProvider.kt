@@ -26,11 +26,13 @@ public class DBProvider : ContentProvider()
         SeriesChapters(lastCode++),
         SeriesFavorites(lastCode++),
         SeriesGenres(lastCode++),
+        SeriesPageComplete(lastCode++),
         ChapterMatch(lastCode++),
         ChapterByID(lastCode++),
         PrevChapterInSeries(lastCode++),
         NextChapterInSeries(lastCode++),
         ChapterPages(lastCode++),
+        ChapterPageComplete(lastCode++),
         PageMatch(lastCode++),
         PageByID(lastCode++),
         PrevPagesInChapter(lastCode++),
@@ -113,13 +115,19 @@ public class DBProvider : ContentProvider()
                 val chapterNumberForNext = java.lang.Float.parseFloat(chapterNumberStringForNext)
                 return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${Chapter.seriesIdCol}=? and ${Chapter.numberCol}>?", arrayOf(Integer.toString(getId(code, uri)), java.lang.Float.toString(chapterNumberForNext)), null, null, Chapter.numberCol + " asc", "1")
             }
-            DBProvider.MatchCode.SeriesMatch -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
-            DBProvider.MatchCode.SeriesByID -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
+            DBProvider.MatchCode.SeriesMatch -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder ?: Series.nameCol)
+            DBProvider.MatchCode.SeriesByID -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Series.nameCol, "1")
             DBProvider.MatchCode.SeriesChapters -> return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${Chapter.seriesIdCol}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Chapter.numberCol)
-            DBProvider.MatchCode.SeriesFavorites -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${Series.favoriteCol} > 0", null, null, null, sortOrder)
+            DBProvider.MatchCode.SeriesFavorites -> return db.query(Series.tableName, DBHelper.projections[Series.tableName], "${Series.favoriteCol} > 0", null, null, null, sortOrder ?: Series.nameCol)
             DBProvider.MatchCode.SeriesGenres ->
             {
                 return db.query(DBHelper.SeriesGenreEntry.SERIES_GENRES_VIEW, DBHelper.projections[Genre.tableName], "${DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID} =?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+            }
+            DBProvider.MatchCode.SeriesPageComplete ->
+            {
+                return db.query(DBHelper.SeriesPageCompleteViewEntry.TABLE_NAME,
+                    arrayOf(DBHelper.SeriesPageCompleteViewEntry.COLUMN_TOTAL, DBHelper.SeriesPageCompleteViewEntry.COLUMN_FETCHED, DBHelper.SeriesPageCompleteViewEntry.COLUMN_SERIES_ID),
+                    "${DBHelper.SeriesPageCompleteViewEntry.COLUMN_SERIES_ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
             }
             DBProvider.MatchCode.GenreSeries ->
             {
@@ -142,6 +150,12 @@ public class DBProvider : ContentProvider()
             DBProvider.MatchCode.ChapterMatch -> return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${MangaElement.urlCol}=?", selectionArgs, null, null, sortOrder)
             DBProvider.MatchCode.ChapterByID -> return db.query(Chapter.tableName, DBHelper.projections[Chapter.tableName], "${DBHelper.ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null, "1")
             DBProvider.MatchCode.ChapterPages -> return db.query(Page.tableName, DBHelper.projections[Page.tableName], "${Page.chapterIdCol}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, sortOrder ?: Page.numberCol)
+            DBProvider.MatchCode.ChapterPageComplete ->
+            {
+                return db.query(DBHelper.ChapterPageCompleteViewEntry.TABLE_NAME,
+                        arrayOf(DBHelper.ChapterPageCompleteViewEntry.COLUMN_TOTAL, DBHelper.ChapterPageCompleteViewEntry.COLUMN_FETCHED, DBHelper.ChapterPageCompleteViewEntry.COLUMN_CHAPTER_ID),
+                        "${DBHelper.ChapterPageCompleteViewEntry.COLUMN_CHAPTER_ID}=?", arrayOf(Integer.toString(getId(code, uri))), null, null, null)
+            }
             DBProvider.MatchCode.PrevPagesInChapter ->
             {
                 val pageNumberStringForPrev = uri.pathSegments[uri.pathSegments.size - 2]
@@ -297,12 +311,14 @@ public class DBProvider : ContentProvider()
             matcher.addURI(DBHelper.AUTHORITY, "/series/favorites", MatchCode.SeriesFavorites.value())
             matcher.addURI(DBHelper.AUTHORITY, "/series/#", MatchCode.SeriesByID.value())
             matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters", MatchCode.SeriesChapters.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/series/#/pageComplete", MatchCode.SeriesPageComplete.value())
             matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/prev", MatchCode.PrevChapterInSeries.value())
             matcher.addURI(DBHelper.AUTHORITY, "/series/#/chapters/*/next", MatchCode.NextChapterInSeries.value())
             matcher.addURI(DBHelper.AUTHORITY, "/series/#/genres", MatchCode.SeriesGenres.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter", MatchCode.ChapterMatch.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#", MatchCode.ChapterByID.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages", MatchCode.ChapterPages.value())
+            matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pageComplete", MatchCode.ChapterPageComplete.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/prev", MatchCode.PrevPagesInChapter.value())
             matcher.addURI(DBHelper.AUTHORITY, "/chapter/#/pages/*/next", MatchCode.NextPagesInChapter.value())
             matcher.addURI(DBHelper.AUTHORITY, "/page", MatchCode.PageMatch.value())
@@ -323,7 +339,7 @@ public class DBProvider : ContentProvider()
             {
                 DBProvider.MatchCode.ProviderByID, DBProvider.MatchCode.SeriesByID, DBProvider.MatchCode.ChapterByID, DBProvider.MatchCode.PageByID -> return Integer.parseInt(uri.lastPathSegment)
                 DBProvider.MatchCode.ProviderSeries, DBProvider.MatchCode.SeriesChapters, DBProvider.MatchCode.ChapterPages, DBProvider.MatchCode.PageHeritage, DBProvider.MatchCode.SeriesGenres,
-                DBProvider.MatchCode.GenreSeries ->
+                DBProvider.MatchCode.GenreSeries , DBProvider.MatchCode.SeriesPageComplete, DBProvider.MatchCode.ChapterPageComplete ->
                 {
                     segments = uri.pathSegments
                     idStr = segments[segments.size - 2]
