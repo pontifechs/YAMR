@@ -24,9 +24,7 @@ android {
     signingConfigs {
         config {
             keyAlias 'android'
-            keyPassword '9876ar25'
             storeFile file('/home/mdudley/android.jks')
-            storePassword '9876ar25'
         }
     }
     compileSdkVersion 23
@@ -53,9 +51,6 @@ android {
 
                 }
             }
-        }
-        debug {
-            signingConfig signingConfigs.config
         }
     }
     testOptions {
