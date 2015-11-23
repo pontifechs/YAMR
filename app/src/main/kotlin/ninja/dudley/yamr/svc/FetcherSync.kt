@@ -599,7 +599,7 @@ public open class FetcherSync
         }
         out.flush()
 
-        val bmp = BitmapFactory.decodeByteArray(out.toByteArray(), 0, length)
+        val bmp = clampToSize(BitmapFactory.decodeByteArray(out.toByteArray(), 0, length), 8192, 8192)
         val fileOut = FileOutputStream(imagePath)
         bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
 
@@ -646,6 +646,40 @@ public open class FetcherSync
         else
         {
             return null
+        }
+    }
+
+    private companion object
+    {
+        private fun clampToSize(image: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
+        {
+            if (image.width <= maxWidth && image.height <= maxHeight)
+            {
+                return image
+            }
+
+            // Figure out how far out of bounds we are.
+            val widthOver = image.width - maxWidth
+            val heightOver = image.height - maxHeight
+
+            val currentAspectRatio = image.width.toFloat() / image.height.toFloat()
+            // Need to scale in width
+            if (widthOver > heightOver)
+            {
+                val newWidth = maxWidth
+                val newHeight = (maxWidth * currentAspectRatio).toInt()
+                return Bitmap.createScaledBitmap(image, newWidth, newHeight, true)
+            }
+
+            // Need to scale in height
+            if (heightOver > widthOver)
+            {
+                val newWidth = (maxHeight * currentAspectRatio).toInt()
+                val newHeight = maxHeight
+                return Bitmap.createScaledBitmap(image, newWidth, newHeight, true)
+            }
+
+            throw AssertionError("Should Never Happen")
         }
     }
 }
