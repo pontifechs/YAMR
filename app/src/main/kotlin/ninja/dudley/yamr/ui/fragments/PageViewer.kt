@@ -3,6 +3,7 @@ package ninja.dudley.yamr.ui.fragments
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Fragment
+import android.content.DialogInterface
 import android.database.Cursor
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -23,6 +24,8 @@ import ninja.dudley.yamr.ui.activities.Settings
 import ninja.dudley.yamr.ui.util.TouchImageView
 import ninja.dudley.yamr.util.Direction
 import ninja.dudley.yamr.util.ProgressTracker
+import org.acra.ACRA
+import java.util.*
 
 private fun pageViewerStatus(thiS: Any, status: Float)
 {
@@ -41,7 +44,7 @@ private fun pageViewerPageComplete(thiS: Any, page: Page)
 
 private fun pageViewerFailure(thiS: Any, e: Exception)
 {
-    (thiS as PageViewer).failure()
+    (thiS as PageViewer).failure(e)
 }
 
 private fun pageCompleteNop(thiS: Any, page: Page) {}
@@ -160,19 +163,32 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         showLoadingText("Chapter ${chapter.number}, Page ${page.number}")
     }
 
-    public fun failure()
+    public fun failure(e: Exception)
     {
         if (!isAdded)
         {
             return
         }
+
         val heritage = Heritage(activity.contentResolver.query(page!!.heritage(), null, null, null, null))
         val series = Series(activity.contentResolver.query(Series.uri(heritage.seriesId), null, null, null, null))
 
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
         loadingBar.visibility = View.INVISIBLE
         var dialog: AlertDialog
-        if (readDirection == Direction.Next)
+
+        if (e !is NoSuchElementException)
+        {
+            dialog = AlertDialog.Builder(activity)
+                    .setTitle("Something went wrong!")
+                    .setMessage(e.message)
+                    .setPositiveButton("Report!", { dialogInterface: DialogInterface?, i: Int ->
+                        val reporter = ACRA.getErrorReporter()
+                        reporter.handleSilentException(e)
+                    })
+                    .setNegativeButton("K.", null).create()
+        }
+        else if (readDirection == Direction.Next)
         {
             dialog = AlertDialog.Builder(activity)
                     .setTitle("E.N.D.")
