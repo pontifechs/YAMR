@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import android.widget.TextView
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.svc.FetchStarter
+import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -34,6 +36,18 @@ public class MainActivity : Activity()
         val maps = ArrayList<Map<String, *>>()
 
         // Set up activities
+        val continueMap = HashMap<String, Any>()
+        continueMap.put(iconKey, R.drawable.ic_label_black_48dp)
+        continueMap.put(nameKey, "Continue Reading")
+        continueMap.put(descriptionKey, "Pick up right where you left off")
+        maps.add(continueMap)
+
+        val favoritesMap = HashMap<String, Any>()
+        favoritesMap.put(iconKey, R.drawable.ic_favorite_black_48dp)
+        favoritesMap.put(nameKey, "Favorites")
+        favoritesMap.put(descriptionKey, "Check up on your favorites")
+        maps.add(favoritesMap)
+
         val browseMap = HashMap<String, Any>()
         browseMap.put(iconKey, R.drawable.ic_explore_black_48dp)
         browseMap.put(nameKey, "Browse by Provider")
@@ -46,17 +60,7 @@ public class MainActivity : Activity()
         genreMap.put(descriptionKey, "Browse through manga by genres")
         maps.add(genreMap)
 
-        val favoritesMap = HashMap<String, Any>()
-        favoritesMap.put(iconKey, R.drawable.ic_favorite_black_48dp)
-        favoritesMap.put(nameKey, "Favorites")
-        favoritesMap.put(descriptionKey, "Check up on your favorites")
-        maps.add(favoritesMap)
 
-        val settingsMap = HashMap<String, Any>()
-        settingsMap.put(iconKey, R.drawable.ic_settings_black_48dp)
-        settingsMap.put(nameKey, "Settings")
-        settingsMap.put(descriptionKey, "Twiddle the knobs; Push the buttons")
-        maps.add(settingsMap)
 
         val adapter = SimpleAdapter(this,
                                     maps,
@@ -78,25 +82,37 @@ public class MainActivity : Activity()
                 {
                     0 ->
                     {
+                        val tracked = SeriesViewer.trackedSeries(this@MainActivity)
+                        if (tracked == null)
+                        {
+                            val dialog = AlertDialog.Builder(this@MainActivity)
+                                    .setTitle("NoTrack")
+                                    .setMessage("noTrack")
+                                    .setNegativeButton("K.", null).create()
+                            dialog.show()
+                            return
+                        }
+
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name)
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.ContinueReading.name)
                         startActivity(i)
                     }
                     1 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name)
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name)
                         startActivity(i)
                     }
                     2 ->
                     {
                         i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name)
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name)
                         startActivity(i)
                     }
                     3 ->
                     {
-                        i = Intent(this@MainActivity, Settings::class.java)
+                        i = Intent(this@MainActivity, Browse::class.java)
+                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name)
                         startActivity(i)
                     }
                 }
@@ -120,10 +136,8 @@ public class MainActivity : Activity()
 
         if (id == R.id.action_settings)
         {
-            val i = Intent(this, FetchStarter::class.java)
-            i.setAction(FetchStarter.StartChecking)
-            sendBroadcast(i) // Can't be local, as Android will be creating and managing our BroadcastReceiver
-            Log.d("MainActivity", "Starting a fetch new ")
+            val i = Intent(this, Settings::class.java)
+            startActivity(i)
         }
 
         return super.onOptionsItemSelected(item)

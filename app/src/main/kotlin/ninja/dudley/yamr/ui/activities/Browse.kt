@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -16,7 +17,8 @@ public class Browse : Activity(), OrientationAware.I
     {
         ProviderDown,
         Genre,
-        Favorites
+        Favorites,
+        ContinueReading
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -31,6 +33,12 @@ public class Browse : Activity(), OrientationAware.I
             val transaction = fragmentManager.beginTransaction()
             when (flow)
             {
+                FlowType.ContinueReading ->
+                {
+                    val tracked = SeriesViewer.trackedSeries(this)
+                    val pageViewer = PageViewer.newInstance(tracked!!.uri(), MangaElement.UriType.Series)
+                    transaction.replace(R.id.reader, pageViewer)
+                }
                 FlowType.ProviderDown ->
                 {
                     val providerViewer = ProviderSelector()

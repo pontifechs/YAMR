@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.fragments
 
 import android.app.*
+import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor
@@ -125,12 +126,25 @@ public class SeriesViewer :
         {
             menu!!.findItem(R.id.favorite).setIcon(R.drawable.ic_favorite_border_white_48dp)
         }
+
+        val trackedSeries = trackedSeries(activity)
+        if (series != null &&  trackedSeries != null && series!!.uri() == trackedSeries.uri())
+        {
+            menu!!.findItem(R.id.read).setIcon(R.drawable.ic_label_outline_white_48dp)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean
     {
         when (item!!.itemId)
         {
+            R.id.read ->
+            {
+                trackSeries(series!!)
+
+                activity.invalidateOptionsMenu()
+                return true
+            }
             R.id.favorite ->
             {
                 if (series!!.favorite)
@@ -199,6 +213,13 @@ public class SeriesViewer :
         return false;
     }
 
+    private fun trackSeries(series: Series)
+    {
+        val prefs = activity.getSharedPreferences(TrackedSeriesKey, Context.MODE_PRIVATE).edit()
+        prefs.putString(TrackedSeriesKey, series.uri().toString())
+        prefs.commit()
+    }
+
     companion object
     {
         fun newInstance(uri: Uri): SeriesViewer
@@ -211,5 +232,13 @@ public class SeriesViewer :
         }
 
         private val uriArgKey: String = "fuckandroid"
+
+        private val TrackedSeriesKey: String = "trackedSeriesKey"
+        fun trackedSeries(context: Context): Series?
+        {
+            val prefs = context.getSharedPreferences(TrackedSeriesKey, Context.MODE_PRIVATE)
+            val storedUri = prefs.getString(TrackedSeriesKey, null) ?: return null
+            return Series(context.contentResolver.query(Uri.parse(storedUri), null, null, null, null))
+        }
     }
 }
