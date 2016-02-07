@@ -6,16 +6,16 @@ import ninja.dudley.yamr.db.DBHelper
 /**
 * Created by mdudley on 7/19/15. Yup.
 */
-public class Heritage
+class Heritage
 {
-    public val providerId: Int
-    public val providerName: String
-    public val seriesId: Int
-    public val seriesName: String
-    public val chapterId: Int
-    public val chapterNumber: Float
-    public val pageId: Int
-    public val pageNumber: Float
+    val providerId: Int
+    val providerName: String
+    val seriesId: Int
+    val seriesName: String
+    val chapterId: Int
+    val chapterNumber: Float
+    val pageId: Int
+    val pageNumber: Float
 
     constructor(c: Cursor)
     {

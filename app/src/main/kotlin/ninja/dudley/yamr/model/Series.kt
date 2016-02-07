@@ -14,46 +14,46 @@ import ninja.dudley.yamr.db.util.Table
 * Created by mdudley on 5/19/15. Yup.
 */
 @Table(Series.tableName)
-public class Series : MangaElement
+class Series : MangaElement
 {
     @ForeignKey(value = Provider::class, name = providerIdCol)
-    public val providerId: Int
+    val providerId: Int
     @Column(name = nameCol)
-    public var name: String
+    var name: String
     @Column(name = descriptionCol)
-    public var description: String? = null
+    var description: String? = null
     @Column(name = favoriteCol, type = Column.Type.Integer)
-    public var favorite: Boolean = false
+    var favorite: Boolean = false
     @Column(name = alternateNameCol)
-    public var alternateName: String? = null
+    var alternateName: String? = null
     @Column(name = completeCol, type = Column.Type.Integer)
-    public var complete: Boolean = false
+    var complete: Boolean = false
     @Column(name = authorCol)
-    public var author: String? = null
+    var author: String? = null
     @Column(name = artistCol)
-    public var artist: String? = null
+    var artist: String? = null
     @Column(name = thumbnailUrlCol)
-    public var thumbnailUrl: String? = null
+    var thumbnailUrl: String? = null
     @Column(name = thumbnailPathCol)
-    public var thumbnailPath: String? = null
+    var thumbnailPath: String? = null
     @ForeignKey(value = Chapter::class, name = progressChapterIdCol)
-    public var progressChapterId: Int? = -1
+    var progressChapterId: Int? = -1
     @ForeignKey(value = Page::class, name = progressPageIdCol)
-    public var progressPageId: Int? = -1
+    var progressPageId: Int? = -1
     @Column(name = updatedCol, type = Column.Type.Integer)
-    public var updated: Boolean = false
+    var updated: Boolean = false
 
 
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(providerId: Int, url: String, name: String) : super(url, MangaElement.UriType.Series)
+    constructor(providerId: Int, url: String, name: String) : super(url, MangaElement.UriType.Series)
     {
         this.providerId = providerId
         this.url = url
         this.name = name
     }
 
-    public constructor(c: Cursor, close: Boolean = true) : super(c)
+    constructor(c: Cursor, close: Boolean = true) : super(c)
     {
         if (type != MangaElement.UriType.Series)
         {
@@ -112,94 +112,94 @@ public class Series : MangaElement
     }
 
     // Uri Handling --------------------------------------------------------------------------------
-    public fun uri(): Uri
+    fun uri(): Uri
     {
         return uri(id)
     }
 
-    public fun chapters(): Uri
+    fun chapters(): Uri
     {
         return chapters(id)
     }
 
-    public fun prevChapter(num: Float): Uri
+    fun prevChapter(num: Float): Uri
     {
         return prevChapter(id, num)
     }
 
-    public fun nextChapter(num: Float): Uri
+    fun nextChapter(num: Float): Uri
     {
         return nextChapter(id, num)
     }
 
-    public fun genres(): Uri
+    fun genres(): Uri
     {
         return genres(id)
     }
 
-    public fun pageComplete(): Uri
+    fun pageComplete(): Uri
     {
        return pageComplete(id)
     }
 
     companion object
     {
-        const public val tableName: String = "series"
-        const public val providerIdCol: String = Provider.tableName + DBHelper.ID
-        const public val nameCol: String = "name"
-        const public val descriptionCol: String = "description"
-        const public val favoriteCol: String = "favorite"
-        const public val alternateNameCol: String = "alternate_name"
-        const public val completeCol: String = "complete"
-        const public val authorCol: String = "author"
-        const public val artistCol: String = "artist"
-        const public val thumbnailUrlCol: String = "thumbnail_url"
-        const public val thumbnailPathCol: String = "thumbnail_path"
-        const public val progressChapterIdCol: String = "progress_" + Chapter.tableName + DBHelper.ID
-        const public val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
-        const public val updatedCol: String = "updated"
+        const val tableName: String = "series"
+        const val providerIdCol: String = Provider.tableName + DBHelper.ID
+        const val nameCol: String = "name"
+        const val descriptionCol: String = "description"
+        const val favoriteCol: String = "favorite"
+        const val alternateNameCol: String = "alternate_name"
+        const val completeCol: String = "complete"
+        const val authorCol: String = "author"
+        const val artistCol: String = "artist"
+        const val thumbnailUrlCol: String = "thumbnail_url"
+        const val thumbnailPathCol: String = "thumbnail_path"
+        const val progressChapterIdCol: String = "progress_" + Chapter.tableName + DBHelper.ID
+        const val progressPageIdCol: String = "progress_" + Page.tableName + DBHelper.ID
+        const val updatedCol: String = "updated"
 
         // Uri Handling ----------------------------------------------------------------------------
-        public fun baseUri(): Uri
+        fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/series")
         }
 
-        public fun uri(id: Int): Uri
+        fun uri(id: Int): Uri
         {
             return baseUri().buildUpon().appendPath(Integer.toString(id)).build()
         }
 
-        public fun favorites(): Uri
+        fun favorites(): Uri
         {
             return baseUri().buildUpon().appendPath("favorites").build()
         }
 
-        public fun chapters(id: Int): Uri
+        fun chapters(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("chapters").build()
         }
 
-        public fun prevChapter(id: Int, num: Float): Uri
+        fun prevChapter(id: Int, num: Float): Uri
         {
             return chapters(id).buildUpon()
                     .appendPath(java.lang.Float.toString(num))
                     .appendPath("prev").build()
         }
 
-        public fun nextChapter(id: Int, num: Float): Uri
+        fun nextChapter(id: Int, num: Float): Uri
         {
             return chapters(id).buildUpon()
                     .appendPath(java.lang.Float.toString(num))
                     .appendPath("next").build()
         }
 
-        public fun genres(id: Int): Uri
+        fun genres(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("genres").build()
         }
 
-        public fun pageComplete(id: Int): Uri
+        fun pageComplete(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("pageComplete").build();
         }

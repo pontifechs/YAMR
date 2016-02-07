@@ -348,9 +348,6 @@ public class DBHelper extends SQLiteOpenHelper
                         joinStatement(SeriesGenreEntry.TABLE_NAME, SeriesGenreEntry.COLUMN_SERIES_ID,
                                 Series.tableName, ID);
         db.execSQL(genreSeriesViewCreate);
-
-        // Set up the basic directory structure
-        createNoMedia();
     }
 
     private void createAndUpdateV2(SQLiteDatabase db)
@@ -426,24 +423,5 @@ public class DBHelper extends SQLiteOpenHelper
             }
         }
         allProviders.close();
-    }
-
-    private void createNoMedia()
-    {
-        File root = Environment.getExternalStorageDirectory();
-        try
-        {
-            File noMedia = new File(root.getAbsolutePath() + "/YAMR/.nomedia");
-            noMedia.getParentFile().mkdirs();
-            noMedia.createNewFile();
-            FileOutputStream nomediaStream = new FileOutputStream(noMedia);
-            nomediaStream.write("Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.".getBytes());
-            nomediaStream.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
     }
 }

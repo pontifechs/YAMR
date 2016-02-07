@@ -20,7 +20,7 @@ import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.activities.Browse
 
-public class ProviderSelector : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>
+class ProviderSelector : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>
 {
     private var adapter: SimpleCursorAdapter? = null
 

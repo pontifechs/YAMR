@@ -18,10 +18,10 @@ import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.activities.Browse
 
-public class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
+class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
     private var adapter: ThumbSeriesAdapter? = null
-    public inner class ThumbSeriesAdapter :
+    inner class ThumbSeriesAdapter :
             SimpleCursorAdapter(activity, 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater

@@ -3,7 +3,6 @@ package ninja.dudley.yamr.ui.fragments
 import android.app.Activity
 import android.app.ListFragment
 import android.app.LoaderManager
-import android.content.Context
 import android.content.CursorLoader
 import android.content.Loader
 import android.database.Cursor
@@ -11,13 +10,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.SimpleCursorAdapter
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Genre
-import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.ui.activities.Browse
 
 class GenreSelector : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>

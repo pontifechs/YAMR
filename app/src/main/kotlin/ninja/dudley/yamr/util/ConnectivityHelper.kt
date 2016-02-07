@@ -7,22 +7,22 @@ import android.net.NetworkInfo
 /**
 * Created by mdudley on 11/13/15. Yup.
  */
-public class ConnectivityHelper
+class ConnectivityHelper
 {
-    public companion object
+    companion object
     {
-        public fun isAnyNetworkConnected(context: Context): Boolean
+        fun isAnyNetworkConnected(context: Context): Boolean
         {
             return isWiFiNetworkConnected(context) || isMobileNetworkConnected(context)
         }
 
-        public fun isWiFiNetworkConnected(context: Context): Boolean
+        fun isWiFiNetworkConnected(context: Context): Boolean
         {
             val network:  NetworkInfo? = getConnectivityManager(context).activeNetworkInfo
             return network != null && network.isConnectedOrConnecting && network.type == ConnectivityManager.TYPE_WIFI;
         }
 
-        public fun isMobileNetworkConnected(context: Context): Boolean
+        fun isMobileNetworkConnected(context: Context): Boolean
         {
             val network:  NetworkInfo? = getConnectivityManager(context).activeNetworkInfo
             return network != null && network.isConnectedOrConnecting && network.type == ConnectivityManager.TYPE_MOBILE;

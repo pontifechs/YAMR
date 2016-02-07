@@ -13,32 +13,32 @@ import android.view.ScaleGestureDetector
 import android.widget.ImageView
 import android.widget.OverScroller
 
-public class TouchImageView : ImageView
+class TouchImageView : ImageView
 {
-    public constructor(context: Context) : super(context)
+    constructor(context: Context) : super(context)
     {
         init(context)
     }
 
-    public constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
     {
         init(context)
     }
 
-    public constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
     {
         init(context)
     }
 
-    public interface SwipeListener
+    interface SwipeListener
     {
-        public fun onSwipeLeft()
+        fun onSwipeLeft()
 
-        public fun onSwipeRight()
+        fun onSwipeRight()
     }
 
     private var parent: SwipeListener? = null
-    public fun register(parent: SwipeListener)
+    fun register(parent: SwipeListener)
     {
         this.parent = parent
     }

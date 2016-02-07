@@ -13,13 +13,13 @@ import ninja.dudley.yamr.R;
  * This class makes heavy use of the {@link NotificationCompat.Builder} helper
  * class to create notifications in a backward-compatible way.
  */
-public class FetchAllProgress
+class FetchAllProgress
 {
-    public companion object
+    companion object
     {
         const private val NOTIFICATION_TAG = "FetchAllProgress";
 
-        public fun notify(context: Context, currentDL: String, status: Float)
+        fun notify(context: Context, currentDL: String, status: Float)
         {
             val title = "YAMR Downloading"
 

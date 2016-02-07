@@ -6,17 +6,17 @@ import android.os.AsyncTask
 * Created by mdudley on 8/28/15. Yup.
 */
 
-public abstract class LambdaAsyncTask<Params, Progress, Result> : AsyncTask<Params, Progress, Result>
+abstract class LambdaAsyncTask<Params, Progress, Result> : AsyncTask<Params, Progress, Result>
 {
 
     private val caller: Any
 
-    public var complete: ((thiS: Any, complete: Result) -> Unit)?
-    public var progress: ((thiS: Any, progress: Progress)-> Unit)?
-    public var failure: ((thiS: Any) -> Unit)?
+    var complete: ((thiS: Any, complete: Result) -> Unit)?
+    var progress: ((thiS: Any, progress: Progress)-> Unit)?
+    var failure: ((thiS: Any) -> Unit)?
 
     private var failed: Boolean = false
-    public var finished: Boolean = false
+    var finished: Boolean = false
 
     constructor (callee: Any,
                  complete: ((thiS: Any, complete: Result) -> Unit)? = null,

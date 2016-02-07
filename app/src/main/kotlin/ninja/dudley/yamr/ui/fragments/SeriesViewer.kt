@@ -7,7 +7,6 @@ import android.content.Loader
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
@@ -18,18 +17,18 @@ import ninja.dudley.yamr.svc.FetcherSync
 import ninja.dudley.yamr.ui.activities.Browse
 import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
-public fun seriesViewerStatus(thiS: Any, status: Float)
+fun seriesViewerStatus(thiS: Any, status: Float)
 {
     (thiS as SeriesViewer).status(status)
 }
 
-public fun seriesViewerComplete(thiS: Any, series: Series)
+fun seriesViewerComplete(thiS: Any, series: Series)
 {
     (thiS as SeriesViewer).complete(series)
 }
 
 
-public class SeriesViewer :
+class SeriesViewer :
         ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemLongClickListener
 {
     private var seriesUri: Uri? = null

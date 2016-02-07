@@ -15,12 +15,12 @@ import ninja.dudley.yamr.db.util.Table
 * Created by mdudley on 6/25/15. Yup.
 */
 @Table(Genre.tableName)
-public class Genre
+class Genre
 {
     @Id
-    public var id: Int = -1
+    var id: Int = -1
     @Column(name = nameCol)
-    public var name: String
+    var name: String
 
     // Construction / Persistence ------------------------------------------------------------------
     private constructor(_id: Int, name: String)
@@ -29,12 +29,12 @@ public class Genre
         this.name = name
     }
 
-    public constructor(name: String)
+    constructor(name: String)
     {
         this.name = name
     }
 
-    public constructor(c: Cursor)
+    constructor(c: Cursor)
     {
         c.moveToFirst()
         val idCol = c.getColumnIndex(DBHelper.ID)
@@ -44,7 +44,7 @@ public class Genre
         c.close()
     }
 
-    public fun getContentValues(): ContentValues
+    fun getContentValues(): ContentValues
     {
         val values = ContentValues()
         if (id != -1)
@@ -56,47 +56,47 @@ public class Genre
     }
 
     // Uri Handling --------------------------------------------------------------------------------
-    public fun uri(): Uri
+    fun uri(): Uri
     {
         return uri(this.id)
     }
 
-    public fun series(): Uri
+    fun series(): Uri
     {
         return series(id)
     }
 
     companion object
     {
-        public const val tableName: String = "genre"
-        public const val nameCol: String = "name"
+        const val tableName: String = "genre"
+        const val nameCol: String = "name"
 
         // Uri Handling ----------------------------------------------------------------------------
-        public fun baseUri(): Uri
+        fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/genre")
         }
 
-        public fun uri(id: Int): Uri
+        fun uri(id: Int): Uri
         {
             return baseUri().buildUpon().appendPath(Integer.toString(id)).build()
         }
 
-        public fun relator(): Uri
+        fun relator(): Uri
         {
             return baseUri().buildUpon().appendPath("relator").build()
         }
 
-        public fun series(id: Int): Uri
+        fun series(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("series").build()
         }
 
-        public fun all(): Uri{
+        fun all(): Uri{
             return baseUri().buildUpon().appendPath("all").build()
         }
 
-        public fun genres(c: Cursor): Set<Genre>
+        fun genres(c: Cursor): Set<Genre>
         {
             val genres = HashSet<Genre>()
             while (c.moveToNext())
@@ -109,7 +109,7 @@ public class Genre
             return genres
         }
 
-        public fun SeriesGenreRelator(seriesId: Int, genreId: Int): ContentValues
+        fun SeriesGenreRelator(seriesId: Int, genreId: Int): ContentValues
         {
             val values = ContentValues()
             values.put(DBHelper.SeriesGenreEntry.COLUMN_SERIES_ID, seriesId)

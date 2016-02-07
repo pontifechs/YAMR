@@ -1,7 +1,6 @@
 package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -11,7 +10,7 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.ui.fragments.*
 import ninja.dudley.yamr.ui.util.OrientationAware
 
-public class Browse : Activity(), OrientationAware.I
+class Browse : Activity(), OrientationAware.I
 {
     enum class FlowType
     {
@@ -139,6 +138,6 @@ public class Browse : Activity(), OrientationAware.I
 
     companion object
     {
-        public val FlowKey: String = "flow"
+        val FlowKey: String = "flow"
     }
 }

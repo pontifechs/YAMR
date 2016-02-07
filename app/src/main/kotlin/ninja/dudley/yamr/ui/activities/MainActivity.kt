@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -14,12 +13,11 @@ import android.widget.SimpleAdapter
 import android.widget.TextView
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
-import ninja.dudley.yamr.svc.FetchStarter
 import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import java.util.ArrayList
 import java.util.HashMap
 
-public class MainActivity : Activity()
+class MainActivity : Activity()
 {
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -86,8 +84,8 @@ public class MainActivity : Activity()
                         if (tracked == null)
                         {
                             val dialog = AlertDialog.Builder(this@MainActivity)
-                                    .setTitle("NoTrack")
-                                    .setMessage("noTrack")
+                                    .setTitle("You haven't set a series to track!")
+                                    .setMessage("Set this up in your favorites menu.")
                                     .setNegativeButton("K.", null).create()
                             dialog.show()
                             return
@@ -119,6 +117,8 @@ public class MainActivity : Activity()
             }
         }
     }
+
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean
     {

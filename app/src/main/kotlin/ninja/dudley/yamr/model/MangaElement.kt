@@ -12,7 +12,7 @@ import ninja.dudley.yamr.db.util.Id
 /**
 * Created by mdudley on 6/2/15. Yup.
 */
-public open class MangaElement
+open class MangaElement
 {
     enum class UriType
     {
@@ -24,22 +24,22 @@ public open class MangaElement
     }
 
     @Id
-    public val id: Int
+    val id: Int
     @Column(name = urlCol)
-    public var url: String
+    var url: String
     @Column(name = fullyParsedCol)
-    public var fullyParsed: Boolean = false
+    var fullyParsed: Boolean = false
     @Column(name = typeCol)
-    public var type: UriType
+    var type: UriType
 
-    public constructor(url: String, type: MangaElement.UriType)
+    constructor(url: String, type: MangaElement.UriType)
     {
         id = -1
         this.url = url;
         this.type = type;
     }
 
-    public constructor(c: Cursor)
+    constructor(c: Cursor)
     {
         if (c.count <= 0)
         {
@@ -56,7 +56,7 @@ public open class MangaElement
         type = UriType.valueOf(getString(c, typeCol)!!)
     }
 
-    public open fun getContentValues(): ContentValues
+    open fun getContentValues(): ContentValues
     {
         val values = ContentValues()
         if (id != -1)
@@ -99,8 +99,8 @@ public open class MangaElement
 
     companion object
     {
-        const public val urlCol: String = "url"
-        const public val fullyParsedCol: String = "fully_parsed"
-        const public val typeCol: String = "type"
+        const val urlCol: String = "url"
+        const val fullyParsedCol: String = "fully_parsed"
+        const val typeCol: String = "type"
     }
 }

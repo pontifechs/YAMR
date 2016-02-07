@@ -24,17 +24,17 @@ import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.ui.activities.Browse
 import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
-public fun chapterViewerStatus(thiS: Any, status: Float)
+fun chapterViewerStatus(thiS: Any, status: Float)
 {
     (thiS as ChapterViewer).status(status)
 }
 
-public fun chapterViewerComplete(thiS: Any, chapter: Chapter)
+fun chapterViewerComplete(thiS: Any, chapter: Chapter)
 {
     (thiS as ChapterViewer).complete(chapter)
 }
 
-public class ChapterViewer :
+class ChapterViewer :
         Fragment(), LoaderManager.LoaderCallbacks<Cursor>, AdapterView.OnItemClickListener
 {
     private var chapterUri: Uri? = null
@@ -43,7 +43,7 @@ public class ChapterViewer :
     private var loading: ProgressDialog? = null
 
     private var adapter: PageThumbAdapter? = null
-    public inner class PageThumbAdapter :
+    inner class PageThumbAdapter :
             SimpleCursorAdapter(activity, 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
         private val inflater: LayoutInflater

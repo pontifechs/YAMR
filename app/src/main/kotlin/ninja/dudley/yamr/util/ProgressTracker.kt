@@ -9,7 +9,7 @@ import ninja.dudley.yamr.model.Series
 /**
  * Created by mdudley on 6/18/15.
  */
-public class ProgressTracker(private val resolver: ContentResolver, private val series: Series?)
+class ProgressTracker(private val resolver: ContentResolver, private val series: Series?)
 {
     private var progressChapter: Chapter? = null
     private var progressPage: Page? = null
@@ -27,7 +27,7 @@ public class ProgressTracker(private val resolver: ContentResolver, private val 
         progressChapter = Chapter(chapterCursor)
     }
 
-    public fun handleNewPage(p: Page)
+    fun handleNewPage(p: Page)
     {
         // Check if we're still on the same chapter.
         if (progressChapter!!.id == p.chapterId)

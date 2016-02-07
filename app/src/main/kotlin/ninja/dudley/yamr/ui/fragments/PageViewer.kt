@@ -53,7 +53,7 @@ private fun pageStatusNop(thiS: Any, status: Float) {}
 
 private fun pageFailNop(thiS: Any, e: Exception) {}
 
-public class PageViewer : Fragment(), TouchImageView.SwipeListener
+class PageViewer : Fragment(), TouchImageView.SwipeListener
 {
     // The page that is currently being displayed
     private var page: Page? = null
@@ -123,7 +123,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
     }
 
     // Page Loading --------------------------------------------------------------------------------
-    public fun status(status: Float)
+    fun status(status: Float)
     {
         if (!isAdded)
         {
@@ -135,7 +135,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         loadingBar.progress = percent.toInt();
     }
 
-    public fun pageAcquired(page: Page)
+    fun pageAcquired(page: Page)
     {
         if (!isAdded)
         {
@@ -146,7 +146,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         fetchPage()
     }
 
-    public fun pageComplete(page: Page)
+    fun pageComplete(page: Page)
     {
         if (!isAdded)
         {
@@ -163,7 +163,7 @@ public class PageViewer : Fragment(), TouchImageView.SwipeListener
         showLoadingText("Chapter ${chapter.number}, Page ${page.number}")
     }
 
-    public fun failure(e: Exception)
+    fun failure(e: Exception)
     {
         if (!isAdded)
         {

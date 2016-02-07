@@ -11,22 +11,21 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import ninja.dudley.yamr.ui.activities.Browse
-import java.util.*
 
 /**
 * Created by mdudley on 6/23/15. Yup.
 */
 
-public fun fetchNewComplete(thiS: Any, newUris: List<Uri>)
+fun fetchNewComplete(thiS: Any, newUris: List<Uri>)
 {
     (thiS as FetchStarter).complete(newUris)
 }
 
-public class FetchStarter : BroadcastReceiver()
+class FetchStarter : BroadcastReceiver()
 {
     private var context: Context? = null
 
-    public fun complete(newUris: List<Uri>)
+    fun complete(newUris: List<Uri>)
     {
         // None! Nada!
         if (newUris.size == 0)
@@ -81,7 +80,7 @@ public class FetchStarter : BroadcastReceiver()
             object: LambdaAsyncTask<Unit, Float, List<Uri>>(this, ::fetchNewComplete)
             {
                 override fun doInBackground(vararg params: Unit?): List<Uri>? {
-                    val fetch = FetcherSync(context.contentResolver);
+                    val fetch = FetcherSync(context);
                     return fetch.fetchAllNew()
                 }
             }.execute()
@@ -91,6 +90,6 @@ public class FetchStarter : BroadcastReceiver()
     companion object
     {
         private val Base: String = "ninja.dudley.yamr.FetchStarter"
-        public val StartChecking: String = "$Base.StartChecking"
+        val StartChecking: String = "$Base.StartChecking"
     }
 }

@@ -18,7 +18,6 @@ import android.widget.ListView
 import android.widget.SearchView
 import android.widget.SimpleCursorAdapter
 import ninja.dudley.yamr.R
-import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.model.Provider
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
@@ -26,20 +25,20 @@ import ninja.dudley.yamr.svc.FetcherSync
 import ninja.dudley.yamr.ui.activities.Browse
 
 // Method reference functions
-public fun providerViewerStatus(providerViewer: Any, status: Float)
+fun providerViewerStatus(providerViewer: Any, status: Float)
 {
     (providerViewer as SeriesSelector).status(status)
 }
 
-public fun providerViewerComplete(providerViewer: Any, provider: Provider)
+fun providerViewerComplete(providerViewer: Any, provider: Provider)
 {
     (providerViewer as SeriesSelector).complete(provider)
 }
 
-public class SeriesSelector :
+class SeriesSelector :
         ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener
 {
-    public enum class FilterMode
+    enum class FilterMode
     {
         Provider,
         Genre,

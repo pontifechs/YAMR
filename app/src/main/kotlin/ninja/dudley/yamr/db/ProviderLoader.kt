@@ -14,9 +14,9 @@ import java.util.ArrayList
 /**
 * Created by mdudley on 10/10/15. Yup.
 */
-public class ProviderLoader()
+class ProviderLoader()
 {
-    public companion object
+    companion object
     {
         private fun loadFiles(context: Context): List<JSONObject>
         {
@@ -42,7 +42,7 @@ public class ProviderLoader()
             return jsons
         }
 
-        public fun loadProviders(context: Context): List<ContentValues>
+        fun loadProviders(context: Context): List<ContentValues>
         {
             val providers = ArrayList<ContentValues>()
             loadFiles(context).forEach(

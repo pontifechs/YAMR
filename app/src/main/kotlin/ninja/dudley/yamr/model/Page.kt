@@ -13,26 +13,26 @@ import ninja.dudley.yamr.db.util.Table
 * Created by mdudley on 5/19/15. Yup.
 */
 @Table(Page.tableName)
-public class Page : MangaElement
+class Page : MangaElement
 {
     @ForeignKey(value = Chapter::class, name = chapterIdCol)
-    public val chapterId: Int
+    val chapterId: Int
     @Column(name = numberCol, type = Column.Type.Real)
-    public val number: Float
+    val number: Float
     @Column(name = imageUrlCol)
-    public var imageUrl: String? = null
+    var imageUrl: String? = null
     @Column(name = imagePathCol)
-    public var imagePath: String? = null
+    var imagePath: String? = null
 
     // Construction / Persistence ------------------------------------------------------------------
-    public constructor(chapterId: Int, url: String, number: Float) :
+    constructor(chapterId: Int, url: String, number: Float) :
         super(url, MangaElement.UriType.Page)
     {
         this.chapterId = chapterId
         this.number = number
     }
 
-    public constructor(c: Cursor, close: Boolean = true) : super(c)
+    constructor(c: Cursor, close: Boolean = true) : super(c)
     {
         if (type != MangaElement.UriType.Page)
         {
@@ -59,37 +59,37 @@ public class Page : MangaElement
     }
 
     // Uri Handling --------------------------------------------------------------------------------
-    public fun uri(): Uri
+    fun uri(): Uri
     {
         return uri(id)
     }
 
-    public fun heritage(): Uri
+    fun heritage(): Uri
     {
         return heritage(id)
     }
 
     companion object
     {
-        const public val tableName: String = "page"
-        const public val chapterIdCol: String = Chapter.tableName + DBHelper.ID
-        const public val numberCol: String = "number"
-        const public val imageUrlCol: String = "image_url"
-        const public val imagePathCol: String = "image_path"
+        const val tableName: String = "page"
+        const val chapterIdCol: String = Chapter.tableName + DBHelper.ID
+        const val numberCol: String = "number"
+        const val imageUrlCol: String = "image_url"
+        const val imagePathCol: String = "image_path"
 
 
         // Uri Handling ----------------------------------------------------------------------------
-        public fun baseUri(): Uri
+        fun baseUri(): Uri
         {
             return Uri.parse("content://" + DBHelper.AUTHORITY + "/page")
         }
 
-        public fun uri(id: Int): Uri
+        fun uri(id: Int): Uri
         {
             return baseUri().buildUpon().appendPath(Integer.toString(id)).build()
         }
 
-        public fun heritage(id: Int): Uri
+        fun heritage(id: Int): Uri
         {
             return uri(id).buildUpon().appendPath("heritage").build()
         }

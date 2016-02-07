@@ -10,7 +10,7 @@ import ninja.dudley.yamr.model.*
 /**
 * Created by mdudley on 5/21/15. Yup.
 */
-public class DBProvider : ContentProvider()
+class DBProvider : ContentProvider()
 {
     private var dbh: DBHelper? = null
 
@@ -48,16 +48,16 @@ public class DBProvider : ContentProvider()
             return Integer.toString(code)
         }
 
-        public fun value(): Int
+        fun value(): Int
         {
             return code
         }
 
         companion object
         {
-            public fun from(code: Int): MatchCode
+            fun from(code: Int): MatchCode
             {
-                for (matchCode in values)
+                for (matchCode in MatchCode.values())
                 {
                     if (matchCode.value() == code)
                     {

@@ -18,7 +18,7 @@ private fun failureNop(thiS: Any) {}
 
 private fun statusNop(thiS: Any, status: Float) {}
 
-public class FetcherAsync: Service()
+class FetcherAsync: Service()
 {
     private enum class RequestType
     {
@@ -37,13 +37,13 @@ public class FetcherAsync: Service()
         FetchAllSeries
     }
 
-    public class Comms<Return>
+    class Comms<Return>
     {
-        public var complete: (thiS: Any, ret: Return) -> Unit
-        public var status: (thiS: Any, status: Float) -> Unit
-        public var failure: (thiS: Any, e: Exception) -> Unit
+        var complete: (thiS: Any, ret: Return) -> Unit
+        var status: (thiS: Any, status: Float) -> Unit
+        var failure: (thiS: Any, e: Exception) -> Unit
 
-        public constructor(complete: (thiS: Any, ret: Return) -> Unit = { thiS: Any, ret: Return ->},
+        constructor(complete: (thiS: Any, ret: Return) -> Unit = { thiS: Any, ret: Return ->},
                            status: (thiS: Any, status: Float) -> Unit = { thiS: Any, status: Float ->},
                            failure: (thiS: Any, e: Exception) -> Unit = {thiS: Any, e: Exception -> throw e})
         {
@@ -55,15 +55,15 @@ public class FetcherAsync: Service()
 
     private class FetchRequest<Arg, Return>: Comparable<Any>
     {
-        public val arg: Arg
-        public val thiS: Any
-        public val comms: Comms<Return>
-        public val priority: Int
-        public val behavior: FetcherSync.Behavior
-        public val type: RequestType
-        public val otherArgs: Any?
+        val arg: Arg
+        val thiS: Any
+        val comms: Comms<Return>
+        val priority: Int
+        val behavior: FetcherSync.Behavior
+        val type: RequestType
+        val otherArgs: Any?
 
-        public constructor(arg: Arg,
+        constructor(arg: Arg,
                            thiS: Any,
                            comms: Comms<Return>,
                            priority: Int,
@@ -142,7 +142,7 @@ public class FetcherAsync: Service()
         return ret
     }
 
-    public fun enqueue(req: FetchRequest<*,*>)
+    private fun enqueue(req: FetchRequest<*,*>)
     {
         if (req.priority == NoPriority)
         {
@@ -157,7 +157,7 @@ public class FetcherAsync: Service()
     // Fetches -------------------------------------------------------------------------------------
     private fun fetchProvider(req: FetchRequest<Provider, Provider>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register( object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
@@ -178,7 +178,7 @@ public class FetcherAsync: Service()
 
     private fun fetchSeries(req: FetchRequest<Series, Series>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
@@ -199,7 +199,7 @@ public class FetcherAsync: Service()
 
     private fun fetchChapter(req: FetchRequest<Chapter, Chapter>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -221,7 +221,7 @@ public class FetcherAsync: Service()
 
     private fun fetchPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -242,7 +242,7 @@ public class FetcherAsync: Service()
 
     private fun fetchNextPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(contentResolver)
+        val fetcher = Navigation(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -263,7 +263,7 @@ public class FetcherAsync: Service()
 
     private fun fetchPrevPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(contentResolver)
+        val fetcher = Navigation(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -284,7 +284,7 @@ public class FetcherAsync: Service()
 
     private fun fetchFirstPageFromChapter(req: FetchRequest<Chapter, Page>)
     {
-        val fetcher = Navigation(contentResolver)
+        val fetcher = Navigation(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -305,7 +305,7 @@ public class FetcherAsync: Service()
 
     private fun fetchPageFromSeries(req: FetchRequest<Series, Page>)
     {
-        val fetcher = Navigation(contentResolver)
+        val fetcher = Navigation(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -330,7 +330,7 @@ public class FetcherAsync: Service()
 
     private fun fetchOffsetFromPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(contentResolver)
+        val fetcher = Navigation(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -352,7 +352,7 @@ public class FetcherAsync: Service()
 
     private fun fetchAllNew(req: FetchRequest<Unit, List<Uri>>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         try
         {
             val ret = fetcher.fetchAllNew()
@@ -366,7 +366,7 @@ public class FetcherAsync: Service()
 
     private fun fetchEntireChapter(req: FetchRequest<Chapter, Chapter>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus
         {
             override fun notify(status: Float): Boolean
@@ -389,7 +389,7 @@ public class FetcherAsync: Service()
 
     private fun fetchEntireSeries(req: FetchRequest<Series, Series>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus
         {
             override fun notify(status: Float): Boolean
@@ -412,7 +412,7 @@ public class FetcherAsync: Service()
 
     private fun fetchAllSeries(req: FetchRequest<Unit, Unit>)
     {
-        val fetcher = FetcherSync(contentResolver)
+        val fetcher = FetcherSync(baseContext)
         fetcher.register(object: FetcherSync.NotifyStatus
         {
             override fun notify(status: Float): Boolean
@@ -458,13 +458,13 @@ public class FetcherAsync: Service()
     {
         var Fetcher: FetcherAsync? = null
 
-        public var NoPriority = 50
-        public var LowPriority = 100
-        public var MediumPriority = 500
-        public var HighPriority = 1000
+        var NoPriority = 50
+        var LowPriority = 100
+        var MediumPriority = 500
+        var HighPriority = 1000
 
 
-        public fun fetchProvider(provider: Provider,
+        fun fetchProvider(provider: Provider,
                                  caller: Any,
                                  comms: Comms<Provider>,
                                  priority: Int = LowPriority,
@@ -474,7 +474,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchSeries(series: Series,
+        fun fetchSeries(series: Series,
                                caller: Any,
                                comms: Comms<Series>,
                                priority: Int = LowPriority,
@@ -484,7 +484,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchChapter(chapter: Chapter,
+        fun fetchChapter(chapter: Chapter,
                                 caller: Any,
                                 comms: Comms<Chapter>,
                                 priority: Int = LowPriority,
@@ -494,7 +494,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchPage(page: Page,
+        fun fetchPage(page: Page,
                              caller: Any,
                              comms: Comms<Page>,
                              priority: Int = LowPriority,
@@ -504,7 +504,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchNextPage(page: Page,
+        fun fetchNextPage(page: Page,
                                  caller: Any,
                                  comms: Comms<Page>,
                                  priority: Int = LowPriority)
@@ -513,7 +513,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchPrevPage(page: Page,
+        fun fetchPrevPage(page: Page,
                                  caller: Any,
                                  comms: Comms<Page>,
                                  priority: Int = LowPriority)
@@ -522,7 +522,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchFirstPageFromChapter(chapter: Chapter,
+        fun fetchFirstPageFromChapter(chapter: Chapter,
                                              caller: Any,
                                              comms: Comms<Page>,
                                              priority: Int = LowPriority)
@@ -531,7 +531,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchPageFromSeries(series: Series,
+        fun fetchPageFromSeries(series: Series,
                                        caller: Any,
                                        comms: Comms<Page>,
                                        priority: Int = LowPriority)
@@ -540,7 +540,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchOffsetFromPage(page: Page,
+        fun fetchOffsetFromPage(page: Page,
                                        offset: Int,
                                        direction: Direction,
                                        caller: Any,
@@ -551,14 +551,14 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchAllNew(caller: Any,
+        fun fetchAllNew(caller: Any,
                                comms: Comms<List<Uri>>)
         {
             val req = FetchRequest(Unit, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllNew)
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchEntireChapter(chapter: Chapter,
+        fun fetchEntireChapter(chapter: Chapter,
                                       caller: Any,
                                       comms: Comms<Chapter>)
         {
@@ -566,7 +566,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchEntireSeries(series: Series,
+        fun fetchEntireSeries(series: Series,
                                      caller: Any,
                                      comms: Comms<Series>)
         {
@@ -574,7 +574,7 @@ public class FetcherAsync: Service()
             Fetcher!!.enqueue(req)
         }
 
-        public fun fetchAllSeries(caller: Any,
+        fun fetchAllSeries(caller: Any,
                                   comms: Comms<Series>)
         {
             val req = FetchRequest(Unit, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllSeries)

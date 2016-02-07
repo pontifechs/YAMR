@@ -13,6 +13,7 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.model.js.JsChapter
 import ninja.dudley.yamr.model.js.JsPage
 import ninja.dudley.yamr.model.js.JsSeries
+import ninja.dudley.yamr.ui.activities.Settings
 import org.acra.ACRA
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -22,23 +23,24 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ScriptableObject
 import java.io.*
 import java.net.HttpURLConnection
-import java.net.MalformedURLException
 import java.net.URL
 import java.util.ArrayList
 
 /**
 * Created by mdudley on 5/19/15. Yup.
 */
-public open class FetcherSync
+open class FetcherSync
 {
     private var cx: Context? = null
+    private var androidContext: android.content.Context? = null
     private var scope: ScriptableObject? = null
     private val resolver: ContentResolver
     private var provider: Provider? = null
 
-    public constructor(resolver: ContentResolver)
+    constructor(context: android.content.Context)
     {
-        this.resolver = resolver
+        this.androidContext = context
+        this.resolver = context.contentResolver
     }
 
     private fun providerFromSeries(series: Series): Provider
@@ -117,24 +119,24 @@ public open class FetcherSync
         cx!!.evaluateString(scope, provider!!.fetchNew, "fetchNew", 1, null);
     }
 
-    public interface NotifyStatus
+    interface NotifyStatus
     {
-        public fun notify(status: Float): Boolean
+        fun notify(status: Float): Boolean
     }
 
     protected var listener: NotifyStatus? = null
-    public fun register(listener: NotifyStatus)
+    fun register(listener: NotifyStatus)
     {
         this.listener = listener
     }
 
-    public enum class Behavior
+    enum class Behavior
     {
         LazyFetch,
         ForceRefresh;
     }
 
-    public fun fetchProvider(provider: Provider, behavior: Behavior = Behavior.LazyFetch): Provider
+    fun fetchProvider(provider: Provider, behavior: Behavior = Behavior.LazyFetch): Provider
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && provider.fullyParsed)
         {
@@ -182,7 +184,7 @@ public open class FetcherSync
         return provider
     }
 
-    public fun fetchSeries(series: Series, behavior: Behavior = Behavior.LazyFetch): Series
+    fun fetchSeries(series: Series, behavior: Behavior = Behavior.LazyFetch): Series
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && series.fullyParsed)
         {
@@ -249,7 +251,7 @@ public open class FetcherSync
         return series
     }
 
-    public fun fetchChapter(chapter: Chapter, behavior: Behavior = Behavior.LazyFetch): Chapter
+    fun fetchChapter(chapter: Chapter, behavior: Behavior = Behavior.LazyFetch): Chapter
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && chapter.fullyParsed)
         {
@@ -295,7 +297,7 @@ public open class FetcherSync
         return chapter
     }
 
-    public fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
+    fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed)
         {
@@ -318,7 +320,7 @@ public open class FetcherSync
         return page
     }
 
-    public fun fetchNew(provider: Provider): List<Uri>
+    fun fetchNew(provider: Provider): List<Uri>
     {
         init(provider)
         Log.d("FetchStarter", "Starting")
@@ -363,7 +365,7 @@ public open class FetcherSync
         return newChapters
     }
 
-    public fun fetchAllNew(): List<Uri>
+    fun fetchAllNew(): List<Uri>
     {
         val ret = ArrayList<Uri>()
 
@@ -376,7 +378,7 @@ public open class FetcherSync
         return ret
     }
 
-    public fun fetchEntireChapter(chapter: Chapter, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Chapter
+    fun fetchEntireChapter(chapter: Chapter, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Chapter
     {
         fetchChapter(chapter, behavior)
         if (chapterPageComplete(chapter) && behavior != FetcherSync.Behavior.ForceRefresh)
@@ -404,7 +406,7 @@ public open class FetcherSync
         return chapter
     }
 
-    public fun fetchEntireSeries(series: Series, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Series
+    fun fetchEntireSeries(series: Series, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Series
     {
         fetchSeries(series, behavior)
         if (seriesPageComplete(series) && behavior != FetcherSync.Behavior.ForceRefresh)
@@ -432,7 +434,7 @@ public open class FetcherSync
         return series
     }
 
-    public fun fetchAllSeries()
+    fun fetchAllSeries()
     {
         val providersCursor = resolver.query(Provider.all(), null, null, null, null)
         var totalSeries = 0
@@ -566,7 +568,9 @@ public open class FetcherSync
         }
     }
 
-    private fun downloadImage(imageUrl: String, imagePath: String): Boolean
+
+
+    private fun downloadImage(imageUrl: String, outputStream: FileOutputStream): Boolean
     {
         val inStream: InputStream
         var count: Int
@@ -600,28 +604,50 @@ public open class FetcherSync
         out.flush()
 
         val bmp = clampToSize(BitmapFactory.decodeByteArray(out.toByteArray(), 0, length), 8192, 8192)
-        val fileOut = FileOutputStream(imagePath)
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
-
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         out.close()
         return true
     }
 
-    private fun savePageImage(p: Page): String?
+    private fun getRootDirectory(): String
+    {
+        if (Settings.useExternalStorage(androidContext!!))
+        {
+            return Environment.getExternalStorageDirectory().absolutePath
+        }
+        else
+        {
+            return androidContext!!.filesDir.absolutePath
+        }
+    }
+
+    private fun buildChapterPath(p: Page): String
     {
         val heritage = Heritage(resolver.query(p.heritage(), null, null, null, null))
 
-        val root = Environment.getExternalStorageDirectory()
-        val chapterPath = root.absolutePath + "/YAMR/" + stripBadCharsForFile(heritage.providerName) + "/" +
+        return getRootDirectory() + "/YAMR/" + stripBadCharsForFile(heritage.providerName) + "/" +
                 stripBadCharsForFile(heritage.seriesName) + "/" + formatFloat(heritage.chapterNumber)
+    }
 
+    private fun buildPagePath(p: Page): String
+    {
+        return buildChapterPath(p) + "/" + formatFloat(p.number) + ".png"
+    }
+
+    private fun getPageOutputStream(p: Page): FileOutputStream
+    {
+        val chapterPath = buildChapterPath(p)
+        val pagePath = buildPagePath(p)
         val chapterDirectory = File(chapterPath)
         chapterDirectory.mkdirs()
-        val pagePath = "$chapterDirectory/${formatFloat(heritage.pageNumber)}.png"
+        return FileOutputStream(pagePath);
+    }
 
-        if (downloadImage(p.imageUrl!!, pagePath))
+    private fun savePageImage(p: Page): String?
+    {
+        if (downloadImage(p.imageUrl!!, getPageOutputStream(p)))
         {
-            return pagePath
+            return buildPagePath(p)
         }
         else
         {
@@ -633,13 +659,13 @@ public open class FetcherSync
     {
         val p = Provider(resolver.query(Provider.uri(s.providerId), null, null, null, null))
 
-        val root = Environment.getExternalStorageDirectory()
-        val seriesPath = root.absolutePath + "/YAMR/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
+        val seriesPath = getRootDirectory() + "/YAMR/" + stripBadCharsForFile(p.name) + "/" + stripBadCharsForFile(s.name)
         val chapterDirectory = File(seriesPath)
         chapterDirectory.mkdirs()
         val thumbPath = "$chapterDirectory/thumb.png"
+        val stream = FileOutputStream(thumbPath)
 
-        if (downloadImage(s.thumbnailUrl!!, thumbPath))
+        if (downloadImage(s.thumbnailUrl!!, stream))
         {
             return thumbPath
         }

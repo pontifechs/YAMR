@@ -18,7 +18,7 @@ import ninja.dudley.yamr.model.Series
 import org.jsoup.helper.StringUtil
 import java.util.ArrayList
 
-public class SeriesCard : Fragment()
+class SeriesCard : Fragment()
 {
 
     private var series: Series? = null
@@ -107,9 +107,9 @@ public class SeriesCard : Fragment()
 
     companion object
     {
-        public val ArgumentKey: String = "series_arg"
+        val ArgumentKey: String = "series_arg"
 
-        public fun newInstance(s: Series): SeriesCard
+        fun newInstance(s: Series): SeriesCard
         {
             val fragment = SeriesCard()
             val args = Bundle()

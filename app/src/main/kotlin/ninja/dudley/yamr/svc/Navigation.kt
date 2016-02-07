@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.svc
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Page
@@ -8,14 +9,14 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException
 
-public class Navigation : FetcherSync
+class Navigation : FetcherSync
 {
     private val resolver: ContentResolver
 
-    public constructor(resolver: ContentResolver)
-    : super(resolver)
+    constructor(context: Context)
+    : super(context)
     {
-        this.resolver = resolver
+        this.resolver = context.contentResolver
     }
 
     private fun page(uri: Uri): Page
@@ -68,7 +69,7 @@ public class Navigation : FetcherSync
         return chapter
     }
 
-    public fun nextPage(page: Page): Page
+    fun nextPage(page: Page): Page
     {
         var nextPage: Page
         try
@@ -85,7 +86,7 @@ public class Navigation : FetcherSync
         return nextPage
     }
 
-    public fun prevPage(page: Page): Page
+    fun prevPage(page: Page): Page
     {
         var prevPage: Page
         try
@@ -112,7 +113,7 @@ public class Navigation : FetcherSync
         return neighboringChapter(chapter, Direction.Prev)
     }
 
-    public fun firstPageFromChapter(chapter: Chapter): Page
+    fun firstPageFromChapter(chapter: Chapter): Page
     {
         fetchChapter(chapter)
         val pages = resolver.query(chapter.pages(), null, null, null, Page.numberCol + " asc")
@@ -132,14 +133,14 @@ public class Navigation : FetcherSync
         return Chapter(chapters)
     }
 
-    public fun firstPageFromSeries(series: Series): Page
+    fun firstPageFromSeries(series: Series): Page
     {
         val c = firstChapterFromSeries(series)
         fetchChapter(c)
         return firstPageFromChapter(c)
     }
 
-    public fun bookmarkFirstPage(series: Series): Series
+    fun bookmarkFirstPage(series: Series): Series
     {
         val firstChapter = firstChapterFromSeries(series)
         val firstPage = firstPageFromSeries(series)
@@ -149,13 +150,13 @@ public class Navigation : FetcherSync
         return series
     }
 
-    public fun pageFromBookmark(series: Series): Page
+    fun pageFromBookmark(series: Series): Page
     {
         val pageUri = Page.uri(series.progressPageId!!)
         return page(pageUri)
     }
 
-    public fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page
+    fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page
     {
         var currentChapter = chapterFromPage(page)
         var neighboringPagesUri =

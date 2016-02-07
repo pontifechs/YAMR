@@ -5,10 +5,10 @@ import android.content.res.Configuration
 /**
 * Created by mdudley on 5/17/15. Yup.
 */
-public object OrientationAware
+object OrientationAware
 {
     // Silly Java, why won't you let me separate my concerns like I want to?
-    public fun handleOrientationAware(fakeThis: I, newConfig: Configuration)
+    fun handleOrientationAware(fakeThis: I, newConfig: Configuration)
     {
         if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT)
         {
@@ -20,9 +20,9 @@ public object OrientationAware
         }
     }
 
-    public interface I
+    interface I
     {
-        public fun onPortrait(newConfig: Configuration)
-        public fun onLandscape(newConfig: Configuration)
+        fun onPortrait(newConfig: Configuration)
+        fun onLandscape(newConfig: Configuration)
     }
 }

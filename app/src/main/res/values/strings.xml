@@ -16,6 +16,8 @@
     <string name="rtl_enabled_sum">Enable this to read Right to Left (Swiping right goes to the next page)</string>
     <string name="pre_fetch_buffer">Pre Fetching</string>
     <string name="pre_fetch_buffer_sum">Select the number of pages to download ahead of time.</string>
+    <string name="use_external_storage">Use External Storage</string>
+    <string name="use_external_storage_sum">Store Manga in External Storage. This allows you access to the pages directly.</string>
 
     <string name="hello_world">
         Bacon ipsum dolor amet non frankfurter elit ex ipsum hamburger. Officia pancetta labore frankfurter, strip steak eu cillum ipsum kielbasa exercitation quis aute biltong. Proident porchetta mollit, ut kielbasa do laborum cupim jerky landjaeger veniam aliqua biltong sunt. Cow consequat biltong hamburger, est sunt ham dolor ut alcatra salami eiusmod ribeye velit. Nostrud swine excepteur, duis biltong ut meatball proident ham hock meatloaf rump porchetta. Strip steak jowl beef ribs tail adipisicing officia, in in exercitation ball tip flank turkey culpa brisket.

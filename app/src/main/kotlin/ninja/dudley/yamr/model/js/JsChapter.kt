@@ -6,7 +6,7 @@ import org.mozilla.javascript.ScriptableObject
 /**
 * Created by mdudley on 7/19/15. Yup.
 */
-public class JsChapter : ScriptableObject
+class JsChapter : ScriptableObject
 {
     override fun getClassName(): String?
     {
@@ -18,40 +18,40 @@ public class JsChapter : ScriptableObject
     private var name: String? = null
     private var number: Double
 
-    public constructor(): super()
+    constructor(): super()
     {
         url = ""
         number = 0.0
     }
 
-    public fun jsGet_url(): String?
+    fun jsGet_url(): String?
     {
         return url;
     }
-    public fun jsSet_url(url: String)
+    fun jsSet_url(url: String)
     {
         this.url = url;
     }
 
-    public fun jsGet_name(): String?
+    fun jsGet_name(): String?
     {
         return name
     }
-    public fun jsSet_name(name: String?)
+    fun jsSet_name(name: String?)
     {
         this.name = name
     }
 
-    public fun jsGet_number(): Double
+    fun jsGet_number(): Double
     {
         return number
     }
-    public fun jsSet_number(number: Double)
+    fun jsSet_number(number: Double)
     {
         this.number = number
     }
 
-    public fun unJS(seriesId: Int): Chapter
+    fun unJS(seriesId: Int): Chapter
     {
         val ret = Chapter(seriesId, url, number.toFloat())
         ret.name = name
