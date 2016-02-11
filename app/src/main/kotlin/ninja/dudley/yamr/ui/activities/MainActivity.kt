@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.SimpleAdapter
@@ -70,49 +69,45 @@ class MainActivity : Activity()
         val listView = findViewById(R.id.listView) as ListView
 
         listView.adapter = adapter
-        listView.onItemClickListener = object : AdapterView.OnItemClickListener
-        {
-            override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long)
+        listView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
+            // TODO:: Is this the only way?
+            val i: Intent
+            when (position)
             {
-                // TODO:: Is this the only way?
-                val i: Intent
-                when (position)
+                0 ->
                 {
-                    0 ->
+                    val tracked = SeriesViewer.trackedSeries(this@MainActivity)
+                    if (tracked == null)
                     {
-                        val tracked = SeriesViewer.trackedSeries(this@MainActivity)
-                        if (tracked == null)
-                        {
-                            val dialog = AlertDialog.Builder(this@MainActivity)
-                                    .setTitle("You haven't set a series to track!")
-                                    .setMessage("Set this up in your favorites menu.")
-                                    .setNegativeButton("K.", null).create()
-                            dialog.show()
-                            return
-                        }
+                        val dialog = AlertDialog.Builder(this@MainActivity)
+                                .setTitle("You haven't set a series to track!")
+                                .setMessage("Set this up in your favorites menu.")
+                                .setNegativeButton("K.", null).create()
+                        dialog.show()
+                        return@OnItemClickListener
+                    }
 
-                        i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.ContinueReading.name)
-                        startActivity(i)
-                    }
-                    1 ->
-                    {
-                        i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name)
-                        startActivity(i)
-                    }
-                    2 ->
-                    {
-                        i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name)
-                        startActivity(i)
-                    }
-                    3 ->
-                    {
-                        i = Intent(this@MainActivity, Browse::class.java)
-                        i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name)
-                        startActivity(i)
-                    }
+                    i = Intent(this@MainActivity, Browse::class.java)
+                    i.putExtra(Browse.FlowKey, Browse.FlowType.ContinueReading.name)
+                    startActivity(i)
+                }
+                1 ->
+                {
+                    i = Intent(this@MainActivity, Browse::class.java)
+                    i.putExtra(Browse.FlowKey, Browse.FlowType.Favorites.name)
+                    startActivity(i)
+                }
+                2 ->
+                {
+                    i = Intent(this@MainActivity, Browse::class.java)
+                    i.putExtra(Browse.FlowKey, Browse.FlowType.ProviderDown.name)
+                    startActivity(i)
+                }
+                3 ->
+                {
+                    i = Intent(this@MainActivity, Browse::class.java)
+                    i.putExtra(Browse.FlowKey, Browse.FlowType.Genre.name)
+                    startActivity(i)
                 }
             }
         }

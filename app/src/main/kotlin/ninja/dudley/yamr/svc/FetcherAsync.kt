@@ -14,10 +14,6 @@ import java.util.concurrent.PriorityBlockingQueue
 * Created by mdudley on 6/11/15. Yup.
 */
 
-private fun failureNop(thiS: Any) {}
-
-private fun statusNop(thiS: Any, status: Float) {}
-
 class FetcherAsync: Service()
 {
     private enum class RequestType

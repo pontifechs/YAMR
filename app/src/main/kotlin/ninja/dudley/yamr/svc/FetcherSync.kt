@@ -511,14 +511,6 @@ open class FetcherSync
         return total != 0 && total == fetched;
     }
 
-    private fun providerExists(url: String): Boolean
-    {
-        val c = resolver.query(Provider.baseUri(), null, null, arrayOf(url), null)
-        val ret = c.count > 0
-        c.close()
-        return ret
-    }
-
     private fun seriesExists(url: String): Boolean
     {
         val c = resolver.query(Series.baseUri(), null, null, arrayOf(url), null)
@@ -567,8 +559,6 @@ open class FetcherSync
             return "$f"
         }
     }
-
-
 
     private fun downloadImage(imageUrl: String, outputStream: FileOutputStream): Boolean
     {
