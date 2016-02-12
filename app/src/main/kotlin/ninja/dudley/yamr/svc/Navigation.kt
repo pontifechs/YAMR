@@ -184,12 +184,15 @@ class Navigation : FetcherSync
                     prevChapter(currentChapter)
                 fetchChapter(neighboringChapter)
                 currentChapter = neighboringChapter
-                neighboringPagesUri =
-                        if (direction == Direction.Next)
-                            currentChapter.nextPage(page.number)
-                        else
-                            currentChapter.prevPage(page.number)
-                neighboringPages = resolver.query(neighboringPagesUri, null, null, null, null)
+
+                if (direction == Direction.Next)
+                {
+                    neighboringPages = resolver.query(currentChapter.pages(), null, null, null, null)
+                }
+                else
+                {
+                    neighboringPages = resolver.query(currentChapter.pages(), null, null, null, "${Page.numberCol} desc")
+                }
             }
         }
         val retPage = Page(neighboringPages)
