@@ -387,36 +387,100 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(seriesPageComplete);
     }
 
-    private void addFetchDate(Class klass, String tableName, SQLiteDatabase db)
-    {
-         // Really hate that I have to create/insert/drop
-        String move =
-                "ALTER TABLE " + tableName +
-                        " RENAME TO " + tableName + "temp";
-
-        String recreate = schema(klass, 3);
-
-        String refill =
-                "INSERT INTO " + tableName +
-                        " SELECT " + tableName + "temp.*, CURRENT_TIMESTAMP " +
-                        " FROM " + tableName + "temp";
-
-        String drop =
-                "DROP TABLE " + tableName + "temp";
-
-        db.execSQL(move);
-        db.execSQL(recreate);
-        db.execSQL(refill);
-        db.execSQL(drop);
-    }
-
     private void createAndUpdateV3(SQLiteDatabase db)
     {
-        // Add fetch date to all the fetched things
-        addFetchDate(Provider.class, Provider.tableName, db);
-        addFetchDate(Series.class, Series.tableName, db);
-        addFetchDate(Chapter.class, Chapter.tableName, db);
-        addFetchDate(Page.class, Page.tableName, db);
+        // Really hate that I have to create/insert/drop
+        String providerMove =
+                "ALTER TABLE " + Provider.tableName +
+                        " RENAME TO " + Provider.tableName + "temp";
+
+        String providerRecreate = schema(Provider.class, 3);
+
+        String providerRefill = "INSERT INTO " + Provider.tableName + " (";
+        providerRefill += " _id,url,fully_parsed,type,";
+        providerRefill += "name,new_url,fetch_provider,stub_series,fetch_series,fetch_series_genres,";
+        providerRefill += "stub_chapter_col,fetch_chapter,stub_page,fetch_page,fetch_new,fetch_date";
+        providerRefill += ") SELECT ";
+        providerRefill += " _id,url,fully_parsed,type,";
+        providerRefill += "name,new_url,fetch_provider,stub_series,fetch_series,fetch_series_genres,";
+        providerRefill += "stub_chapter_col,fetch_chapter,stub_page,fetch_page,fetch_new,";
+        providerRefill += "CURRENT_TIMESTAMP " +
+                        " FROM " + Provider.tableName + "temp";
+
+        String providerDrop = "DROP TABLE " + Provider.tableName + "temp";
+
+        db.execSQL(providerMove);
+        db.execSQL(providerRecreate);
+        db.execSQL(providerRefill);
+        db.execSQL(providerDrop);
+
+        String seriesMove =
+                "ALTER TABLE " + Series.tableName +
+                        " RENAME TO " + Series.tableName + "temp";
+
+        String seriesRecreate = schema(Series.class, 3);
+
+        String seriesRefill = "INSERT INTO " + Series.tableName + " (";
+        seriesRefill += " _id,url,fully_parsed,type,";
+        seriesRefill += "provider_id,name,description,favorite,alternate_name,complete,";
+        seriesRefill += "author,artist,thumbnail_url,thumbnail_path,progress_chapter_id,progress_page_id,updated,fetch_date";
+        seriesRefill += ") SELECT ";
+        seriesRefill += " _id,url,fully_parsed,type,";
+        seriesRefill += "provider_id,name,description,favorite,alternate_name,complete,";
+        seriesRefill += "author,artist,thumbnail_url,thumbnail_path,progress_chapter_id,progress_page_id,updated,";
+        seriesRefill += "CURRENT_TIMESTAMP " +
+                        " FROM " + Series.tableName + "temp";
+
+        String seriesDrop = "DROP TABLE " + Series.tableName + "temp";
+
+        db.execSQL(seriesMove);
+        db.execSQL(seriesRecreate);
+        db.execSQL(seriesRefill);
+        db.execSQL(seriesDrop);
+
+        String chapterMove =
+                "ALTER TABLE " + Chapter.tableName +
+                        " RENAME TO " + Chapter.tableName + "temp";
+
+        String chapterRecreate = schema(Chapter.class, 3);
+
+        String chapterRefill = "INSERT INTO " + Chapter.tableName + " (";
+        chapterRefill += " _id,url,fully_parsed,type,";
+        chapterRefill += "series_id,name,number,fetch_date";
+        chapterRefill += ") SELECT ";
+        chapterRefill += " _id,url,fully_parsed,type,";
+        chapterRefill += "series_id,name,number,";
+        chapterRefill += "CURRENT_TIMESTAMP " +
+                " FROM " + Chapter.tableName + "temp";
+
+        String chapterDrop = "DROP TABLE " + Chapter.tableName + "temp";
+
+        db.execSQL(chapterMove);
+        db.execSQL(chapterRecreate);
+        db.execSQL(chapterRefill);
+        db.execSQL(chapterDrop);
+
+        String pageMove =
+                "ALTER TABLE " + Page.tableName +
+                        " RENAME TO " + Page.tableName + "temp";
+
+        String pageRecreate = schema(Page.class, 3);
+
+        String pageRefill = "INSERT INTO " + Page.tableName + " (";
+        pageRefill += " _id,url,fully_parsed,type,";
+        pageRefill += "chapter_id,number,image_url,image_path,fetch_date";
+        pageRefill += ") SELECT ";
+        pageRefill += " _id,url,fully_parsed,type,";
+        pageRefill += "chapter_id,number,image_url,image_path,";
+        pageRefill += "CURRENT_TIMESTAMP " +
+                " FROM " + Page.tableName + "temp";
+
+        String pageDrop = "DROP TABLE " + Page.tableName + "temp";
+
+        db.execSQL(pageMove);
+        db.execSQL(pageRecreate);
+        db.execSQL(pageRefill);
+        db.execSQL(pageDrop);
     }
 
     @Override
