@@ -5,6 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ninja.dudley.yamr.db.DBHelper;
+
 /**
  * Created by mdudley on 7/2/15.
  */
@@ -16,10 +18,13 @@ public @interface Column
     {
         Text,
         Integer,
-        Real
+        Real,
+        Datetime
     }
 
     Type type() default Type.Text;
 
     String name();
+
+    int version() default 1;
 }

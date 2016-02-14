@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.ui.activities
 
 import android.app.Activity
+import android.app.Fragment
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -116,6 +117,14 @@ class Browse : Activity(), OrientationAware.I
         transaction.replace(R.id.reader, pageViewer)
         transaction.addToBackStack(null)
         transaction.commit()
+    }
+
+    fun redraw(frag: Fragment)
+    {
+        fragmentManager.beginTransaction()
+                .detach(frag)
+                .attach(frag)
+                .commitAllowingStateLoss();
     }
 
     override fun onConfigurationChanged(newConfig: Configuration)

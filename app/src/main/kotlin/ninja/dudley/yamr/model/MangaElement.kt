@@ -3,11 +3,10 @@ package ninja.dudley.yamr.model
 import android.content.ContentValues
 import android.database.Cursor
 
-import java.util.NoSuchElementException
-
 import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.db.util.Column
 import ninja.dudley.yamr.db.util.Id
+import java.util.*
 
 /**
 * Created by mdudley on 6/2/15. Yup.
@@ -31,6 +30,8 @@ open class MangaElement
     var fullyParsed: Boolean = false
     @Column(name = typeCol)
     var type: UriType
+    @Column(name = fetchDateCol, type = Column.Type.Datetime, version = 3)
+    var fetchDate: Date = Date(0)
 
     constructor(url: String, type: MangaElement.UriType)
     {
@@ -97,10 +98,18 @@ open class MangaElement
         return c.getInt(colNum) > 0
     }
 
+    protected fun getDate(c: Cursor, col: String): Date
+    {
+        val colNum = c.getColumnIndex(col)
+        return Date(0)
+    }
+
+
     companion object
     {
         const val urlCol: String = "url"
         const val fullyParsedCol: String = "fully_parsed"
         const val typeCol: String = "type"
+        const val fetchDateCol: String ="fetch_date"
     }
 }

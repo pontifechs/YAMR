@@ -29,6 +29,7 @@ import ninja.dudley.yamr.db.util.Table;
 import ninja.dudley.yamr.db.util.Unique;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Genre;
+import ninja.dudley.yamr.model.MangaElement;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
@@ -40,7 +41,7 @@ public class DBHelper extends SQLiteOpenHelper
 {
     private final Context context;
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
@@ -121,6 +122,10 @@ public class DBHelper extends SQLiteOpenHelper
 
     private static String makeColumn(String name, Column.Type type)
     {
+        if (type == Column.Type.Datetime)
+        {
+            return name + " " + type.toString() + " DEFAULT CURRENT_TIMESTAMP";
+        }
         return name + " " + type.toString();
     }
 
@@ -158,7 +163,7 @@ public class DBHelper extends SQLiteOpenHelper
                                               rhsTable + "." + rhsField;
     }
 
-    public static String schema(Class<?> klass)
+    public static String schema(Class<?> klass, int version)
     {
         Table t = klass.getAnnotation(Table.class);
         if (t == null)
@@ -183,6 +188,12 @@ public class DBHelper extends SQLiteOpenHelper
         for (Field field : fields)
         {
             Column column = field.getAnnotation(Column.class);
+            // Skip if we're building for an earlier version
+            if (column != null && column.version() > version)
+            {
+                continue;
+            }
+
             ForeignKey fk = field.getAnnotation(ForeignKey.class);
             Id id = field.getAnnotation(Id.class);
 
@@ -277,15 +288,16 @@ public class DBHelper extends SQLiteOpenHelper
     {
         createV1(db);
         createAndUpdateV2(db);
+        createAndUpdateV3(db);
     }
 
     private void createV1(SQLiteDatabase db)
     {
-        db.execSQL(schema(Provider.class));
-        db.execSQL(schema(Series.class));
-        db.execSQL(schema(Chapter.class));
-        db.execSQL(schema(Page.class));
-        db.execSQL(schema(Genre.class));
+        db.execSQL(schema(Provider.class, 1));
+        db.execSQL(schema(Series.class, 1));
+        db.execSQL(schema(Chapter.class, 1));
+        db.execSQL(schema(Page.class, 1));
+        db.execSQL(schema(Genre.class, 1));
 
         String pageHeritageView =
                 "CREATE VIEW " + PageHeritageViewEntry.TABLE_NAME + " AS " +
@@ -375,12 +387,49 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(seriesPageComplete);
     }
 
+    private void addFetchDate(Class klass, String tableName, SQLiteDatabase db)
+    {
+         // Really hate that I have to create/insert/drop
+        String move =
+                "ALTER TABLE " + tableName +
+                        " RENAME TO " + tableName + "temp";
+
+        String recreate = schema(klass, 3);
+
+        String refill =
+                "INSERT INTO " + tableName +
+                        " SELECT " + tableName + "temp.*, CURRENT_TIMESTAMP " +
+                        " FROM " + tableName + "temp";
+
+        String drop =
+                "DROP TABLE " + tableName + "temp";
+
+        db.execSQL(move);
+        db.execSQL(recreate);
+        db.execSQL(refill);
+        db.execSQL(drop);
+    }
+
+    private void createAndUpdateV3(SQLiteDatabase db)
+    {
+        // Add fetch date to all the fetched things
+        addFetchDate(Provider.class, Provider.tableName, db);
+        addFetchDate(Series.class, Series.tableName, db);
+        addFetchDate(Chapter.class, Chapter.tableName, db);
+        addFetchDate(Page.class, Page.tableName, db);
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
         if (oldVersion < 2)
         {
             createAndUpdateV2(db);
+        }
+
+        if (oldVersion < 3)
+        {
+            createAndUpdateV3(db);
         }
     }
 

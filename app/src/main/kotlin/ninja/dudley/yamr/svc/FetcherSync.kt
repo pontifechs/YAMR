@@ -396,7 +396,7 @@ open class FetcherSync
         localListener?.notify(0.0f);
         while (pages.moveToNext())
         {
-            Log.d("FetchAll", "page ${i} / ${pages.count}")
+            Log.d("FetchAll", "page $i / ${pages.count}")
             val page = Page(pages, false)
             fetchPage(page, behavior)
 
@@ -578,8 +578,6 @@ open class FetcherSync
             return false
         }
 
-        val out = ByteArrayOutputStream()
-
         val length = conn.contentLength
         var done = 0
         val data = ByteArray(1024)
@@ -589,13 +587,9 @@ open class FetcherSync
             done += count
 
             listener?.notify(done / length.toFloat())
-            out.write(data, 0, count)
+            outputStream.write(data, 0, count)
         }
-        out.flush()
-
-        val bmp = clampToSize(BitmapFactory.decodeByteArray(out.toByteArray(), 0, length), 8192, 8192)
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-        out.close()
+        outputStream.flush()
         return true
     }
 
@@ -621,7 +615,8 @@ open class FetcherSync
 
     private fun buildPagePath(p: Page): String
     {
-        return buildChapterPath(p) + "/" + formatFloat(p.number) + ".png"
+        val extension = p.imageUrl!!.substring(p.imageUrl!!.lastIndexOf("."))
+        return buildChapterPath(p) + "/" + formatFloat(p.number) + extension
     }
 
     private fun getPageOutputStream(p: Page): FileOutputStream
@@ -637,7 +632,9 @@ open class FetcherSync
     {
         if (downloadImage(p.imageUrl!!, getPageOutputStream(p)))
         {
-            return buildPagePath(p)
+            val path = buildPagePath(p)
+            resize(path)
+            return path
         }
         else
         {
@@ -667,6 +664,20 @@ open class FetcherSync
 
     private companion object
     {
+
+        private fun resize(path: String)
+        {
+            var bitmap = BitmapFactory.decodeFile(path)
+            if (bitmap.width < 8192 && bitmap.height < 8192)
+            {
+                return
+            }
+            bitmap = clampToSize(bitmap, 8192, 8192)
+            val out = FileOutputStream(path)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+            out.close()
+        }
+
         private fun clampToSize(image: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
         {
             if (image.width <= maxWidth && image.height <= maxHeight)

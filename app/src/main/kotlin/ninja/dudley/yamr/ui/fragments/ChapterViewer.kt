@@ -1,11 +1,9 @@
 package ninja.dudley.yamr.ui.fragments
 
-import android.app.Activity
-import android.app.Fragment
-import android.app.LoaderManager
-import android.app.ProgressDialog
+import android.app.*
 import android.content.Context
 import android.content.CursorLoader
+import android.content.DialogInterface
 import android.content.Loader
 import android.database.Cursor
 import android.graphics.BitmapFactory
@@ -23,6 +21,8 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.ui.activities.Browse
 import ninja.dudley.yamr.ui.notifications.FetchAllProgress
+import org.acra.ACRA
+import java.io.File
 
 fun chapterViewerStatus(thiS: Any, status: Float)
 {
@@ -157,6 +157,32 @@ class ChapterViewer :
                 FetcherAsync.fetchEntireChapter(chapter!!, this,
                         FetcherAsync.Comms({ thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number} Complete!", 1.0f) },
                                            { thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series.name} ch. ${chapter!!.number}", status) }))
+                return true
+            }
+            R.id.delete ->
+            {
+                AlertDialog.Builder(activity)
+                        .setTitle("Really Delete?")
+                        .setMessage("This will delete all the images in this chapter. They can be re-downloaded")
+                        .setPositiveButton("OK!", { dialogInterface: DialogInterface?, i: Int ->
+                            val pages = activity.contentResolver.query(chapter!!.pages(), null, null, null, null)
+                            while (pages.moveToNext())
+                            {
+                                val page = Page(pages, false)
+                                if (page.imagePath.isNullOrEmpty())
+                                {
+                                    continue;
+                                }
+                                val image = File(page.imagePath)
+                                image.delete()
+                                page.imagePath = null
+                                page.fullyParsed = false
+                                activity.contentResolver.update(page.uri(), page.getContentValues(), null, null)
+                            }
+                            pages.close()
+                            parent!!.redraw(this)
+                        })
+                        .setNegativeButton("JK.", null).create().show()
                 return true
             }
             else -> return super.onOptionsItemSelected(item)

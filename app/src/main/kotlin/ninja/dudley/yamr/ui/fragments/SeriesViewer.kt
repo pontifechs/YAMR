@@ -3,6 +3,7 @@ package ninja.dudley.yamr.ui.fragments
 import android.app.*
 import android.content.Context
 import android.content.CursorLoader
+import android.content.DialogInterface
 import android.content.Loader
 import android.database.Cursor
 import android.net.Uri
@@ -11,11 +12,13 @@ import android.view.*
 import android.widget.*
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
+import ninja.dudley.yamr.model.Page
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.FetcherAsync
 import ninja.dudley.yamr.svc.FetcherSync
 import ninja.dudley.yamr.ui.activities.Browse
 import ninja.dudley.yamr.ui.notifications.FetchAllProgress
+import java.io.File
 
 fun seriesViewerStatus(thiS: Any, status: Float)
 {
@@ -180,6 +183,37 @@ class SeriesViewer :
                         FetcherAsync.Comms(
                                 { thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} Complete!", 1.0f) },
                                 { thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series!!.name}", status) }))
+                return true
+            }
+            R.id.delete ->
+            {
+                AlertDialog.Builder(activity)
+                        .setTitle("Really Delete?")
+                        .setMessage("This will delete all the images in this series. They can be re-downloaded")
+                        .setPositiveButton("OK!", { dialogInterface: DialogInterface?, i: Int ->
+                            val chapters = activity.contentResolver.query(series!!.chapters(), null, null, null, null)
+                            while (chapters.moveToNext())
+                            {
+                                val chapter = Chapter(chapters, false)
+                                val pages = activity.contentResolver.query(chapter.pages(), null, null, null, null)
+                                while (pages.moveToNext())
+                                {
+                                    val page = Page(pages, false)
+                                    if (page.imagePath.isNullOrEmpty())
+                                    {
+                                        continue;
+                                    }
+                                    val image = File(page.imagePath)
+                                    image.delete()
+                                    page.imagePath = null
+                                    page.fullyParsed = false
+                                    activity.contentResolver.update(page.uri(), page.getContentValues(), null, null)
+                                }
+                                pages.close()
+                            }
+                            parent!!.redraw(this)
+                        })
+                        .setNegativeButton("JK.", null).create().show()
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
