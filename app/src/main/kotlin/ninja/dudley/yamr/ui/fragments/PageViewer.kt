@@ -129,7 +129,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         {
             return
         }
-        showLoadingBar()
+        resetLoadingBar()
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
         val percent = 100 * status;
         loadingBar.progress = percent.toInt();
@@ -216,9 +216,10 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         loadingBar?.visibility = View.INVISIBLE
     }
 
-    private fun showLoadingBar()
+    private fun resetLoadingBar()
     {
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
+        loadingBar.progress = 0;
         loadingBar.visibility = View.VISIBLE
     }
 
@@ -268,7 +269,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
 
     private fun changePage(direction: Direction)
     {
-        showLoadingBar()
+        resetLoadingBar()
         if (Settings.preFetchEnabled(activity))
         {
             changePagePreFetch(direction)

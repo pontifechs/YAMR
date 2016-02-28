@@ -179,10 +179,15 @@ class SeriesViewer :
             }
             R.id.fetch_all ->
             {
+                val appContext = activity.applicationContext
                 FetcherAsync.fetchEntireSeries(series!!, this,
                         FetcherAsync.Comms(
-                                { thiS, series -> FetchAllProgress.notify(activity, "Fetching ${series.name} Complete!", 1.0f) },
-                                { thiS, status -> FetchAllProgress.notify(activity, "Fetching ${series!!.name}", status) }))
+                                {
+                                    thiS, series -> FetchAllProgress.notify(appContext, "Fetching ${series.name} Complete!", 1.0f)
+                                },
+                                {
+                                    thiS, status -> FetchAllProgress.notify(appContext, "Fetching ${series!!.name}", status)
+                                }))
                 return true
             }
             R.id.delete ->
@@ -191,6 +196,7 @@ class SeriesViewer :
                         .setTitle("Really Delete?")
                         .setMessage("This will delete all the images in this series. They can be re-downloaded")
                         .setPositiveButton("OK!", { dialogInterface: DialogInterface?, i: Int ->
+                            // TODO:: Move this off the main thread
                             val chapters = activity.contentResolver.query(series!!.chapters(), null, null, null, null)
                             while (chapters.moveToNext())
                             {

@@ -633,6 +633,13 @@ open class FetcherSync
         if (downloadImage(p.imageUrl!!, getPageOutputStream(p)))
         {
             val path = buildPagePath(p)
+            // Check for 0B files
+            val file = File(path)
+            if (file.length() == 0L)
+            {
+                file.delete();
+                return null;
+            }
             resize(path)
             return path
         }

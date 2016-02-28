@@ -137,7 +137,8 @@ class ChapterViewer :
         loaderManager.initLoader(0, Bundle(), this)
         loading = ProgressDialog(activity)
         loading!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-        loading!!.setTitle("Loading Chapters for " + chapter!!.name!!)
+        val chapterNameText = chapter!!.name?: chapter!!.number
+        loading!!.setTitle("Loading Chapters for " + chapterNameText)
         loading!!.show()
         return view
     }

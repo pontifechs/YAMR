@@ -16,7 +16,7 @@
             android:key="pre_fetch_buffer"
             android:summary="@string/pre_fetch_buffer_sum"
             android:title="@string/pre_fetch_buffer"
-            custom:defaultValue="5"
+            custom:defaultValue="0"
             custom:min="0"
             custom:max="10"
             />
