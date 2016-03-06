@@ -155,7 +155,15 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         this.page = page
         hideLoadingBar()
         val touchImageView = activity.findViewById(R.id.imageView) as TouchImageView
-        val d = Drawable.createFromPath(page.imagePath)
+        var d: Drawable
+        if (page.imagePath == null)
+        {
+            d = resources.getDrawable(R.drawable.panic, null)
+        }
+        else
+        {
+            d = Drawable.createFromPath(page.imagePath)
+        }
         touchImageView.setImageDrawable(d)
         progressTracker?.handleNewPage(page)
 

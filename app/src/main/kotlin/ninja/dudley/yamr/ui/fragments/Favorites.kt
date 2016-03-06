@@ -100,22 +100,6 @@ class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, Adapter
         return layout;
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
-    {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        inflater!!.inflate(R.menu.menu_favorites, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean
-    {
-        when (item!!.itemId)
-        {
-            R.id.action_settings -> return true
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
-
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)
     {
         parent?.loadBookmarkFromSeries(Series.uri(id.toInt()))

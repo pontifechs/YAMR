@@ -299,7 +299,7 @@ open class FetcherSync
 
     fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
     {
-        if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed)
+        if (behavior === FetcherSync.Behavior.LazyFetch && page.fullyParsed && (page.imagePath != null))
         {
             Log.d("FetchPage", "Already parsed. Ignoring")
             return page
@@ -569,6 +569,11 @@ open class FetcherSync
         conn.readTimeout = 10000
         conn.connectTimeout = 10000
         conn.connect()
+
+        if (conn.responseCode != 200)
+        {
+            return false
+        }
         try
         {
             inStream = conn.inputStream

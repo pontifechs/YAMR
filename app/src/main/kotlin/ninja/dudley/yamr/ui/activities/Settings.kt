@@ -131,7 +131,7 @@ class Settings : Activity()
         fun rtlEnabled(context: Context): Boolean
         {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getBoolean(RTL_ENABLED_KEY, true)
+            return pref.getBoolean(RTL_ENABLED_KEY, false)
         }
 
         fun preFetchEnabled(context: Context): Boolean

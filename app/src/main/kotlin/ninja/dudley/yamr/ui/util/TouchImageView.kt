@@ -114,7 +114,15 @@ class TouchImageView : ImageView
 
     private fun screenWidth(): Int
     {
-        return resources.displayMetrics.widthPixels
+        val pt = Point()
+        try {
+            display.getRealSize(pt)
+        }
+        catch (e: NullPointerException)
+        {
+            return resources.displayMetrics.heightPixels
+        }
+        return pt.x
     }
 
     private fun screenHeight(): Int

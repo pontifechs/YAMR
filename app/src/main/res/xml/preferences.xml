@@ -7,7 +7,7 @@
         android:title="@string/reading_settings"
         >
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="rtl_enabled"
             android:summary="@string/rtl_enabled_sum"
             android:title="@string/rtl_enabled"

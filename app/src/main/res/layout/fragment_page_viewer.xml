@@ -2,19 +2,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#770000"
+    android:background="@drawable/paper_tiled"
     tools:context=".PageViewer"
     >
     <ninja.dudley.yamr.ui.util.TouchImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/panic"
         android:id="@+id/imageView"
         />
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="15dp"
+        android:layout_height="18dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:id="@+id/page_loading_text"
