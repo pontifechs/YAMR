@@ -11,6 +11,7 @@ import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import ninja.dudley.yamr.ui.activities.Browse
+import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
 /**
 * Created by mdudley on 6/23/15. Yup.
@@ -77,13 +78,9 @@ class FetchStarter : BroadcastReceiver()
         }
         else if (intent.action == StartChecking)
         {
-            object: LambdaAsyncTask<Unit, Float, List<Uri>>(this, ::fetchNewComplete)
-            {
-                override fun doInBackground(vararg params: Unit?): List<Uri>? {
-                    val fetch = FetcherSync(context);
-                    return fetch.fetchAllNew()
-                }
-            }.execute()
+            FetcherAsync.fetchAllNew(this,
+                    FetcherAsync.Comms({ thiS, list -> fetchNewComplete(thiS, list) },
+                                       { thiS, status -> run {} }))
         }
     }
 

@@ -36,8 +36,8 @@ open class MangaElement
     constructor(url: String, type: MangaElement.UriType)
     {
         id = -1
-        this.url = url;
-        this.type = type;
+        this.url = url
+        this.type = type
     }
 
     constructor(c: Cursor)
@@ -103,7 +103,6 @@ open class MangaElement
         val colNum = c.getColumnIndex(col)
         return Date(0)
     }
-
 
     companion object
     {

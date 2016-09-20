@@ -1,6 +1,7 @@
 package ninja.dudley.yamr.svc
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,17 +11,11 @@ import android.util.Log
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.db.DBHelper
 import ninja.dudley.yamr.model.*
-import ninja.dudley.yamr.model.js.JsChapter
-import ninja.dudley.yamr.model.js.JsPage
-import ninja.dudley.yamr.model.js.JsSeries
 import ninja.dudley.yamr.ui.activities.Settings
 import org.acra.ACRA
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.jsoup.select.Elements
-import org.mozilla.javascript.Context
-import org.mozilla.javascript.ScriptableObject
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
@@ -29,94 +24,15 @@ import java.util.ArrayList
 /**
 * Created by mdudley on 5/19/15. Yup.
 */
-open class FetcherSync
+abstract class FetcherSync
 {
-    private var cx: Context? = null
     private var androidContext: android.content.Context? = null
-    private var scope: ScriptableObject? = null
     private val resolver: ContentResolver
-    private var provider: Provider? = null
 
     constructor(context: android.content.Context)
     {
         this.androidContext = context
         this.resolver = context.contentResolver
-    }
-
-    private fun providerFromSeries(series: Series): Provider
-    {
-        return Provider(resolver.query(Provider.uri(series.providerId), null, null, null, null))
-    }
-
-    private fun providerFromChapter(chapter: Chapter): Provider
-    {
-        val series = Series(resolver.query(Series.uri(chapter.seriesId), null, null, null, null))
-        return providerFromSeries(series)
-    }
-
-    private fun providerFromPage(page: Page): Provider
-    {
-        val chapter = Chapter(resolver.query(Chapter.uri(page.chapterId), null, null, null, null))
-        return providerFromChapter(chapter)
-    }
-
-    private fun getProvider(element: MangaElement): Provider
-    {
-        when (element.type)
-        {
-            MangaElement.UriType.Provider ->
-            {
-                return element as Provider
-            }
-            MangaElement.UriType.Series ->
-            {
-                return providerFromSeries(element as Series)
-            }
-            MangaElement.UriType.Chapter ->
-            {
-                return providerFromChapter(element as Chapter)
-            }
-            MangaElement.UriType.Page ->
-            {
-                return providerFromPage(element as Page)
-            }
-            MangaElement.UriType.Genre ->
-            {
-                throw IllegalArgumentException("Can't get provider from Genre")
-            }
-        }
-    }
-
-    protected fun init(mangaElement: MangaElement)
-    {
-        cx = Context.enter()
-        cx!!.optimizationLevel = -1
-        scope = cx!!.initStandardObjects()
-
-        this.provider = getProvider(mangaElement)
-
-        try
-        {
-            ScriptableObject.defineClass(scope, JsSeries::class.java)
-            ScriptableObject.defineClass(scope, JsChapter::class.java)
-            ScriptableObject.defineClass(scope, JsPage::class.java)
-        }
-        catch (e: Exception)
-        {
-            Log.e("RHINO", e.toString())
-            // Gotta catch 'em all!
-            throw RuntimeException(e)
-        }
-
-        cx!!.evaluateString(scope, provider!!.fetchProvider, "fetchProvider", 1, null);
-        cx!!.evaluateString(scope, provider!!.stubSeries, "stubSeries", 1, null);
-        cx!!.evaluateString(scope, provider!!.fetchSeries, "fetchSeries", 1, null);
-        cx!!.evaluateString(scope, provider!!.fetchSeriesGenres, "fetchSeriesGenres", 1, null);
-        cx!!.evaluateString(scope, provider!!.stubChapter, "stubChapter", 1, null);
-        cx!!.evaluateString(scope, provider!!.fetchChapter, "fetchChapter", 1, null);
-        cx!!.evaluateString(scope, provider!!.stubPage, "stubPage", 1, null);
-        cx!!.evaluateString(scope, provider!!.fetchPage, "fetchPage", 1, null);
-        cx!!.evaluateString(scope, provider!!.fetchNew, "fetchNew", 1, null);
     }
 
     interface NotifyStatus
@@ -136,6 +52,22 @@ open class FetcherSync
         ForceRefresh;
     }
 
+    abstract fun enumerateSeries(): List<Series>
+
+    abstract fun fillSeries(series: Series): Series
+
+    abstract fun enumerateGenres(series: Series): List<Genre>
+
+    abstract fun enumerateChapters(series: Series): List<Chapter>
+
+    abstract fun fillChapter(chapter: Chapter): Chapter
+
+    abstract fun enumeratePages(chapter: Chapter): List<Page>
+
+    abstract fun fillPage(page: Page): Page
+
+    abstract fun enumerateNew(): List<Pair<Series, Chapter>>
+
     fun fetchProvider(provider: Provider, behavior: Behavior = Behavior.LazyFetch): Provider
     {
         if (behavior === FetcherSync.Behavior.LazyFetch && provider.fullyParsed)
@@ -144,42 +76,32 @@ open class FetcherSync
             return provider
         }
 
-        init(provider)
         Log.d("Fetch", "Starting a Provider fetch")
 
-        val doc = fetchUrl(provider.url)
-        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-        ScriptableObject.putProperty(scope, "provider", Context.javaToJS(provider, scope))
-        val result = cx!!.evaluateString(scope, "fetchProvider(doc, provider);", "fetchProvider", 100, null);
-        val elements = Context.jsToJava(result, Elements::class.java) as Elements
-        Log.d("RHINO", "${elements.size}")
-        provider.fullyParsed = true
-        resolver.update(provider.uri(), provider.getContentValues(), null, null)
-        Log.d("Fetch", "Iteration complete. Provider Fetched.")
+        val seriesStubs = enumerateSeries()
 
-        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        val statusStride = Math.ceil((seriesStubs.size / 100.0f).toDouble()).toInt()
         var index = 0
-        for (e in elements)
+        for (series in seriesStubs)
         {
             index++
             if (index % statusStride == 0 && listener != null)
             {
-                val progress = index / elements.size.toFloat()
+                val progress = index / seriesStubs.size.toFloat()
                 Log.d("Fetch", "ProviderFetch progress: $progress")
                 listener?.notify(progress)
             }
-            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-            val seriesResult = cx!!.evaluateString(scope, "stubSeries(element);", "fetchProvider", 200, null);
-            val jsSeries = Context.jsToJava(seriesResult, JsSeries::class.java) as JsSeries
-            val s = jsSeries.unJS(provider.id)
 
-            if (seriesExists(s.url))
+            if (seriesExists(series.url))
             {
                 continue
             }
-            resolver.insert(Series.baseUri(), s.getContentValues())
+            resolver.insert(Series.baseUri(), series.getContentValues())
         }
+
+        Log.d("Fetch", "Iteration complete. Provider Fetched.")
         provider.fullyParsed = true
+        resolver.update(provider.uri(), provider.getContentValues(), null, null)
 
         return provider
     }
@@ -192,50 +114,39 @@ open class FetcherSync
             return series
         }
 
-        init(series)
         Log.d("Fetch", "Starting Series fetch: ${series.id}: ${series.url}")
-        val doc = fetchUrl(series.url)
-        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-        ScriptableObject.putProperty(scope, "series", Context.javaToJS(series, scope))
+        val fullSeries = fillSeries(series)
+        val genres = enumerateGenres(fullSeries)
 
-        val genreResult = cx!!.evaluateString(scope, "fetchSeriesGenres(doc, series);", "fetchProvider", 100, null);
-        val genres = Context.jsToJava(genreResult, List::class.java) as List<String>
-
-        // Clean up any the existing relations (Only really relevant with a refresh.)
-        resolver.delete(Series.genres(series.id), null, null)
+        // Delete all existing relations (Only really relevant with a refresh.)
+        resolver.delete(Series.genres(fullSeries.id), null, null)
 
         for (genre in genres)
         {
-            if (!genreExists(genre))
+            if (!genreExists(genre.name))
             {
-                val g = Genre(genre)
-                resolver.insert(Genre.baseUri(), g.getContentValues())
+                resolver.insert(Genre.baseUri(), genre.getContentValues())
             }
-            val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre), null))
+            val g = Genre(resolver.query(Genre.baseUri(), null, null, arrayOf(genre.name), null))
 
             // Now that we have the genre for sure, add the relation.
             resolver.insert(Genre.relator(), Genre.SeriesGenreRelator(series.id, g.id))
         }
 
-        val result = cx!!.evaluateString(scope, "fetchSeries(doc, series);", "fetchProvider", 300, null);
-        val elements = Context.jsToJava(result, Elements::class.java) as Elements
+        val chapterStubs = enumerateChapters(fullSeries)
 
         // Parse chapters
-        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        val statusStride = Math.ceil((chapterStubs.size / 100.0f).toDouble()).toInt()
         var index = 0
-        for (e in elements)
+        for (chapter in chapterStubs)
         {
             index++
             if (index % statusStride == 0 && listener != null)
             {
-                val progress = index / elements.size.toFloat()
+                val progress = index / chapterStubs.size.toFloat()
                 Log.d("Fetch", "SeriesFetch progress: $progress")
                 listener?.notify(progress)
             }
-            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-            val chapterResult = cx!!.evaluateString(scope, "stubChapter(element);", "fetchProvider", 400, null);
-            val jsChapter = Context.jsToJava(chapterResult, JsChapter::class.java) as JsChapter
-            val chapter = jsChapter.unJS(series.id)
 
             if (chapterExists(chapter.url))
             {
@@ -243,12 +154,12 @@ open class FetcherSync
             }
             resolver.insert(Chapter.baseUri(), chapter.getContentValues())
         }
-        series.fullyParsed = true
-        series.thumbnailPath = saveThumbnail(series)
-        resolver.update(series.uri(), series.getContentValues(), null, null)
+        fullSeries.fullyParsed = true
+        fullSeries.thumbnailPath = saveThumbnail(fullSeries)
+        resolver.update(fullSeries.uri(), fullSeries.getContentValues(), null, null)
         Log.d("Fetch", "Iteration complete. Series Fetched.")
 
-        return series
+        return fullSeries
     }
 
     fun fetchChapter(chapter: Chapter, behavior: Behavior = Behavior.LazyFetch): Chapter
@@ -259,29 +170,20 @@ open class FetcherSync
             return chapter
         }
 
-        init(chapter)
-        val doc = fetchUrl(chapter.url)
-        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-        ScriptableObject.putProperty(scope, "chapter", Context.javaToJS(chapter, scope))
-        val result = cx!!.evaluateString(scope, "fetchChapter(doc, chapter);", "fetchProvider", 500, null);
-        val elements = Context.jsToJava(result, Elements::class.java) as Elements
+        val fullChapter = fillChapter(chapter)
+        val pageStubs = enumeratePages(fullChapter)
 
-        val statusStride = Math.ceil((elements.size / 100.0f).toDouble()).toInt()
+        val statusStride = Math.ceil((pageStubs.size / 100.0f).toDouble()).toInt()
         var index = 0
-        for (e in elements)
+        for (page in pageStubs)
         {
             index++
             if (index % statusStride == 0 && listener != null)
             {
-                val progress = index / elements.size.toFloat()
+                val progress = index / pageStubs.size.toFloat()
                 Log.d("Fetch", "Chapter fetch progress: $progress")
                 listener?.notify(progress)
             }
-
-            ScriptableObject.putProperty(scope, "element", Context.javaToJS(e, scope))
-            val pageResult = cx!!.evaluateString(scope, "stubPage(element);", "fetchProvider", 600, null);
-            val jsPage = Context.jsToJava(pageResult, JsPage::class.java) as JsPage
-            val page = jsPage.unJS(chapter.id)
 
             if (pageExists(page.url))
             {
@@ -290,11 +192,11 @@ open class FetcherSync
 
             resolver.insert(Page.baseUri(), page.getContentValues())
         }
-        chapter.fullyParsed = true
-        resolver.update(chapter.uri(), chapter.getContentValues(), null, null)
+        fullChapter.fullyParsed = true
+        resolver.update(fullChapter.uri(), fullChapter.getContentValues(), null, null)
         Log.d("Fetch", "Iteration complete. Chapter fetched")
 
-        return chapter
+        return fullChapter
     }
 
     fun fetchPage(page: Page, behavior: Behavior = Behavior.LazyFetch): Page
@@ -304,38 +206,27 @@ open class FetcherSync
             Log.d("FetchPage", "Already parsed. Ignoring")
             return page
         }
-        init(page)
-        val doc = fetchUrl(page.url)
 
-        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-        ScriptableObject.putProperty(scope, "page", Context.javaToJS(page, scope))
-        val result = cx!!.evaluateString(scope, "fetchPage(doc, page);", "fetchProvider", 700, null);
-        val p = Context.jsToJava(result, String::class.java) as String
-
-        page.imageUrl = p;
-        page.fullyParsed = true
-        page.imagePath = savePageImage(page)
+        val fullPage = fillPage(page)
+        fullPage.fullyParsed = true
+        fullPage.imagePath = savePageImage(fullPage)
         Log.d("FetchPage", "Done")
-        resolver.update(page.uri(), page.getContentValues(), null, null)
-        return page
+        resolver.update(fullPage.uri(), fullPage.getContentValues(), null, null)
+        return fullPage
     }
 
-    fun fetchNew(provider: Provider): List<Uri>
+    fun fetchNew(): List<Uri>
     {
-        init(provider)
         Log.d("FetchStarter", "Starting")
         val newChapters = ArrayList<Uri>()
-        val doc = fetchUrl(provider.newUrl)
-        ScriptableObject.putProperty(scope, "doc", Context.javaToJS(doc, scope))
-        val result = cx!!.evaluateString(scope, "fetchNew(doc);", "fetchProvider", 1000, null);
-        val seriesChapterPairs = Context.jsToJava(result, List::class.java) as List<List<Any>>
+
+        val seriesChapterPairs = enumerateNew()
 
         for (pair in seriesChapterPairs)
         {
-            val jsSeries = pair[0] as JsSeries;
-            val jsChapter = pair[1] as JsChapter;
+            var series = pair.first
+            var chapter = pair.second
 
-            var series = jsSeries.unJS(provider.id) ;
             if (seriesExists(series.url))
             {
                 series = Series(resolver.query(Series.baseUri(), null, null, arrayOf(series.url), null))
@@ -348,7 +239,6 @@ open class FetcherSync
                 fetchSeries(series)  // FYI, this will always make the newly fetched chapter exist already.
             }
 
-            val chapter = jsChapter.unJS(series.id);
             if (!chapterExists(chapter.url))
             {
                 Log.d("Fetch", "Haven't seen this one.")
@@ -363,19 +253,6 @@ open class FetcherSync
         }
 
         return newChapters
-    }
-
-    fun fetchAllNew(): List<Uri>
-    {
-        val ret = ArrayList<Uri>()
-
-        val providersCursor = resolver.query(Provider.all(), null, null, null, null)
-        while (providersCursor.moveToNext())
-        {
-            val provider = Provider(providersCursor, false)
-            ret.addAll(fetchNew(provider))
-        }
-        return ret
     }
 
     fun fetchEntireChapter(chapter: Chapter, behavior: Behavior = FetcherSync.Behavior.LazyFetch): Chapter
@@ -452,7 +329,7 @@ open class FetcherSync
             providerSeriesList.add(providerSeries)
         }
 
-        var i = 1.0f;
+        var i = 1.0f
         providerSeriesList.forEach {
             while (it.moveToNext())
             {
@@ -474,17 +351,6 @@ open class FetcherSync
             }
         }
         listener = localListener
-    }
-
-    private fun fetchUrl(url: String): Document
-    {
-        val response = Jsoup.connect(url)
-                            .maxBodySize(0)    //// KEKEKEKEKEKEK. MangaHere's List page is over 1MB
-                            .timeout(10000)
-                            .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                            .referrer("http://www.google.com").method(Connection.Method.GET)
-                            .execute()
-        return response.parse()
     }
 
     private fun seriesPageComplete(series: Series): Boolean
@@ -674,13 +540,24 @@ open class FetcherSync
         }
     }
 
-    private companion object
+    companion object
     {
+
+        fun fetchUrl(url: String): Document
+        {
+            val response = Jsoup.connect(url)
+                    .maxBodySize(0)    //// KEKEKEKEKEKEK. MangaHere's List page is over 1MB
+                    .timeout(10000)
+                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                    .referrer("http://www.google.com").method(Connection.Method.GET)
+                    .execute()
+            return response.parse()
+        }
 
         private fun resize(path: String)
         {
             var bitmap = BitmapFactory.decodeFile(path)
-            if (bitmap.width < 8192 && bitmap.height < 8192)
+            if (bitmap == null || bitmap.width < 8192 && bitmap.height < 8192)
             {
                 return
             }

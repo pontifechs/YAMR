@@ -12,7 +12,7 @@ import org.acra.sender.HttpSender
 * Created by mdudley on 8/6/15. Yup.
 */
 @ReportsCrashes(
-        formUri = "http://dudley.ninja:5984/acra-storage/_design/acra-storage/_update/report",
+        formUri = "http://dudley.ninja:5984/acra-yamr/_design/acra-storage/_update/report",
         mode = ReportingInteractionMode.TOAST,
         resToastText = R.string.error_text,
         reportType = HttpSender.Type.JSON,
@@ -27,7 +27,7 @@ class YAMR : Application()
         super.onCreate()
         if (!BuildConfig.DEBUG)
         {
-            ACRA.init(this);
+            ACRA.init(this)
         }
         startService(Intent(this, FetcherAsync::class.java))
     }

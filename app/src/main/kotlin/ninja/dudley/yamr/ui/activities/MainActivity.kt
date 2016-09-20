@@ -12,6 +12,8 @@ import android.widget.SimpleAdapter
 import android.widget.TextView
 import ninja.dudley.yamr.BuildConfig
 import ninja.dudley.yamr.R
+import ninja.dudley.yamr.svc.FetcherAsync
+import ninja.dudley.yamr.svc.FetcherSync
 import ninja.dudley.yamr.ui.fragments.SeriesViewer
 import java.util.ArrayList
 import java.util.HashMap

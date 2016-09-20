@@ -1,18 +1,13 @@
 package ninja.dudley.yamr.db;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Environment;
 import android.provider.BaseColumns;
 
 import org.jsoup.helper.StringUtil;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +24,6 @@ import ninja.dudley.yamr.db.util.Table;
 import ninja.dudley.yamr.db.util.Unique;
 import ninja.dudley.yamr.model.Chapter;
 import ninja.dudley.yamr.model.Genre;
-import ninja.dudley.yamr.model.MangaElement;
 import ninja.dudley.yamr.model.Page;
 import ninja.dudley.yamr.model.Provider;
 import ninja.dudley.yamr.model.Series;
@@ -41,7 +35,7 @@ public class DBHelper extends SQLiteOpenHelper
 {
     private final Context context;
 
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "YAMR.db";
 
     public static final String AUTHORITY = "ninja.dudley.yamr.db.DBProvider";
@@ -289,6 +283,7 @@ public class DBHelper extends SQLiteOpenHelper
         createV1(db);
         createAndUpdateV2(db);
         createAndUpdateV3(db);
+        createAndUpdateV4(db);
     }
 
     private void createV1(SQLiteDatabase db)
@@ -398,13 +393,10 @@ public class DBHelper extends SQLiteOpenHelper
 
         String providerRefill = "INSERT INTO " + Provider.tableName + " (";
         providerRefill += " _id,url,fully_parsed,type,";
-        providerRefill += "name,new_url,fetch_provider,stub_series,fetch_series,fetch_series_genres,";
-        providerRefill += "stub_chapter_col,fetch_chapter,stub_page,fetch_page,fetch_new,fetch_date";
+        providerRefill += "name,fetch_date";
         providerRefill += ") SELECT ";
         providerRefill += " _id,url,fully_parsed,type,";
-        providerRefill += "name,new_url,fetch_provider,stub_series,fetch_series,fetch_series_genres,";
-        providerRefill += "stub_chapter_col,fetch_chapter,stub_page,fetch_page,fetch_new,";
-        providerRefill += "CURRENT_TIMESTAMP " +
+        providerRefill += "name,CURRENT_TIMESTAMP" +
                         " FROM " + Provider.tableName + "temp";
 
         String providerDrop = "DROP TABLE " + Provider.tableName + "temp";
@@ -483,30 +475,14 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL(pageDrop);
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    private void createAndUpdateV4(SQLiteDatabase db)
     {
-        if (oldVersion < 2)
-        {
-            createAndUpdateV2(db);
-        }
+        // This is also the DB version that I dropped rhino and the whole delivered fetchers idea.
+        // The columns will still be there, but idgaf.
 
-        if (oldVersion < 3)
-        {
-            createAndUpdateV3(db);
-        }
-    }
+        // Jesus, I never thought I'd miss liquibase.
 
-    @Override
-    public void onOpen(SQLiteDatabase db)
-    {
-        super.onOpen(db);
-        if (!db.isReadOnly())
-        {
-            db.execSQL("PRAGMA foreign_keys=ON;");
-        }
-
-        // Load up existing providers.
+        // Check which providers are already here
         Map<String, Provider> existingProviders = new HashMap<>();
         Cursor allProviders = db.query(Provider.tableName, projections.get(Provider.tableName), null, null, null, null, null);
         if (allProviders.getCount() > 0)
@@ -519,22 +495,51 @@ public class DBHelper extends SQLiteOpenHelper
             }
             while (allProviders.moveToNext());
         }
-
-        // Go over all the new providers and make sure they're updated to reflect the latest code
-        List<ContentValues> newProviders = ProviderLoader.Companion.loadProviders(context);
-        for (int i = 0; i < newProviders.size(); ++i)
-        {
-            ContentValues newProvider = newProviders.get(i);
-            // Is this a new one?
-            if (!existingProviders.containsKey(newProvider.getAsString(Provider.nameCol)))
-            {
-                db.insert(Provider.tableName, null, newProvider);
-            }
-            else
-            {
-                db.update(Provider.tableName, newProvider, "name = ?", new String[]{newProvider.getAsString("name")});
-            }
-        }
         allProviders.close();
+
+        if (!existingProviders.containsKey("MangaHere"))
+        {
+            db.execSQL("INSERT INTO " + Provider.tableName + "(_id, url, type, name)" +
+                    "values (1, \"http://www.mangahere.co\", \"Provider\", \"MangaHere\")");
+        }
+
+        if (!existingProviders.containsKey("MangaPanda"))
+        {
+            db.execSQL("INSERT INTO " + Provider.tableName + "(_id, url, type, name)" +
+                    "values (2, \"http://www.mangapanda.com\", \"Provider\", \"MangaPanda\")");
+        }
+
+        // Add Batoto
+        db.execSQL("INSERT INTO " + Provider.tableName + "(_id, url, type, name)" +
+                "values (3, \"http://bato.to\", \"Provider\", \"Batoto\")");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
+        if (oldVersion < 2)
+        {
+            createAndUpdateV2(db);
+        }
+
+        if (oldVersion < 3)
+        {
+            createAndUpdateV3(db);
+        }
+
+        if (oldVersion < 4)
+        {
+            createAndUpdateV4(db);
+        }
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db)
+    {
+        super.onOpen(db);
+        if (!db.isReadOnly())
+        {
+            db.execSQL("PRAGMA foreign_keys=ON;");
+        }
     }
 }

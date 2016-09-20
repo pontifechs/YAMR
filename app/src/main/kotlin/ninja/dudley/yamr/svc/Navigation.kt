@@ -9,14 +9,15 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException
 
-class Navigation : FetcherSync
+class Navigation
 {
     private val resolver: ContentResolver
+    private val fetcher: FetcherSync
 
-    constructor(context: Context)
-    : super(context)
+    constructor(context: Context, fetcher: FetcherSync)
     {
         this.resolver = context.contentResolver
+        this.fetcher = fetcher
     }
 
     private fun page(uri: Uri): Page
@@ -51,7 +52,7 @@ class Navigation : FetcherSync
 
         val nextPageCursor = resolver.query(getNextPageUri, null, null, null, null)
         val page = Page(nextPageCursor) // Let it throw, Let it throw!!! Can't hold it back anymore!!!
-        fetchPage(page)
+        fetcher.fetchPage(page)
         return page
     }
 
@@ -65,7 +66,7 @@ class Navigation : FetcherSync
             series.nextChapter(currentChapter.number)
         val nextChapterCursor = resolver.query(getNextChapterUri, null, null, null, null)
         val chapter = Chapter(nextChapterCursor) // Let it throw, Let it throw!!! Can't hold it back anymore
-        fetchChapter(currentChapter)
+        fetcher.fetchChapter(currentChapter)
         return chapter
     }
 
@@ -81,7 +82,7 @@ class Navigation : FetcherSync
             val wrongChapter = chapterFromPage(page)
             val rightChapter = nextChapter(wrongChapter)
             nextPage = firstPageFromChapter(rightChapter)
-            nextPage = fetchPage(nextPage)
+            nextPage = fetcher.fetchPage(nextPage)
         }
         return nextPage
     }
@@ -98,7 +99,7 @@ class Navigation : FetcherSync
             val wrongChapter = chapterFromPage(page)
             val rightChapter = prevChapter(wrongChapter)
             prevPage = lastPageFromChapter(rightChapter)
-            prevPage = fetchPage(prevPage)
+            prevPage = fetcher.fetchPage(prevPage)
         }
         return prevPage
     }
@@ -115,14 +116,14 @@ class Navigation : FetcherSync
 
     fun firstPageFromChapter(chapter: Chapter): Page
     {
-        fetchChapter(chapter)
+        fetcher.fetchChapter(chapter)
         val pages = resolver.query(chapter.pages(), null, null, null, Page.numberCol + " asc")
         return Page(pages)
     }
 
     private fun lastPageFromChapter(chapter: Chapter): Page
     {
-        fetchChapter(chapter)
+        fetcher.fetchChapter(chapter)
         val pages = resolver.query(chapter.pages(), null, null, null, Page.numberCol + " desc")
         return Page(pages)
     }
@@ -136,7 +137,7 @@ class Navigation : FetcherSync
     fun firstPageFromSeries(series: Series): Page
     {
         val c = firstChapterFromSeries(series)
-        fetchChapter(c)
+        fetcher.fetchChapter(c)
         return firstPageFromChapter(c)
     }
 
@@ -182,7 +183,7 @@ class Navigation : FetcherSync
                     nextChapter(currentChapter)
                 else
                     prevChapter(currentChapter)
-                fetchChapter(neighboringChapter)
+                fetcher.fetchChapter(neighboringChapter)
                 currentChapter = neighboringChapter
 
                 if (direction == Direction.Next)
@@ -196,7 +197,7 @@ class Navigation : FetcherSync
             }
         }
         val retPage = Page(neighboringPages)
-        fetchPage(retPage)
+        fetcher.fetchPage(retPage)
         return retPage
     }
 }

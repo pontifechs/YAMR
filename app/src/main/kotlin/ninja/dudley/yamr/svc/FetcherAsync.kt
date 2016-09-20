@@ -7,6 +7,9 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import ninja.dudley.yamr.model.*
+import ninja.dudley.yamr.svc.fetchers.Batoto
+import ninja.dudley.yamr.svc.fetchers.MangaHere
+import ninja.dudley.yamr.svc.fetchers.MangaPanda
 import ninja.dudley.yamr.util.Direction
 import java.util.concurrent.PriorityBlockingQueue
 
@@ -29,8 +32,7 @@ class FetcherAsync: Service()
         FetchOffsetFromPage,
         FetchAllNew,
         FetchEntireChapter,
-        FetchEntireSeries,
-        FetchAllSeries
+        FetchEntireSeries
     }
 
     class Comms<Return>
@@ -127,7 +129,6 @@ class FetcherAsync: Service()
                     RequestType.FetchAllNew -> fetchAllNew(next as FetchRequest<Unit, List<Uri>>)
                     RequestType.FetchEntireChapter -> fetchEntireChapter(next as FetchRequest<Chapter, Chapter>)
                     RequestType.FetchEntireSeries -> fetchEntireSeries(next as FetchRequest<Series, Series>)
-                    RequestType.FetchAllSeries -> fetchAllSeries(next as FetchRequest<Unit, Unit>)
                 }
             }
         })
@@ -150,10 +151,72 @@ class FetcherAsync: Service()
         }
     }
 
+    private fun providerFromSeries(series: Series): Provider
+    {
+        return Provider(baseContext.contentResolver.query(Provider.uri(series.providerId), null, null, null, null))
+    }
+
+    private fun providerFromChapter(chapter: Chapter): Provider
+    {
+        val series = Series(baseContext.contentResolver.query(Series.uri(chapter.seriesId), null, null, null, null))
+        return providerFromSeries(series)
+    }
+
+    private fun providerFromPage(page: Page): Provider
+    {
+        val chapter = Chapter(baseContext.contentResolver.query(Chapter.uri(page.chapterId), null, null, null, null))
+        return providerFromChapter(chapter)
+    }
+
+    private fun getProvider(element: MangaElement): Provider
+    {
+        when (element.type)
+        {
+            MangaElement.UriType.Provider ->
+            {
+                return element as Provider
+            }
+            MangaElement.UriType.Series ->
+            {
+                return providerFromSeries(element as Series)
+            }
+            MangaElement.UriType.Chapter ->
+            {
+                return providerFromChapter(element as Chapter)
+            }
+            MangaElement.UriType.Page ->
+            {
+                return providerFromPage(element as Page)
+            }
+            MangaElement.UriType.Genre ->
+            {
+                throw IllegalArgumentException("Can't get provider from Genre")
+            }
+        }
+    }
+
+    private fun fetcher(element: MangaElement): FetcherSync
+    {
+        val provider = getProvider(element)
+        if (provider.name == "Batoto")
+        {
+            return Batoto(baseContext)
+        }
+        else if (provider.name == "MangaHere")
+        {
+            return MangaHere(baseContext)
+        }
+        else if (provider.name == "MangaPanda")
+        {
+            return MangaPanda(baseContext)
+        }
+        throw IllegalArgumentException("how'd " + provider.name + " get in here?!")
+    }
+
     // Fetches -------------------------------------------------------------------------------------
     private fun fetchProvider(req: FetchRequest<Provider, Provider>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register( object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
@@ -174,7 +237,7 @@ class FetcherAsync: Service()
 
     private fun fetchSeries(req: FetchRequest<Series, Series>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object : FetcherSync.NotifyStatus{
             override fun notify(status: Float): Boolean
             {
@@ -195,7 +258,7 @@ class FetcherAsync: Service()
 
     private fun fetchChapter(req: FetchRequest<Chapter, Chapter>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -217,7 +280,7 @@ class FetcherAsync: Service()
 
     private fun fetchPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -238,7 +301,7 @@ class FetcherAsync: Service()
 
     private fun fetchNextPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -248,7 +311,8 @@ class FetcherAsync: Service()
         })
         try
         {
-            val ret = fetcher.nextPage(req.arg)
+            val navigation = Navigation(baseContext, fetcher)
+            val ret = navigation.nextPage(req.arg)
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -259,7 +323,7 @@ class FetcherAsync: Service()
 
     private fun fetchPrevPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -269,7 +333,8 @@ class FetcherAsync: Service()
         })
         try
         {
-            val ret = fetcher.prevPage(req.arg)
+            val navigation = Navigation(baseContext, fetcher)
+            val ret = navigation.prevPage(req.arg)
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -280,7 +345,7 @@ class FetcherAsync: Service()
 
     private fun fetchFirstPageFromChapter(req: FetchRequest<Chapter, Page>)
     {
-        val fetcher = Navigation(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -290,7 +355,8 @@ class FetcherAsync: Service()
         })
         try
         {
-            val ret = fetcher.firstPageFromChapter(req.arg)
+            val navigation = Navigation(baseContext, fetcher)
+            val ret = navigation.firstPageFromChapter(req.arg)
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -301,7 +367,7 @@ class FetcherAsync: Service()
 
     private fun fetchPageFromSeries(req: FetchRequest<Series, Page>)
     {
-        val fetcher = Navigation(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -311,11 +377,12 @@ class FetcherAsync: Service()
         })
         try
         {
+            val navigation = Navigation(baseContext, fetcher)
             if (req.arg.progressPageId == -1)
             {
-                fetcher.bookmarkFirstPage(req.arg)
+                navigation.bookmarkFirstPage(req.arg)
             }
-            val ret = fetcher.pageFromBookmark(req.arg)
+            val ret = navigation.pageFromBookmark(req.arg)
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -326,7 +393,7 @@ class FetcherAsync: Service()
 
     private fun fetchOffsetFromPage(req: FetchRequest<Page, Page>)
     {
-        val fetcher = Navigation(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus {
             override fun notify(status: Float): Boolean
             {
@@ -336,8 +403,9 @@ class FetcherAsync: Service()
         })
         try
         {
+            val navigation = Navigation(baseContext, fetcher)
             val pair = req.otherArgs as Pair<Int, Direction>
-            val ret = fetcher.fetchPageOffset(req.arg, pair.first, pair.second)
+            val ret = navigation.fetchPageOffset(req.arg, pair.first, pair.second)
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -348,10 +416,15 @@ class FetcherAsync: Service()
 
     private fun fetchAllNew(req: FetchRequest<Unit, List<Uri>>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val batoto = Batoto(baseContext)
+        val mangahere = MangaHere(baseContext)
+        val mangapanda = MangaPanda(baseContext)
+
         try
         {
-            val ret = fetcher.fetchAllNew()
+            val ret = batoto.fetchNew().toMutableList()
+            ret.addAll(mangahere.fetchNew())
+            ret.addAll(mangapanda.fetchNew())
             postComplete(req, ret)
         }
         catch (e: Exception)
@@ -362,7 +435,7 @@ class FetcherAsync: Service()
 
     private fun fetchEntireChapter(req: FetchRequest<Chapter, Chapter>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus
         {
             override fun notify(status: Float): Boolean
@@ -385,7 +458,7 @@ class FetcherAsync: Service()
 
     private fun fetchEntireSeries(req: FetchRequest<Series, Series>)
     {
-        val fetcher = FetcherSync(baseContext)
+        val fetcher = fetcher(req.arg)
         fetcher.register(object: FetcherSync.NotifyStatus
         {
             override fun notify(status: Float): Boolean
@@ -401,29 +474,6 @@ class FetcherAsync: Service()
             postComplete(req, ret)
         }
         catch(e: Exception)
-        {
-            postFailure(req, e)
-        }
-    }
-
-    private fun fetchAllSeries(req: FetchRequest<Unit, Unit>)
-    {
-        val fetcher = FetcherSync(baseContext)
-        fetcher.register(object: FetcherSync.NotifyStatus
-        {
-            override fun notify(status: Float): Boolean
-            {
-                postStatus(req, status)
-                return true
-            }
-        })
-
-        try
-        {
-            fetcher.fetchAllSeries()
-            postComplete(req, Unit)
-        }
-        catch (e: Exception)
         {
             postFailure(req, e)
         }
@@ -567,13 +617,6 @@ class FetcherAsync: Service()
                               comms: Comms<Series>)
         {
             val req = FetchRequest(series, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchEntireSeries)
-            Fetcher!!.enqueue(req)
-        }
-
-        fun fetchAllSeries(caller: Any,
-                           comms: Comms<Series>)
-        {
-            val req = FetchRequest(Unit, caller, comms, NoPriority, FetcherSync.Behavior.LazyFetch, RequestType.FetchAllSeries)
             Fetcher!!.enqueue(req)
         }
     }

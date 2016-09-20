@@ -127,6 +127,8 @@ class Settings : Activity()
         private val RTL_ENABLED_KEY: String = "rtl_enabled"
         private val PRE_FETCH_BUFFER_KEY: String = "pre_fetch_buffer"
         private val USE_EXTERNAL_STORAGE_KEY: String = "use_external_storage"
+        private val BATOTO_USERNAME: String = "batoto_username"
+        private val BATOTO_PASSWORD: String = "batoto_password"
 
         fun rtlEnabled(context: Context): Boolean
         {
@@ -149,6 +151,18 @@ class Settings : Activity()
         {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             return pref.getBoolean(USE_EXTERNAL_STORAGE_KEY, false)
+        }
+
+        fun batotoUsername(context: Context): String?
+        {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getString(BATOTO_USERNAME, null)
+        }
+
+        fun batotoPassword(context: Context): String?
+        {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getString(BATOTO_PASSWORD, null)
         }
     }
 }

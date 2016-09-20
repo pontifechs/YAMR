@@ -31,4 +31,17 @@
             android:title="@string/use_external_storage"
             android:summary="@string/use_external_storage_sum"/>
     </PreferenceCategory>
+    <PreferenceCategory
+        android:key="batoto_credentials"
+        android:title="Batoto Credentials">
+        <EditTextPreference
+            android:key="batoto_username"
+            android:title="Username"
+            android:summary="Username to login for Batoto"/>
+        <EditTextPreference
+            android:key="batoto_password"
+            android:title="Password"
+            android:summary="Password for Batoto login"
+            android:password="true"/>
+    </PreferenceCategory>
 </PreferenceScreen>
