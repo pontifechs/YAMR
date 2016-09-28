@@ -512,6 +512,10 @@ public class DBHelper extends SQLiteOpenHelper
         // Add Batoto
         db.execSQL("INSERT INTO " + Provider.tableName + "(_id, url, type, name)" +
                 "values (3, \"http://bato.to\", \"Provider\", \"Batoto\")");
+
+        // Add Webcomics
+        db.execSQL("INSERT INTO " + Provider.tableName + "(_id, url, type, name)" +
+                "values (4, \"http://www.nope.com\", \"Provider\", \"Webcomics\")");
     }
 
     @Override

@@ -10,6 +10,7 @@ import ninja.dudley.yamr.model.*
 import ninja.dudley.yamr.svc.fetchers.Batoto
 import ninja.dudley.yamr.svc.fetchers.MangaHere
 import ninja.dudley.yamr.svc.fetchers.MangaPanda
+import ninja.dudley.yamr.svc.fetchers.Webcomics
 import ninja.dudley.yamr.util.Direction
 import java.util.concurrent.PriorityBlockingQueue
 
@@ -209,6 +210,10 @@ class FetcherAsync: Service()
         else if (provider.name == "MangaPanda")
         {
             return MangaPanda(baseContext)
+        }
+        else if (provider.name == "Webcomics")
+        {
+            return Webcomics(baseContext)
         }
         throw IllegalArgumentException("how'd " + provider.name + " get in here?!")
     }
@@ -419,12 +424,14 @@ class FetcherAsync: Service()
         val batoto = Batoto(baseContext)
         val mangahere = MangaHere(baseContext)
         val mangapanda = MangaPanda(baseContext)
+        val webcomics = Webcomics(baseContext)
 
         try
         {
             val ret = batoto.fetchNew().toMutableList()
             ret.addAll(mangahere.fetchNew())
             ret.addAll(mangapanda.fetchNew())
+            ret.addAll(webcomics.fetchNew())
             postComplete(req, ret)
         }
         catch (e: Exception)

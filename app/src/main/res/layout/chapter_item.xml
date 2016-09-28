@@ -23,5 +23,5 @@
         android:layout_height="wrap_content"
         android:id="@+id/chapter_name"
         android:layout_gravity="end"
-        />
+        android:layout_marginLeft="3dp"/>
 </LinearLayout>
