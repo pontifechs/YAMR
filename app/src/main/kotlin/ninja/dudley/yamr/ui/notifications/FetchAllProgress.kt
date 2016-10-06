@@ -17,7 +17,7 @@ class FetchAllProgress
 {
     companion object
     {
-        const private val NOTIFICATION_TAG = "FetchAllProgress";
+        const private val NOTIFICATION_TAG = "FetchAllProgress"
 
         fun notify(context: Context, currentDL: String, status: Float)
         {
@@ -38,10 +38,10 @@ class FetchAllProgress
                     .setPriority(Notification.PRIORITY_DEFAULT)
 
                     // Automatically dismiss the notification when it is touched.
-                    .setAutoCancel(true);
+                    .setAutoCancel(true)
 
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.notify(NOTIFICATION_TAG, 0, builder.build());
+            nm.notify(NOTIFICATION_TAG, 0, builder.build())
         }
     }
 }

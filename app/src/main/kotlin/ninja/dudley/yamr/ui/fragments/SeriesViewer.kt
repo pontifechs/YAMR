@@ -78,7 +78,7 @@ class SeriesViewer :
         transaction.replace(R.id.list_header_container, card)
         transaction.commit()
 
-        this.series = series;
+        this.series = series
     }
 
 
@@ -90,7 +90,7 @@ class SeriesViewer :
         val list = layout.findViewById(android.R.id.list) as ListView
         val headerContainer = inflater.inflate(R.layout.list_header_container, null) as FrameLayout
         list.addHeaderView(headerContainer)
-        list.onItemLongClickListener = this;
+        list.onItemLongClickListener = this
 
         series = Series(activity.contentResolver.query(seriesUri, null, null, null, null))
 
@@ -171,8 +171,8 @@ class SeriesViewer :
             }
             R.id.reset_progress ->
             {
-                series!!.progressChapterId = -1;
-                series!!.progressPageId = -1;
+                series!!.progressChapterId = -1
+                series!!.progressPageId = -1
                 activity.contentResolver.update(series!!.uri(), series!!.getContentValues(), null, null)
                 activity.invalidateOptionsMenu()
                 return true
@@ -217,6 +217,7 @@ class SeriesViewer :
                                 }
                                 pages.close()
                             }
+                            chapters.close()
                             parent!!.redraw(this)
                         })
                         .setNegativeButton("JK.", null).create().show()
@@ -249,14 +250,14 @@ class SeriesViewer :
     override fun onItemLongClick(adapterView: AdapterView<*>?, view: View?, position: Int, id: Long): Boolean
     {
         parent!!.loadChapter(Chapter.uri(id.toInt()))
-        return false;
+        return false
     }
 
     private fun trackSeries(series: Series)
     {
         val prefs = activity.getSharedPreferences(TrackedSeriesKey, Context.MODE_PRIVATE).edit()
         prefs.putString(TrackedSeriesKey, series.uri().toString())
-        prefs.commit()
+        prefs.apply()
     }
 
     companion object

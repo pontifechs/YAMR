@@ -29,7 +29,7 @@ class Settings : Activity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         val transaction = fragmentManager.beginTransaction()
-        val settingsBox = SettingsFragment();
+        val settingsBox = SettingsFragment()
         transaction.replace(R.id.settingsContainer, settingsBox)
         transaction.commit()
     }
@@ -89,28 +89,28 @@ class Settings : Activity()
                             pref.isChecked = false
                         })
                         .setPositiveButton("Fair enough.", {dialogInterface, which ->
-                            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 42);
+                            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 42)
                         })
                         .create().show()
             }
             else
             {
-                val root = Environment.getExternalStorageDirectory();
+                val root = Environment.getExternalStorageDirectory()
                 try
                 {
-                    val noMedia = File(root.absolutePath + "/YAMR/.nomedia");
-                    noMedia.parentFile.mkdirs();
-                    noMedia.createNewFile();
-                    val nomediaStream = FileOutputStream(noMedia);
-                    val body = "Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it.";
-                    nomediaStream.write(body.toByteArray());
-                    nomediaStream.close();
+                    val noMedia = File(root.absolutePath + "/YAMR/.nomedia")
+                    noMedia.parentFile.mkdirs()
+                    noMedia.createNewFile()
+                    val nomediaStream = FileOutputStream(noMedia)
+                    val body = "Sigh.... I really don't like these sorts of magic files. The more work I do in android, the less I like it."
+                    nomediaStream.write(body.toByteArray())
+                    nomediaStream.close()
                     Log.d("Settings", "Creating .nomedia")
                 }
                 catch (e: IOException)
                 {
-                    e.printStackTrace();
-                    throw RuntimeException(e);
+                    e.printStackTrace()
+                    throw RuntimeException(e)
                 }
             }
         }

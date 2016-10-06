@@ -428,10 +428,10 @@ class FetcherAsync: Service()
 
         try
         {
-            val ret = batoto.fetchNew().toMutableList()
-            ret.addAll(mangahere.fetchNew())
+            val ret = mangahere.fetchNew().toMutableList()
             ret.addAll(mangapanda.fetchNew())
             ret.addAll(webcomics.fetchNew())
+            ret.addAll(batoto.fetchNew())
             postComplete(req, ret)
         }
         catch (e: Exception)

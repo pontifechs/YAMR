@@ -31,9 +31,7 @@ class Webcomics : FetcherSync
 
     override fun enumerateSeries(): List<Series>
     {
-        return subSeriesFetchers.map {
-            it.fillSeries()
-        }
+        return subSeriesFetchers.map(SeriesFetcher::fillSeries)
     }
 
     override fun fillSeries(series: Series): Series

@@ -160,7 +160,7 @@ class Navigation
     fun fetchPageOffset(page: Page, offset: Int, direction: Direction): Page
     {
         var currentChapter = chapterFromPage(page)
-        var neighboringPagesUri =
+        val neighboringPagesUri =
                 if (direction == Direction.Next)
                     currentChapter.nextPage(page.number)
                 else
@@ -174,7 +174,7 @@ class Navigation
         {
             if (neighboringPages.moveToNext())
             {
-                ++skipped;
+                ++skipped
             }
             // Ran out of rows, try the next chapter
             else

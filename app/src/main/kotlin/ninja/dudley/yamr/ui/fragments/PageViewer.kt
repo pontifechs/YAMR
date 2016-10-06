@@ -131,8 +131,8 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         }
         resetLoadingBar()
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
-        val percent = 100 * status;
-        loadingBar.progress = percent.toInt();
+        val percent = 100 * status
+        loadingBar.progress = percent.toInt()
     }
 
     fun pageAcquired(page: Page)
@@ -141,7 +141,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         {
             return
         }
-        this.page = page;
+        this.page = page
         initProgressTracker(page)
         fetchPage()
     }
@@ -155,7 +155,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         this.page = page
         hideLoadingBar()
         val touchImageView = activity.findViewById(R.id.imageView) as TouchImageView
-        var d: Drawable
+        val d: Drawable
         if (page.imagePath == null)
         {
             d = resources.getDrawable(R.drawable.panic, null)
@@ -183,7 +183,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
 
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
         loadingBar.visibility = View.INVISIBLE
-        var dialog: AlertDialog
+        val dialog: AlertDialog
 
         if (e !is NoSuchElementException)
         {
@@ -213,7 +213,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
         // Wow, android. Just wow. Why the hell are you fucking with my shit?
         // See http://stackoverflow.com/questions/22794049/how-to-maintain-the-immersive-mode-in-dialogs
         dialog.window.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         dialog.show()
     }
 
@@ -227,7 +227,7 @@ class PageViewer : Fragment(), TouchImageView.SwipeListener
     private fun resetLoadingBar()
     {
         val loadingBar = activity.findViewById(R.id.page_loading_bar) as ProgressBar
-        loadingBar.progress = 0;
+        loadingBar.progress = 0
         loadingBar.visibility = View.VISIBLE
     }
 

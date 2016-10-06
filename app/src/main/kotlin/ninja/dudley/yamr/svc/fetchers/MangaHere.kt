@@ -33,15 +33,15 @@ class MangaHere(context: Context) : FetcherSync(context)
         {
             val propTitle = property.ownText()
             val propValue = property.parent().ownText()
-            if (propTitle.equals("Alternative Name:"))
+            if (propTitle == "Alternative Name:")
             {
-                series.alternateName = propValue;
+                series.alternateName = propValue
             }
-            else if (propTitle.equals("Status:"))
+            else if (propTitle == "Status:")
             {
-                series.complete = propValue.equals("Completed")
+                series.complete = propValue == "Completed"
             }
-            else if (propTitle.equals("Author(s):"))
+            else if (propTitle == "Author(s):")
             {
                 try
                 {
@@ -53,7 +53,7 @@ class MangaHere(context: Context) : FetcherSync(context)
                     series.author = propValue
                 }
             }
-            else if (propTitle.equals("Artist(s):"))
+            else if (propTitle == "Artist(s):")
             {
                 try
                 {
@@ -78,7 +78,7 @@ class MangaHere(context: Context) : FetcherSync(context)
         {
             val propTitle = property.ownText()
             val propValue = property.parent().ownText()
-            if (propTitle.equals("Genre(s):"))
+            if (propTitle == "Genre(s):")
             {
                 for (genre in propValue.split(", "))
                 {

@@ -280,7 +280,7 @@ class TouchImageView : ImageView
         // Vertical is a little special. Center it vertically if the image is too small
         if (verticalSlop() == 0 && drawable != null)
         {
-            guts[Matrix.MTRANS_Y] = -unsafeVerticalSlop() / 2;
+            guts[Matrix.MTRANS_Y] = -unsafeVerticalSlop() / 2
         }
         matrix.setValues(guts)
 

@@ -225,7 +225,7 @@ abstract class FetcherSync
         for (pair in seriesChapterPairs)
         {
             var series = pair.first
-            var chapter = pair.second
+            val chapter = pair.second
 
             if (seriesExists(series.url))
             {
@@ -270,7 +270,7 @@ abstract class FetcherSync
         listener = null
 
         var i = 1.0f
-        localListener?.notify(0.0f);
+        localListener?.notify(0.0f)
         while (pages.moveToNext())
         {
             Log.d("FetchAll", "page $i / ${pages.count}")
@@ -327,6 +327,7 @@ abstract class FetcherSync
             val providerSeries = resolver.query(provider.series(), null, null, null, null)
             totalSeries += providerSeries.count
             providerSeriesList.add(providerSeries)
+            providerSeries.close()
         }
 
         var i = 1.0f
@@ -357,24 +358,24 @@ abstract class FetcherSync
     {
         val c = resolver.query(series.pageComplete(), null, null, null, null)
         c.moveToFirst()
-        val totalIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_TOTAL);
-        val fetchedIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_FETCHED);
-        val total = c.getInt(totalIndex);
-        val fetched = c.getInt(fetchedIndex);
+        val totalIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_TOTAL)
+        val fetchedIndex = c.getColumnIndex(DBHelper.SeriesPageCompleteViewEntry.COLUMN_FETCHED)
+        val total = c.getInt(totalIndex)
+        val fetched = c.getInt(fetchedIndex)
         c.close()
-        return total != 0 && total == fetched;
+        return total != 0 && total == fetched
     }
 
     private fun chapterPageComplete(chapter: Chapter): Boolean
     {
         val c = resolver.query(chapter.pageComplete(), null, null, null, null)
         c.moveToFirst()
-        val totalIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_TOTAL);
-        val fetchedIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_FETCHED);
-        val total = c.getInt(totalIndex);
-        val fetched = c.getInt(fetchedIndex);
+        val totalIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_TOTAL)
+        val fetchedIndex = c.getColumnIndex(DBHelper.ChapterPageCompleteViewEntry.COLUMN_FETCHED)
+        val total = c.getInt(totalIndex)
+        val fetched = c.getInt(fetchedIndex)
         c.close()
-        return total != 0 && total == fetched;
+        return total != 0 && total == fetched
     }
 
     private fun seriesExists(url: String): Boolean
@@ -496,7 +497,7 @@ abstract class FetcherSync
         val pagePath = buildPagePath(p)
         val chapterDirectory = File(chapterPath)
         chapterDirectory.mkdirs()
-        return FileOutputStream(pagePath);
+        return FileOutputStream(pagePath)
     }
 
     private fun savePageImage(p: Page): String?
@@ -508,8 +509,8 @@ abstract class FetcherSync
             val file = File(path)
             if (file.length() == 0L)
             {
-                file.delete();
-                return null;
+                file.delete()
+                return null
             }
             resize(path)
             return path

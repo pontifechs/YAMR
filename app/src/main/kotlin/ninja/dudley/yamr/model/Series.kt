@@ -201,7 +201,7 @@ class Series : MangaElement
 
         fun pageComplete(id: Int): Uri
         {
-            return uri(id).buildUpon().appendPath("pageComplete").build();
+            return uri(id).buildUpon().appendPath("pageComplete").build()
         }
     }
 }

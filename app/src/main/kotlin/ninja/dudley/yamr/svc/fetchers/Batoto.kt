@@ -105,7 +105,7 @@ class Batoto : FetcherSync
 
     override fun enumerateChapters(series: Series): List<Chapter>
     {
-        val doc = fetchUrl(series.url)
+        val doc = fetchLoggedInUrl(series.url)
         val chapters = doc.select(".row.lang_English.chapter_row a[title]")
         return chapters.map {
             val number = it.attr("title").split(" | Sort: ")[1].toFloat()
@@ -190,7 +190,8 @@ class Batoto : FetcherSync
         private var loginDate = Date(0)
         val OneHour = 1000 * 60 * 60
     }
-    private fun fetchUrl(url: String): Document
+
+    private fun fetchLoggedInUrl(url: String): Document
     {
         verifyLoggedIn()
         val response = Jsoup.connect(url)

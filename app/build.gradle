@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.0.3'
+    ext.kotlin_version = '1.0.4'
     repositories {
         mavenCentral()
     }
@@ -21,14 +21,6 @@ def getVersionName = { ->
 }
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'android'
-            storeFile file('/home/matt/android.jks')
-            keyPassword '9876ar25'
-            storePassword '9876ar25'
-        }
-    }
     compileSdkVersion 24
     buildToolsVersion "23.0.2"
     defaultConfig {
@@ -42,7 +34,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
             applicationVariants.all { variant ->
                 variant.outputs.each { output ->
                     output.outputFile = new File(
@@ -62,8 +53,6 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
-
-
 }
 
 dependencies {

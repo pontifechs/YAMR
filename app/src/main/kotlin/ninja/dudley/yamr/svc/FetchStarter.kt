@@ -79,7 +79,7 @@ class FetchStarter : BroadcastReceiver()
         else if (intent.action == StartChecking)
         {
             FetcherAsync.fetchAllNew(this,
-                    FetcherAsync.Comms({ thiS, list -> fetchNewComplete(thiS, list) },
+                    FetcherAsync.Comms(::fetchNewComplete,
                                        { thiS, status -> run {} }))
         }
     }

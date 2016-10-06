@@ -116,7 +116,7 @@ public class SeekBarPreference extends Preference implements SeekBar.OnSeekBarCh
     /**
      * Update a SeekBarPreference view with our current state
      */
-    protected void updateView(View view)
+    private void updateView(View view)
     {
         try
         {

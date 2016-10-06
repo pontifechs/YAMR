@@ -124,7 +124,7 @@ class Browse : Activity(), OrientationAware.I
         fragmentManager.beginTransaction()
                 .detach(frag)
                 .attach(frag)
-                .commitAllowingStateLoss();
+                .commitAllowingStateLoss()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration)

@@ -97,7 +97,7 @@ class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, Adapter
 
         loaderManager.initLoader(0, Bundle(), this)
 
-        return layout;
+        return layout
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long)

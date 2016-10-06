@@ -172,7 +172,7 @@ class ChapterViewer :
                                 val page = Page(pages, false)
                                 if (page.imagePath.isNullOrEmpty())
                                 {
-                                    continue;
+                                    continue
                                 }
                                 val image = File(page.imagePath)
                                 image.delete()
