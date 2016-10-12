@@ -9,9 +9,7 @@ import android.util.Log
 import ninja.dudley.yamr.R
 import ninja.dudley.yamr.model.Chapter
 import ninja.dudley.yamr.model.Series
-import ninja.dudley.yamr.svc.util.LambdaAsyncTask
 import ninja.dudley.yamr.ui.activities.Browse
-import ninja.dudley.yamr.ui.notifications.FetchAllProgress
 
 /**
 * Created by mdudley on 6/23/15. Yup.
@@ -73,7 +71,7 @@ class FetchStarter : BroadcastReceiver()
             val i = Intent(StartChecking)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                             AlarmManager.INTERVAL_FIFTEEN_MINUTES /15,
+                                             AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15,
                                              AlarmManager.INTERVAL_HALF_DAY / 2, pi)
         }
         else if (intent.action == StartChecking)

@@ -233,16 +233,15 @@ abstract class FetcherSync
             }
             else
             {
-                Log.d("Fetch", "Completely New Series!!")
-                val inserted = resolver.insert(Series.baseUri(), series.getContentValues())
-                series = Series(resolver.query(inserted, null, null, null, null))
-                fetchSeries(series)  // FYI, this will always make the newly fetched chapter exist already.
+                // We really only care about series we have favorited. And if it doesn't exists, it can't be favorited.
+                continue
             }
 
             if (!chapterExists(chapter.url))
             {
                 Log.d("Fetch", "Haven't seen this one.")
-                val newChapterUri = resolver.insert(Chapter.baseUri(), chapter.getContentValues())
+                val chapterWithSeriesId = Chapter(series.id, chapter.url, chapter.number)
+                val newChapterUri = resolver.insert(Chapter.baseUri(), chapterWithSeriesId.getContentValues())
                 if (series.favorite)
                 {
                     series.updated = true
