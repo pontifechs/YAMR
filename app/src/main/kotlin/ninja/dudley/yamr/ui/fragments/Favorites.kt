@@ -24,12 +24,7 @@ class Favorites : ListFragment(), LoaderManager.LoaderCallbacks<Cursor>, Adapter
     inner class ThumbSeriesAdapter :
             SimpleCursorAdapter(activity, 0, null, arrayOf<String>(), intArrayOf(), 0)
     {
-        private val inflater: LayoutInflater
-
-        init
-        {
-            inflater = LayoutInflater.from(activity)
-        }
+        private val inflater: LayoutInflater = LayoutInflater.from(activity)
 
         override fun newView(context: Context?, cursor: Cursor?, parent: ViewGroup?): View
         {

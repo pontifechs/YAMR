@@ -80,10 +80,7 @@ class MangaHere(context: Context) : FetcherSync(context)
             val propValue = property.parent().ownText()
             if (propTitle == "Genre(s):")
             {
-                for (genre in propValue.split(", "))
-                {
-                    genres.add(Genre(genre))
-                }
+                propValue.split(", ").mapTo(genres) { Genre(it) }
             }
         }
         return genres
@@ -134,12 +131,10 @@ class MangaHere(context: Context) : FetcherSync(context)
             val series = Series(1, seriesElement.absUrl("href"), seriesElement.text())
 
             val chapters = row.select("dd a")
-            for (chapterElement in chapters)
-            {
-                val chapter = Chapter(-1, chapterElement.absUrl("href"),
-                        chapterElement.text().replace(series.name, "").toFloat())
-                ret.add(Pair(series, chapter))
-            }
+            chapters.map {
+                        Chapter(-1, it.absUrl("href"), it.text().replace(series.name, "").toFloat())
+                    }
+                    .mapTo(ret) { Pair(series, it) }
         }
         return ret
     }

@@ -101,12 +101,10 @@ class MangaPanda(context: Context) : FetcherSync(context)
             val series = Series(1, seriesElement.absUrl("href"), seriesElement.text())
 
             val chapters = row.select(".chaptersrec")
-            for (chapterElement in chapters)
-            {
-                val chapter = Chapter(-1, chapterElement.absUrl("href"),
-                        chapterElement.text().replace(series.name, "").toFloat())
-                ret.add(Pair(series, chapter))
-            }
+            chapters.map {
+                        Chapter(-1, it.absUrl("href"), it.text().replace(series.name, "").toFloat())
+                    }
+                    .mapTo(ret) { Pair(series, it) }
         }
         return ret
     }

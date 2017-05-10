@@ -47,7 +47,7 @@ class Batoto : FetcherSync
 
     private fun hasNoMorePages(doc: Document): Boolean
     {
-        return doc.select("td").first().ownText().equals("No (more) comics found!")
+        return doc.select("td").first().ownText() == "No (more) comics found!"
     }
 
     override fun fillSeries(series: Series): Series
@@ -92,7 +92,7 @@ class Batoto : FetcherSync
                     val imgs = row.select("img")
                     imgs.forEach {
                         val text = it.attr("alt")
-                        if (!text.equals("edit"))
+                        if (text != "edit")
                         {
                             genres.add(Genre(text))
                         }
@@ -172,7 +172,7 @@ class Batoto : FetcherSync
             {
                 val link = row.select("td a[href]").first()
                 val flagDiv = row.select("div[title]").first()
-                if (!flagDiv.attr("title").equals("English"))
+                if (flagDiv.attr("title") != "English")
                 {
                     continue
                 }

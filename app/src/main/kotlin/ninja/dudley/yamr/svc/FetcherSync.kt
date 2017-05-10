@@ -278,6 +278,7 @@ abstract class FetcherSync
 
             localListener?.notify(i++ / pages.count.toFloat())
         }
+        pages.close()
         listener = localListener
         return chapter
     }
@@ -306,51 +307,9 @@ abstract class FetcherSync
 
             localListener?.notify(i++ / chapters.count.toFloat())
         }
+        chapters.close()
         listener = localListener
         return series
-    }
-
-    fun fetchAllSeries()
-    {
-        val providersCursor = resolver.query(Provider.all(), null, null, null, null)
-        var totalSeries = 0
-        val providerSeriesList = ArrayList<Cursor>()
-
-        val localListener = listener
-        listener = null
-
-        while (providersCursor.moveToNext())
-        {
-            val provider = Provider(providersCursor, false)
-            fetchProvider(provider)
-            val providerSeries = resolver.query(provider.series(), null, null, null, null)
-            totalSeries += providerSeries.count
-            providerSeriesList.add(providerSeries)
-            providerSeries.close()
-        }
-
-        var i = 1.0f
-        providerSeriesList.forEach {
-            while (it.moveToNext())
-            {
-                Log.d("All Series Fetch", "${i / totalSeries.toFloat()}")
-                val series = Series(it, false)
-                try
-                {
-                    fetchSeries(series)
-                }
-                catch (e: Exception)
-                {
-                    if (!BuildConfig.DEBUG)
-                    {
-                        val reporter = ACRA.getErrorReporter()
-                        reporter.handleSilentException(Exception("Stale Series? ${series.url}"))
-                    }
-                }
-                localListener?.notify(i++ / totalSeries.toFloat())
-            }
-        }
-        listener = localListener
     }
 
     private fun seriesPageComplete(series: Series): Boolean

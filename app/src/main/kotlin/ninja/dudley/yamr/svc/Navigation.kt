@@ -9,16 +9,8 @@ import ninja.dudley.yamr.model.Series
 import ninja.dudley.yamr.util.Direction
 import java.util.NoSuchElementException
 
-class Navigation
-{
-    private val resolver: ContentResolver
-    private val fetcher: FetcherSync
-
-    constructor(context: Context, fetcher: FetcherSync)
-    {
-        this.resolver = context.contentResolver
-        this.fetcher = fetcher
-    }
+class Navigation(context: Context, private val fetcher: FetcherSync) {
+    private val resolver: ContentResolver = context.contentResolver
 
     private fun page(uri: Uri): Page
     {

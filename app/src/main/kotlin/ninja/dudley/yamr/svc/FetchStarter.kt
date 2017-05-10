@@ -27,7 +27,7 @@ class FetchStarter : BroadcastReceiver()
     fun complete(newUris: List<Uri>)
     {
         // None! Nada!
-        if (newUris.size == 0)
+        if (newUris.isEmpty())
         {
             Log.d("FetchStarter", "No URIs")
             return

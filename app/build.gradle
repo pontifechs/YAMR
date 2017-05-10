@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.0.4'
+    ext.kotlin_version = '1.1.1'
     repositories {
         mavenCentral()
     }
@@ -21,12 +21,12 @@ def getVersionName = { ->
 }
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "ninja.dudley.yamr"
         minSdkVersion 23
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 1
         versionName getVersionName()
     }
@@ -59,7 +59,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'com.android.support:support-v4:24.2.1'
+    compile 'com.android.support:support-v4:25.3.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'commons-io:commons-io:2.4'
     compile 'ch.acra:acra:4.9.0'

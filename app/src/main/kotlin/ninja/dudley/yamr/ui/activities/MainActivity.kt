@@ -59,8 +59,6 @@ class MainActivity : Activity()
         genreMap.put(descriptionKey, "Browse through manga by genres")
         maps.add(genreMap)
 
-
-
         val adapter = SimpleAdapter(this,
                                     maps,
                                     R.layout.activity_item,
